@@ -97,7 +97,7 @@ Cables are cut and crimped. They're in the blue box under the bed.
 
 ## Notes
 
-Torque settings are in [the battery manual notes](/notes/battery-manual).
+Torque settings are in [the battery manual notes](/notes/battery-manual.md).
 ```
 
 | Field | Applies to | Meaning |
