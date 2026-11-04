@@ -163,3 +163,30 @@ def render_index(sections: dict[str, list[tuple[str, str, str]]]) -> str:
 
 def _one_line(text: Any) -> str:
     return " ".join(str(text).split())
+
+
+# Sections of a concept's body
+
+
+def get_section(body: str, heading: str) -> str:
+    lines = body.splitlines()
+    marker = f"## {heading}"
+    if marker not in lines:
+        return ""
+    start = lines.index(marker) + 1
+    end = next((i for i in range(start, len(lines)) if lines[i].startswith("## ")), len(lines))
+    return "\n".join(lines[start:end]).strip()
+
+
+def set_section(body: str, heading: str, text: str) -> str:
+    """Replaces a section, or adds it at the top of the body."""
+    marker = f"## {heading}"
+    section = [marker, "", *text.strip().splitlines(), ""]
+    lines = body.splitlines()
+    if marker in lines:
+        start = lines.index(marker)
+        end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+        lines[start:end] = section
+    else:
+        lines = ["", *section, *lines]
+    return "\n".join(lines).rstrip("\n") + "\n"

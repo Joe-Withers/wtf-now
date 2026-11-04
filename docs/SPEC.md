@@ -200,6 +200,7 @@ Claude subscription tokens are not a supported credential; use an API key. See t
 | `write_note` | Applies directly; commits, with trust fields |
 | `propose_create_task` | Needs approval |
 | `propose_update_task` | Needs approval |
+| `propose_delete_task` | Needs approval; refused if other tasks depend on it |
 | `propose_move_task` | Needs approval |
 | `propose_add_dependency`, `propose_remove_dependency` | Needs approval; cycles rejected before it's shown |
 
