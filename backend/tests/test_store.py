@@ -76,6 +76,22 @@ def test_bad_progress_is_rejected(store: Store, args: dict) -> None:
         store.apply([Op("set_progress", {"slug": slug, **args})])
 
 
+def test_numbers_sent_as_strings_are_accepted(store: Store) -> None:
+    store.apply([Op("create_task", {"title": "Buy ferrules", "effort_hours": "0.5", "cost": "12", "needs_helper": "false"})])
+    store.apply([Op("set_progress", {"slug": "buy-ferrules", "progress": "40", "reason": "Found a supplier"})])
+    store.apply([Op("update_task", {"slug": "buy-ferrules", "effort_hours": "2"})])
+
+    task = store.project.tasks["buy-ferrules"]
+    assert (task.effort_hours, task.cost, task.progress, task.needs_helper) == (2, 12, 40, False)
+    assert store.project.problems == []
+
+
+@pytest.mark.parametrize("args", [{"effort_hours": "lots"}, {"cost": [1]}, {"needs_helper": "maybe"}])
+def test_nonsense_values_are_rejected_with_a_clear_reason(store: Store, args: dict) -> None:
+    with pytest.raises(ChangeRejected, match="must be"):
+        store.apply([Op("create_task", {"title": "Bad", **args})])
+
+
 def test_rejected_write_changes_nothing(store: Store) -> None:
     a = task(store, "A")
     b = task(store, "B")

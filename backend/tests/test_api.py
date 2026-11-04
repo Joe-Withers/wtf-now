@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from wtf_now.api import create_app
-from wtf_now.store import Store
+from wtf_now.store import Op, Store
 
 NOW = datetime(2026, 11, 4, 12, 0, tzinfo=UTC)
 
@@ -197,3 +197,46 @@ def test_writes_go_to_the_files(client: TestClient) -> None:
     store: Store = client.app.state.store
 
     assert (store.root / f"tasks/{slug}.md").exists()
+
+
+def test_chat_routes_say_when_the_ai_is_not_configured(client: TestClient) -> None:
+    assert client.post("/api/sessions", json={}).status_code == 503
+
+
+def test_chat_over_http(tmp_path: Path) -> None:
+    import json
+
+    from wtf_now.chat import Chat, SessionStore
+    from wtf_now.proposals import ProposalStore
+
+    from .test_agent import ScriptedModel, call, text
+
+    store = Store(tmp_path / "bundle", clock=lambda: NOW)
+    store.initialise()
+    store.apply([Op("create_task", {"title": "Wire board"})])
+    model = ScriptedModel(
+        [
+            text("Proposing."),
+            call(
+                "propose_changes",
+                summary="Add a task",
+                changes=[{"operation": "create_task", "args": {"title": "New"}}],
+            ),
+        ],
+        [text("Over to you.")],
+    )
+    chat = Chat(model, store, SessionStore(tmp_path / "s", lambda: NOW), ProposalStore(tmp_path / "p", store), lambda: NOW)
+    client = TestClient(create_app(store, clock=lambda: NOW, chat=chat))
+
+    session = client.post("/api/sessions", json={}).json()
+    stream = client.post(f"/api/sessions/{session['id']}/messages", json={"text": "Hi"})
+    events = [json.loads(line[6:]) for line in stream.text.splitlines() if line.startswith("data: ")]
+
+    proposal = next(event for event in events if event["type"] == "proposal")
+    assert client.get("/api/proposals").json()[0]["id"] == proposal["id"]
+    assert client.post(f"/api/proposals/{proposal['id']}/approve").json()["status"] == "applied"
+    assert client.get("/api/proposals").json() == []
+    shown = client.get(f"/api/sessions/{session['id']}").json()["display"]
+    assert next(item for item in shown if item["type"] == "proposal")["status"] == "applied"
+    assert client.post(f"/api/proposals/{proposal['id']}/approve").status_code == 422
+    assert client.get("/api/sessions/nothing").status_code == 404

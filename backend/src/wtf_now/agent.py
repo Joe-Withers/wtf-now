@@ -34,6 +34,26 @@ def _tool(name: str, description: str, properties: dict[str, Any] | None = None,
 TEXT = {"type": "string"}
 SLUG = {"type": "string", "description": "The task's slug"}
 
+NUMBER = {"type": "number"}
+CHANGE_ARGS = {
+    "slug": TEXT,
+    "title": TEXT,
+    "parent": TEXT,
+    "kind": {"enum": ["build", "purchase", "research", "decision"]},
+    "description": TEXT,
+    "effort_hours": NUMBER,
+    "zone": TEXT,
+    "closes_zone": TEXT,
+    "needs_helper": {"type": "boolean"},
+    "cost": NUMBER,
+    "reason": TEXT,
+    "task": TEXT,
+    "depends_on": {
+        "description": "A slug for add_dependency and remove_dependency, or a list of {task, strength} for create_task"
+    },
+    "strength": {"enum": ["hard", "soft"]},
+}
+
 TOOLS = [
     _tool("list_tasks", "The whole task tree with state, progress and whether each task is blocked."),
     _tool("get_task", "Everything about one task: notes, dependencies, blockers and dependents.", {"slug": SLUG}, ("slug",)),
@@ -98,7 +118,10 @@ TOOLS = [
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "properties": {"operation": {"enum": list(PROPOSABLE)}, "args": {"type": "object"}},
+                    "properties": {
+                        "operation": {"enum": list(PROPOSABLE)},
+                        "args": {"type": "object", "properties": CHANGE_ARGS},
+                    },
                     "required": ["operation", "args"],
                 },
             },
@@ -210,12 +233,17 @@ def run_conversation(
     connection can't leave the history with an unanswered tool call.
     """
     try:
+        said_something = False
         for _ in range(MAX_STEPS):
             finished: Turn | None = None
+            started = False
             for part in llm.turn(messages, system=system, tools=TOOLS):
                 if isinstance(part, Turn):
                     finished = part
                 else:
+                    if said_something and not started:
+                        yield {"type": "text", "text": "\n\n"}
+                    started = said_something = True
                     yield {"type": "text", "text": part}
             assert finished is not None
 

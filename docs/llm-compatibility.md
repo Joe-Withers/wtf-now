@@ -17,6 +17,7 @@ Results of `scripts/check_llm.py`, run from `backend/` with `uv run python scrip
 ## What the agent loop must handle
 
 - A response can contain a `text` block before its `tool_use` block, so the UI should show text and tool activity in the same turn.
+- `MiniMax-M3` can send numbers as strings when a schema is loose, such as `"effort_hours": "0.5"`. Tool schemas are typed, and the store accepts numeric strings.
 - One turn can contain several tool calls, and every one needs a result.
 - Replay assistant content blocks unchanged in the history. No thinking blocks appeared in these runs, but other models may return them.
 

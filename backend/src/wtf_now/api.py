@@ -1,14 +1,16 @@
 """The REST API. Writes go through the store only."""
 
-from collections.abc import Callable
+import json
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from . import views
+from .chat import Chat
 from .store import ChangeRejected, Op, Store, UndoConflict
 from .what_now import home, log_lines, what_now
 
@@ -74,7 +76,22 @@ class NewNote(BaseModel):
     stale_after: str | None = None
 
 
-def create_app(store: Store, clock: Callable[[], datetime] = lambda: datetime.now(UTC)) -> FastAPI:
+class NewSession(BaseModel):
+    focus: str | None = None
+
+
+class NewMessage(BaseModel):
+    text: str = Field(min_length=1)
+
+
+def _sse(events: Iterator[dict[str, Any]]) -> Iterator[str]:
+    for event in events:
+        yield f"data: {json.dumps(event, default=str)}\n\n"
+
+
+def create_app(
+    store: Store, clock: Callable[[], datetime] = lambda: datetime.now(UTC), chat: Chat | None = None
+) -> FastAPI:
     app = FastAPI(title="wtf-now")
     app.state.store = store
 
@@ -197,5 +214,49 @@ def create_app(store: Store, clock: Callable[[], datetime] = lambda: datetime.no
     @app.post("/api/changes/{change_id}/undo")
     def undo(change_id: str) -> Any:
         return {"change": store.undo(change_id)}
+
+    def require_chat() -> Chat:
+        if chat is None:
+            raise HTTPException(503, "The AI isn't configured. Set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL.")
+        return chat
+
+    @app.get("/api/sessions")
+    def get_sessions() -> Any:
+        return [
+            {"id": session.id, "title": session.title, "updated_at": session.updated_at, "focus": session.focus}
+            for session in require_chat().sessions.list()
+        ]
+
+    @app.post("/api/sessions", status_code=201)
+    def create_session(body: NewSession) -> Any:
+        return require_chat().sessions.create(body.focus)
+
+    @app.get("/api/sessions/{session_id}")
+    def get_session(session_id: str) -> Any:
+        active = require_chat()
+        session = active.sessions.get(session_id)
+        display = [
+            {**item, "status": active.proposals.get(item["id"]).status} if item["type"] == "proposal" else item
+            for item in session.display
+        ]
+        return {"id": session.id, "title": session.title, "focus": session.focus, "display": display}
+
+    @app.post("/api/sessions/{session_id}/messages")
+    def send_message(session_id: str, body: NewMessage) -> StreamingResponse:
+        active = require_chat()
+        active.sessions.get(session_id)
+        return StreamingResponse(_sse(active.send(session_id, body.text)), media_type="text/event-stream")
+
+    @app.get("/api/proposals")
+    def get_proposals() -> Any:
+        return require_chat().proposals.pending()
+
+    @app.post("/api/proposals/{proposal_id}/approve")
+    def approve(proposal_id: str) -> Any:
+        return require_chat().decide(proposal_id, approved=True)
+
+    @app.post("/api/proposals/{proposal_id}/reject")
+    def reject(proposal_id: str) -> Any:
+        return require_chat().decide(proposal_id, approved=False)
 
     return app

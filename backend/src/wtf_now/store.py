@@ -70,6 +70,28 @@ class Change:
     at: str
 
 
+def _as_number(name: str, value: Any) -> float | int | None:
+    """Accepts numbers sent as strings, which models sometimes do."""
+    if value is None or (isinstance(value, int | float) and not isinstance(value, bool)):
+        return value
+    try:
+        return float(str(value).strip()) if isinstance(value, str) else _reject_number(name, value)
+    except ValueError:
+        return _reject_number(name, value)
+
+
+def _reject_number(name: str, value: Any) -> None:
+    raise ChangeRejected(f"{name} must be a number, not {value!r}")
+
+
+def _as_bool(name: str, value: Any) -> bool | None:
+    if value is None or isinstance(value, bool):
+        return value
+    if str(value).strip().lower() in ("true", "false"):
+        return str(value).strip().lower() == "true"
+    raise ChangeRejected(f"{name} must be true or false, not {value!r}")
+
+
 def slugify(title: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60].rstrip("-") or "untitled"
 
@@ -153,6 +175,9 @@ class Transaction:
         if parent is not None:
             self._clear_leaf_fields(self._task(parent))
 
+        effort_hours = _as_number("effort_hours", effort_hours)
+        cost = _as_number("cost", cost)
+        needs_helper = bool(_as_bool("needs_helper", needs_helper))
         slug = self._unique_slug(TASK_DIR, slug or slugify(title))
         data = CommentedMap(type="Task", title=title)
         optional = {
@@ -194,6 +219,11 @@ class Transaction:
             raise ChangeRejected(f"Can't update {', '.join(sorted(unknown))}")
         if "kind" in fields and fields["kind"] not in KINDS:
             raise ChangeRejected(f"kind must be one of {', '.join(KINDS)}")
+        for key in ("effort_hours", "cost"):
+            if key in fields:
+                fields[key] = _as_number(key, fields[key])
+        if "needs_helper" in fields:
+            fields["needs_helper"] = _as_bool("needs_helper", fields["needs_helper"])
         for key, value in fields.items():
             if value is None:
                 concept.frontmatter.pop(key, None)
@@ -249,7 +279,8 @@ class Transaction:
 
     def set_progress(self, slug: str, progress: float, reason: str) -> None:
         concept = self._leaf(slug)
-        if isinstance(progress, bool) or not isinstance(progress, int | float) or not 0 <= progress <= 100:
+        progress = _as_number("progress", progress)
+        if progress is None or not 0 <= progress <= 100:
             raise ChangeRejected("progress must be between 0 and 100")
         if not reason.strip():
             raise ChangeRejected("A progress change needs a reason")

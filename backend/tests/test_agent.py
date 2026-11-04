@@ -68,6 +68,14 @@ def test_plain_reply_streams_text(store: Store, proposals: ProposalStore) -> Non
     assert messages[-1] == {"role": "assistant", "content": [text("Hi there")]}
 
 
+def test_text_either_side_of_a_tool_call_is_separated(store: Store, proposals: ProposalStore) -> None:
+    model = ScriptedModel([text("Checking."), call("list_tasks")], [text("All clear.")])
+
+    events, _ = converse(store, proposals, model)
+
+    assert "".join(event["text"] for event in of_type(events, "text")) == "Checking.\n\nAll clear."
+
+
 def test_direct_tool_applies_and_offers_undo(store: Store, proposals: ProposalStore) -> None:
     model = ScriptedModel(
         [text("Noted."), call("set_progress", slug="wire-board", progress=40, reason="Cables crimped")],

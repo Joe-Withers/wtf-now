@@ -1,7 +1,23 @@
+from datetime import UTC, datetime
+
 from .api import create_app
-from .config import bundle_path
+from .chat import Chat, SessionStore
+from .config import app_data_path, bundle_path
+from .llm import LLM, LLMConfigError, load_config
+from .proposals import ProposalStore
 from .store import Store
+
+
+def _chat(store: Store) -> Chat | None:
+    try:
+        llm = LLM(load_config())
+    except LLMConfigError:
+        return None
+    root = app_data_path()
+    now = lambda: datetime.now(UTC)  # noqa: E731
+    return Chat(llm, store, SessionStore(root / "sessions", now), ProposalStore(root / "proposals", store), now)
+
 
 store = Store(bundle_path())
 store.initialise()
-app = create_app(store)
+app = create_app(store, chat=_chat(store))
