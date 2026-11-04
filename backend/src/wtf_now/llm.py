@@ -7,8 +7,9 @@ import os
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import Any
 
-from anthropic import Anthropic
+from anthropic import Anthropic, APIError
 from anthropic.lib.streaming import MessageStream
 from anthropic.types import MessageParam, ToolParam
 
@@ -19,6 +20,9 @@ DEFAULT_MAX_TOKENS = 4096
 
 class LLMConfigError(Exception):
     pass
+
+
+LLMError = APIError
 
 
 @dataclass(frozen=True)
@@ -38,6 +42,14 @@ def load_config() -> LLMConfig:
     if missing:
         raise LLMConfigError(f"Missing environment variables: {', '.join(missing)}")
     return LLMConfig(values["LLM_BASE_URL"], values["LLM_API_KEY"], values["LLM_MODEL"])
+
+
+@dataclass(frozen=True)
+class Turn:
+    """A finished model response, as content blocks ready to replay in the history."""
+
+    content: list[dict[str, Any]]
+    stop_reason: str | None
 
 
 class LLM:
@@ -63,3 +75,12 @@ class LLM:
             model=self.model, max_tokens=max_tokens, messages=list(messages), **options
         ) as stream:
             yield stream
+
+    def turn(
+        self, messages: Iterable[MessageParam], *, system: str = "", tools: Iterable[ToolParam] = ()
+    ) -> Iterator[str | Turn]:
+        """Yields text as it arrives, then the finished Turn."""
+        with self.stream(messages, system=system, tools=tools) as stream:
+            yield from stream.text_stream
+            message = stream.get_final_message()
+        yield Turn([block.model_dump(exclude_none=True) for block in message.content], message.stop_reason)

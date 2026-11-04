@@ -198,13 +198,11 @@ Claude subscription tokens are not a supported credential; use an API key. See t
 | `set_state` | Applies directly; logs and commits |
 | `update_current_state` | Applies directly; commits |
 | `write_note` | Applies directly; commits, with trust fields |
-| `propose_create_task` | Needs approval |
-| `propose_update_task` | Needs approval |
-| `propose_delete_task` | Needs approval; refused if other tasks depend on it |
-| `propose_move_task` | Needs approval |
-| `propose_add_dependency`, `propose_remove_dependency` | Needs approval; cycles rejected before it's shown |
+| `propose_changes` | Needs approval. One grouped list of task creates, updates, moves, deletes and dependency changes, validated before it's shown and applied as one commit |
 
-Direct changes appear in the chat with an undo button. Proposed changes appear as approve/reject cards, and related proposals can be grouped into one card so that setting up a new area of work isn't dozens of taps.
+The AI has no tool for verifying notes. Only the owner can confirm a measurement.
+
+Direct changes appear in the chat with an undo button. Proposed changes appear as one approve/reject card per group, so setting up a new area of work isn't dozens of taps.
 
 The one exception is onboarding. While the bundle is empty, the first interview can create tasks directly, and the owner reviews the result as a whole.
 

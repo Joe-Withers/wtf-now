@@ -20,3 +20,7 @@ def data_path(name: str, default: str) -> Path:
 
 def bundle_path() -> Path:
     return data_path("BUNDLE_PATH", "data/bundle")
+
+
+def app_data_path() -> Path:
+    return data_path("APP_DATA_PATH", "data/app")
