@@ -1,19 +1,27 @@
-import { useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import { Layout } from "./components/Layout";
+import { Placeholder } from "./screens/Placeholder";
+
+const client = new QueryClient({
+  defaultOptions: { queries: { retry: 1, staleTime: 5_000 } },
+});
 
 export function App() {
-  const [status, setStatus] = useState("checking");
-
-  useEffect(() => {
-    fetch("/api/health")
-      .then((response) => response.json())
-      .then((body: { status: string }) => setStatus(body.status))
-      .catch(() => setStatus("unreachable"));
-  }, []);
-
   return (
-    <main>
-      <h1>wtf-now</h1>
-      <p>Backend: {status}</p>
-    </main>
+    <QueryClientProvider client={client}>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<Placeholder title="Home" />} />
+            <Route path="what-now" element={<Placeholder title="What now?" />} />
+            <Route path="chat" element={<Placeholder title="Chat" />} />
+            <Route path="tasks" element={<Placeholder title="Tasks" />} />
+            <Route path="more" element={<Placeholder title="More" />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }

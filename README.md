@@ -27,7 +27,7 @@ The headline feature is the answer to "what can I do right now?" — tasks that 
 
 ## Development
 
-Needs [uv](https://docs.astral.sh/uv/) and Node 18 or later. Copy `.env.example` to `.env` and fill it in.
+Needs [uv](https://docs.astral.sh/uv/) and Node 18 or later. Node 18 is why `frontend/package.json` overrides `@rollup/plugin-terser`; that override can go on Node 20 or later. Copy `.env.example` to `.env` and fill it in.
 
 | | Backend | Frontend |
 |---|---|---|
