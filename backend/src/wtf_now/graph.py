@@ -73,3 +73,9 @@ def downstream_hours(project: Project) -> dict[str, float]:
                 pending.extend(dependents.get(current, ()))
         totals[leaf] = sum(project.tasks[slug].remaining_hours for slug in seen)
     return totals
+
+
+def overall_progress(project: Project) -> float:
+    leaves = [project.tasks[leaf] for leaf in project.all_leaves()]
+    total = sum(leaf.effort_hours for leaf in leaves)
+    return sum(leaf.effort_hours * leaf.progress for leaf in leaves) / total if total else 0.0
