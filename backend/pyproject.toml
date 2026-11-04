@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "AI-centred planner for long-running physical builds"
 requires-python = ">=3.12"
 dependencies = [
+    "anthropic>=2.5.0",
     "fastapi>=0.162.0",
+    "python-dotenv>=1.2.4",
     "uvicorn[standard]>=0.54.0",
 ]
 
