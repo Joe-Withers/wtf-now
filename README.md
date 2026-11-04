@@ -1,4 +1,4 @@
-# wtf-now
+# ![wtf-now](artifacts/01%20Scribble%20to%20arrow@2x.png)
 
 For when you open the van doors after three months and think "wtf now?"
 
@@ -24,6 +24,18 @@ You talk to an AI about your project. From that conversation it builds and maint
 - **A project wiki**: research, decisions, measurements and part numbers, organised around the tasks. AI sessions are throwaway; the wiki *is* the memory, and each new session uses it as context.
 
 The headline feature is the answer to "what can I do right now?" — tasks that are unblocked, split into what you can do with what you have, what needs ordering first, and what needs deciding first.
+
+## Development
+
+Needs [uv](https://docs.astral.sh/uv/) and Node 18 or later. Copy `.env.example` to `.env` and fill it in.
+
+| | Backend | Frontend |
+|---|---|---|
+| Install | `cd backend && uv sync` | `cd frontend && npm install` |
+| Run | `cd backend && uv run uvicorn wtf_now.main:app --reload --port 8100` | `cd frontend && npm run dev` |
+| Test | `cd backend && uv run pytest` | `cd frontend && npm test` |
+
+The frontend runs on http://localhost:5173 and proxies `/api` to the backend on port 8100.
 
 ## Status
 
