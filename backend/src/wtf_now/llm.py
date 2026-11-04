@@ -7,14 +7,13 @@ import os
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from pathlib import Path
 
 from anthropic import Anthropic
 from anthropic.lib.streaming import MessageStream
 from anthropic.types import MessageParam, ToolParam
-from dotenv import load_dotenv
 
-ENV_FILE = Path(__file__).resolve().parents[3] / ".env"
+from .config import load_env
+
 DEFAULT_MAX_TOKENS = 4096
 
 
@@ -33,7 +32,7 @@ class LLMConfig:
 
 
 def load_config() -> LLMConfig:
-    load_dotenv(ENV_FILE)
+    load_env()
     values = {name: os.environ.get(name, "").strip() for name in ("LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL")}
     missing = [name for name, value in values.items() if not value]
     if missing:

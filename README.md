@@ -35,6 +35,8 @@ Needs [uv](https://docs.astral.sh/uv/) and Node 18 or later. Copy `.env.example`
 | Run | `cd backend && uv run uvicorn wtf_now.main:app --reload --port 8100` | `cd frontend && npm run dev` |
 | Test | `cd backend && uv run pytest` | `cd frontend && npm test` |
 
+To try it with a made-up van conversion, run `cd backend && uv run python scripts/seed_example.py`. It writes to `BUNDLE_PATH` and won't touch a project that already has tasks.
+
 The frontend runs on http://localhost:5173 and proxies `/api` to the backend on port 8100.
 
 ## Status

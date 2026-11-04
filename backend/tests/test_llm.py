@@ -6,7 +6,7 @@ from wtf_now.llm import LLMConfig, LLMConfigError, load_config
 
 @pytest.fixture(autouse=True)
 def no_env_file(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(llm, "load_dotenv", lambda _: False)
+    monkeypatch.setattr(llm, "load_env", lambda: None)
     for name in ("LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL"):
         monkeypatch.delenv(name, raising=False)
 

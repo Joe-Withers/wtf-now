@@ -169,8 +169,12 @@ class Transaction:
         data.update({key: value for key, value in optional.items() if value is not None})
         concept = Concept(f"{TASK_DIR}{slug}.md", data, "")
         self.concepts[concept.path] = concept
+        # Targets may be created later in this transaction; validation catches any that never are.
         for dependency in depends_on or []:
-            self.add_dependency(slug, dependency["task"], dependency.get("strength", "hard"), quiet=True)
+            strength = dependency.get("strength", "hard")
+            if strength not in STRENGTHS:
+                raise ChangeRejected(f"strength must be one of {', '.join(STRENGTHS)}")
+            data.setdefault("depends_on", []).append(CommentedMap(task=dependency["task"], strength=strength))
         self._record("Added", self._link(concept))
         return slug
 
@@ -217,7 +221,7 @@ class Transaction:
         del self.concepts[concept.path]
         self._record("Removed", str(concept.frontmatter.get("title", slug)))
 
-    def add_dependency(self, task: str, depends_on: str, strength: str = "hard", quiet: bool = False) -> None:
+    def add_dependency(self, task: str, depends_on: str, strength: str = "hard") -> None:
         if strength not in STRENGTHS:
             raise ChangeRejected(f"strength must be one of {', '.join(STRENGTHS)}")
         concept = self._task(task)
@@ -229,8 +233,7 @@ class Transaction:
                 break
         else:
             entries.append(CommentedMap(task=depends_on, strength=strength))
-        if not quiet:
-            self._record("Dependency", f"{self._link(concept)} needs {self._link(target)} ({strength})")
+        self._record("Dependency", f"{self._link(concept)} needs {self._link(target)} ({strength})")
 
     def remove_dependency(self, task: str, depends_on: str) -> None:
         concept = self._task(task)

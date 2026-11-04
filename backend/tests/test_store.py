@@ -108,6 +108,22 @@ def test_grouped_operations_make_one_commit(store: Store) -> None:
     assert store._git("log", "-1", "--format=%s").stdout.strip() == "Plan the work"
 
 
+def test_new_task_can_depend_on_one_created_later_in_the_group(store: Store) -> None:
+    store.apply(
+        [
+            Op("create_task", {"title": "Second", "depends_on": [{"task": "first"}]}),
+            Op("create_task", {"title": "First"}),
+        ]
+    )
+
+    assert is_blocked(store.project, "second")
+
+
+def test_dependency_on_a_task_that_never_appears_is_rejected(store: Store) -> None:
+    with pytest.raises(ChangeRejected, match="doesn't exist"):
+        store.apply([Op("create_task", {"title": "Second", "depends_on": [{"task": "nothing"}]})])
+
+
 def test_adding_a_child_clears_leaf_fields_from_the_parent(store: Store) -> None:
     parent = task(store, "Parent", effort_hours=5)
     store.apply([Op("set_progress", {"slug": parent, "progress": 30, "reason": "Started"})])
