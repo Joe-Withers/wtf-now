@@ -1,8 +1,7 @@
-from fastapi import FastAPI
+from .api import create_app
+from .config import bundle_path
+from .store import Store
 
-app = FastAPI(title="wtf-now")
-
-
-@app.get("/api/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+store = Store(bundle_path())
+store.initialise()
+app = create_app(store)
