@@ -1,0 +1,29 @@
+# Tickets
+
+Work through these in number order; each one lists what it depends on. Tickets 001 to 017 get the app into use at the van, and the rest build on that.
+
+| Ticket | Title |
+|---|---|
+| [001](001-repo-scaffold.md) | Repo scaffold |
+| [002](002-llm-compatibility-check.md) | LLM compatibility check |
+| [003](003-bundle-layer.md) | OKF bundle layer |
+| [004](004-task-model-and-validation.md) | Task model and validation |
+| [005](005-graph-engine.md) | Graph engine |
+| [006](006-write-core.md) | Write core |
+| [007](007-seed-the-real-project.md) | Seed the real project |
+| [008](008-what-now-engine.md) | What-now engine |
+| [009](009-rest-api.md) | REST API |
+| [010](010-agent-loop-and-tools.md) | Agent loop and tools |
+| [011](011-context-and-sessions.md) | Context and sessions |
+| [012](012-frontend-shell.md) | Frontend shell |
+| [013](013-home-and-what-now.md) | Home and What now screens |
+| [014](014-chat-screen.md) | Chat screen |
+| [015](015-task-tree-and-detail.md) | Task tree and detail |
+| [016](016-wiki-and-log.md) | Wiki and log screens |
+| [017](017-deployment.md) | Deployment |
+| [018](018-shopping.md) | Shopping screen |
+| [019](019-zones-and-preflight.md) | Zones and preflight |
+| [020](020-photos.md) | Photos |
+| [021](021-voice-capture.md) | Voice capture |
+| [022](022-floor-plan.md) | Floor plan view |
+| [023](023-dependency-graph.md) | Dependency graph view |
