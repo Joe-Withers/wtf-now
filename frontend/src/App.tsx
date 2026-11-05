@@ -4,11 +4,11 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { Chat } from "./screens/Chat";
 import { FloorPlan } from "./screens/FloorPlan";
+import { GraphScreen } from "./screens/GraphScreen";
 import { Home } from "./screens/Home";
 import { LogScreen } from "./screens/LogScreen";
 import { More } from "./screens/More";
 import { NoteScreen } from "./screens/NoteScreen";
-import { Placeholder } from "./screens/Placeholder";
 import { ShoppingScreen } from "./screens/ShoppingScreen";
 import { TaskScreen } from "./screens/TaskScreen";
 import { Tasks } from "./screens/Tasks";
@@ -36,7 +36,7 @@ export function App() {
             <Route path="log" element={<LogScreen />} />
             <Route path="shopping" element={<ShoppingScreen />} />
             <Route path="floor-plan" element={<FloorPlan />} />
-            <Route path="graph" element={<Placeholder title="Dependency graph" />} />
+            <Route path="graph" element={<GraphScreen />} />
           </Route>
         </Routes>
       </BrowserRouter>

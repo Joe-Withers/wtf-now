@@ -263,6 +263,10 @@ export function TaskScreen() {
               </section>
             )}
 
+            <Link className="meta" to={`/graph?task=${task.slug}`}>
+              See what this depends on →
+            </Link>
+
             <Link className="button" to={`/chat?focus=${task.slug}`} style={{ textAlign: "center", lineHeight: "22px" }}>
               Talk about this task
             </Link>

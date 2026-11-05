@@ -183,6 +183,17 @@ def test_graph(client: TestClient) -> None:
     assert graph["edges"] == [{"from": a, "to": b, "strength": "soft"}]
 
 
+def test_graph_says_what_a_blocked_task_is_waiting_on(client: TestClient) -> None:
+    a = new_task(client, "A")
+    b = new_task(client, "B", depends_on=[{"task": a, "strength": "hard"}])
+
+    nodes = {node["slug"]: node for node in client.get("/api/graph").json()["nodes"]}
+
+    assert nodes[b]["blocked"] is True
+    assert nodes[b]["waiting_on"] == ["A"]
+    assert nodes[a]["waiting_on"] == []
+
+
 def test_problems_are_exposed(client: TestClient) -> None:
     store: Store = client.app.state.store
     (store.root / "tasks").mkdir(exist_ok=True)

@@ -234,3 +234,13 @@ export type Zone = {
   shape: Shape | null;
 };
 export type Layout = { slug: string; title: string; view_box: string; zones: Zone[]; shapes: Shape[] };
+
+export type GraphNode = {
+  slug: string;
+  title: string;
+  state: State;
+  blocked: boolean;
+  is_leaf: boolean;
+  waiting_on: string[];
+};
+export type Graph = { nodes: GraphNode[]; edges: { from: string; to: string; strength: "hard" | "soft" }[] };

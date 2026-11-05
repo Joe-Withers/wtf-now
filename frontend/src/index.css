@@ -165,3 +165,12 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .plan text { font: 600 13px var(--body); pointer-events: none; }
 .zone-list button { display: flex; justify-content: space-between; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 13px 0; text-align: left; }
 .zone-list button[aria-pressed="true"] { color: var(--now); font-weight: 600; }
+
+.focus-card { border: 2px solid var(--now); }
+.link-list { display: flex; flex-direction: column; gap: 6px; }
+.link-card { display: flex; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 11px 12px; width: 100%; text-align: left; }
+.link-card.stack { flex-direction: column; align-items: flex-start; gap: 3px; }
+.link-card.soft { border-style: dashed; }
+.link-card.finished { color: var(--muted); }
+.link-card .why { flex: none; font-size: 0.78rem; color: var(--muted); }
+.link-card .why.blocking { color: var(--warn); font-weight: 600; }

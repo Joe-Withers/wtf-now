@@ -284,16 +284,26 @@ def search(project: Project, query: str) -> list[SearchHit]:
 
 
 def dependency_graph(project: Project) -> dict[str, list[dict[str, Any]]]:
-    nodes = [
-        {
-            "slug": slug,
-            "title": project.tasks[slug].title,
-            "state": _state(project, slug),
-            "blocked": _leaf_blocked(project, slug),
-            "is_leaf": project.is_leaf(slug),
-        }
-        for slug in project.tasks
-    ]
+    nodes = []
+    for slug in project.tasks:
+        task = project.tasks[slug]
+        waiting = []
+        if project.is_leaf(slug) and task.state != "done":
+            waiting = [
+                project.tasks[target].title
+                for target in blockers(project, slug)
+                if project.tasks[target].state != "done"
+            ]
+        nodes.append(
+            {
+                "slug": slug,
+                "title": task.title,
+                "state": _state(project, slug),
+                "blocked": _leaf_blocked(project, slug),
+                "is_leaf": project.is_leaf(slug),
+                "waiting_on": waiting,
+            }
+        )
     edges = [
         {"from": dependency.task, "to": task.slug, "strength": dependency.strength}
         for task in project.tasks.values()
