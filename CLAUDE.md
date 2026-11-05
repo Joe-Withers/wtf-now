@@ -13,7 +13,7 @@ wtf-now: an AI-centred planner for long-running physical builds (first user: a v
 
 ## Current phase
 
-Tickets 001 to 023 are built and merged. The app runs end to end: tasks, dependencies, progress, the wiki, chat with the AI, photos, voice, the floor plan and the dependency graph.
+Tickets 001 to 023 are built and merged, and so is 028. The app runs end to end: tasks, dependencies, progress, the wiki, chat with the AI, photos, voice, the floor plan and the dependency graph. The screens read the plan; the chat records the work.
 
 The rest of the work needs something from the owner, and is written up in `docs/tickets/024-*.md` onwards:
 
@@ -29,6 +29,7 @@ We're building the full product, ticket by ticket, not an MVP.
 - Files are the source of truth. There is no database.
 - The AI writes only through validated tools, never raw file edits.
 - The AI tools and the REST API share one write path.
+- The screens read the project; the chat records the work. No button changes a task's state, progress or current state — the owner says what happened and the AI updates the plan.
 - Graph integrity (cycles, blocking, roll-ups, suggestions) is code, not LLM judgement.
 - Progress and effort are stored AI estimates that change only when something happens, with a reason. Parent values are always calculated.
 - Task state lives in `state`. Never use OKF's reserved `status` for it.

@@ -1,5 +1,4 @@
 import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 
 import { mockApi, renderApp } from "../test-helpers";
 import { ShoppingScreen } from "./ShoppingScreen";
@@ -28,20 +27,21 @@ test("shows totals and what each item is waiting on", async () => {
   expect(screen.getByText("Waiting on Lithium or AGM")).toBeInTheDocument();
 });
 
-test("a blocked item can't be marked as ordered", async () => {
+test("nothing on the shopping list changes a task — the chat does that", async () => {
+  const calls = mockApi({ "/api/shopping": shopping });
+
+  renderApp(<ShoppingScreen />);
+
+  expect(await screen.findByText("£80")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Ordered: Wall panels" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Arrived: PIR board" })).not.toBeInTheDocument();
+  expect(calls.every((call) => call.init?.method !== "POST")).toBe(true);
+});
+
+test("the shopping list sends you to the chat to report an order or an arrival", async () => {
   mockApi({ "/api/shopping": shopping });
 
   renderApp(<ShoppingScreen />);
 
-  expect(await screen.findByRole("button", { name: "Ordered: Wall panels" })).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Ordered: Battery" })).not.toBeInTheDocument();
-});
-
-test("marking arrival goes through the task state", async () => {
-  const calls = mockApi({ "/api/shopping": shopping, "/api/tasks/pir/state": { change: { id: "c", summary: "", at: "" } } });
-  renderApp(<ShoppingScreen />);
-
-  await userEvent.click(await screen.findByRole("button", { name: "Arrived: PIR board" }));
-
-  expect(calls.find((call) => call.url === "/api/tasks/pir/state")?.init?.body).toBe(JSON.stringify({ state: "done" }));
+  expect(await screen.findByRole("link", { name: /Tell it/ })).toHaveAttribute("href", "/chat");
 });

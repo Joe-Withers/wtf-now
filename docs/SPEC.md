@@ -24,7 +24,7 @@ Everything here is decided unless it's marked **Default** (a choice made on the 
 
 ## 3. Product
 
-A mobile-first web app, installable as a PWA, with an AI chat built in. You talk to it about the project, and it maintains the tasks and wiki. The screens let you see the state of things and make quick changes by tapping.
+A mobile-first web app, installable as a PWA, with an AI chat built in. You talk to it about the project, and it maintains the tasks and wiki. The screens show you the state of things; the chat is where the work gets recorded.
 
 ### 3.1 Screens
 
@@ -34,12 +34,26 @@ A mobile-first web app, installable as a PWA, with an AI chat built in. You talk
 | **What now?** | All available work, grouped (§5.3), filtered by time available and whether you have a helper. |
 | **Chat** | Conversation with the AI, with approve/reject cards for structural changes. |
 | **Task tree** | Expandable tree with roll-up progress bars. |
-| **Task detail** | Current state, notes, dependencies, photos, quick actions. |
+| **Task detail** | Current state, notes, dependencies, photos, and a way into the chat with that task in focus. |
 | **Shopping** | Purchases to order, on order and arrived, with running cost. |
 | **Floor plan** | Zones coloured by progress. |
 | **Dependency graph** | The task graph. |
 | **Wiki** | Browse and search notes. |
 | **Log** | Project history, newest first. |
+
+### 3.2 The screens read, the chat writes
+
+There is no button anywhere in the app that changes a task's state, progress or current state. The screens show the plan; the chat records the work.
+
+The owner says what happened in their own words — "I've ordered the PIR board", "it arrived", "I've got the floor down to the ribs" — and the AI works out what that means and updates the plan itself. For a purchase, to order is `todo`, on order is `doing`, and arrived is `done`.
+
+Three taps survive, because each of them is the owner's judgement rather than a record of work:
+
+- approving or rejecting a proposed change,
+- undoing a change the AI made,
+- confirming a measurement, which only the owner can do.
+
+Every screen keeps a way into the chat, and the task screen opens it with that task in focus, so reporting work is one tap from wherever you noticed it.
 
 ---
 
@@ -201,6 +215,8 @@ Claude subscription tokens are not a supported credential; use an API key. See t
 | `propose_changes` | Needs approval. One grouped list of task creates, updates, moves, deletes and dependency changes, validated before it's shown and applied as one commit |
 
 The AI has no tool for verifying notes. Only the owner can confirm a measurement.
+
+The direct tools are how work gets recorded. The screens have no controls of their own, so when the owner reports something, these are the only route from their words to the bundle.
 
 Direct changes appear in the chat with an undo button. Proposed changes appear as one approve/reject card per group, so setting up a new area of work isn't dozens of taps.
 

@@ -25,6 +25,8 @@ You talk to an AI about your project. From that conversation it builds and maint
 
 The headline feature is the answer to "what can I do right now?" — tasks that are unblocked, split into what you can do with what you have, what needs ordering first, and what needs deciding first.
 
+There are no buttons for recording work. You say "I've ordered the PIR board" or "the vent turned up" and the AI works out what that means, updates the plan and tells you where that leaves things. The screens are there to show you the plan, not to make you click through it.
+
 ## Development
 
 Needs [uv](https://docs.astral.sh/uv/) and Node 18 or later. Node 18 is why `frontend/package.json` overrides `@rollup/plugin-terser`; that override can go on Node 20 or later. Copy `.env.example` to `.env` and fill it in.

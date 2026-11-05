@@ -30,6 +30,9 @@ export function Home() {
   return (
     <main className="screen">
       <Wordmark />
+      <Link to="/chat" className="meta">
+        Tell it what you've done →
+      </Link>
       <Loading query={query}>
         {(home) => {
           if (home.last_activity === null) {

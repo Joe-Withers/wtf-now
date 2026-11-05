@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 import { getJson, type WhatNow, type WorkItem } from "../api";
-import { Loading, useChange } from "../components/ui";
+import { Loading } from "../components/ui";
 import { WorkCard } from "../components/WorkCard";
 
 const TIMES: { label: string; hours: number | null }[] = [
@@ -13,17 +14,14 @@ const TIMES: { label: string; hours: number | null }[] = [
   { label: "All day", hours: 8 },
 ];
 
-function Group({ title, items, action }: { title: string; items: WorkItem[]; action?: (item: WorkItem) => React.ReactNode }) {
+function Group({ title, items }: { title: string; items: WorkItem[] }) {
   if (items.length === 0) return null;
   return (
     <section className="section">
       <h2>{title}</h2>
       <div className="card-stack">
         {items.map((item) => (
-          <div className="card-stack" key={item.slug}>
-            <WorkCard item={item} />
-            {action?.(item)}
-          </div>
+          <WorkCard key={item.slug} item={item} />
         ))}
       </div>
     </section>
@@ -33,7 +31,6 @@ function Group({ title, items, action }: { title: string; items: WorkItem[]; act
 export function WhatNowScreen() {
   const [time, setTime] = useState<number | null>(null);
   const [solo, setSolo] = useState(false);
-  const change = useChange();
 
   const parameters = new URLSearchParams();
   if (time !== null) parameters.set("hours", String(time));
@@ -43,19 +40,12 @@ export function WhatNowScreen() {
     queryFn: () => getJson<WhatNow>(`/what-now?${parameters}`),
   });
 
-  const markPurchase = (item: WorkItem, state: "doing" | "done", message: string) => (
-    <button
-      className="button"
-      disabled={change.isPending}
-      onClick={() => change.mutate({ path: `/tasks/${item.slug}/state`, body: { state }, message })}
-    >
-      {state === "doing" ? "Mark as ordered" : "It's arrived"}
-    </button>
-  );
-
   return (
     <main className="screen">
       <h1>What now?</h1>
+      <Link className="meta" to="/chat">
+        Finished something? Tell it →
+      </Link>
       <section className="section" aria-label="Filters">
         <div className="chips">
           {TIMES.map((option) => (
@@ -75,8 +65,8 @@ export function WhatNowScreen() {
           <>
             {result.can_do.length === 0 && <p className="empty">Nothing hands-on fits that right now.</p>}
             <Group title="Can do now" items={result.can_do} />
-            <Group title="Order first" items={result.order_first} action={(item) => markPurchase(item, "doing", `Ordered ${item.title}`)} />
-            <Group title="On its way" items={result.on_its_way} action={(item) => markPurchase(item, "done", `${item.title} arrived`)} />
+            <Group title="Order first" items={result.order_first} />
+            <Group title="On its way" items={result.on_its_way} />
             <Group title="Decide or research first" items={result.decide_first} />
           </>
         )}

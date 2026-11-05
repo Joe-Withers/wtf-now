@@ -68,6 +68,14 @@ def test_context_for_an_empty_project_prompts_an_interview(tmp_path: Path) -> No
     assert "no tasks yet" in build_system(store, NOW, [])
 
 
+def test_the_prompt_makes_the_ai_the_one_that_records_work(store: Store, clock: Clock) -> None:
+    system = build_system(store, clock(), [])
+
+    assert "There are no buttons for recording work" in system
+    assert '"I\'ve ordered X" means X is on order' in system
+    assert "todo is to order, doing is on order, and done is arrived" in system
+
+
 def test_focus_brings_in_the_task_and_its_linked_notes(store: Store, clock: Clock) -> None:
     path = store.root / "tasks" / "wire-board.md"
     path.write_text(path.read_text() + "\nSee [torque](/notes/torque.md).\n")

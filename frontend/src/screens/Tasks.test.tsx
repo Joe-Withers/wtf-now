@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
 
@@ -29,9 +29,6 @@ const detail = {
 
 const renderTask = (overrides = {}) => {
   const calls = mockApi({
-    "/api/tasks/wire/state": { change: { id: "c1", summary: "", at: "" } },
-    "/api/tasks/wire/progress": { change: { id: "c2", summary: "", at: "" } },
-    "/api/tasks/wire/photos": { change: { id: "c3", summary: "", at: "" } },
     "/api/tasks/wire": { ...detail, ...overrides },
   });
   renderApp(
@@ -59,46 +56,40 @@ test("a task shows where it was left and links its notes in the app", async () =
 
   expect(await screen.findByText("Cables in the blue box.")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "the torque note" })).toHaveAttribute("href", "/notes/torque");
-  expect(screen.getByRole("link", { name: /Talk about this task/ })).toHaveAttribute("href", "/chat?focus=wire");
+  expect(screen.getByRole("link", { name: /Tell it what you've done/ })).toHaveAttribute("href", "/chat?focus=wire");
 });
 
-test("marking a task done offers undo", async () => {
+test("the task screen has no buttons that change the work", async () => {
   const calls = renderTask();
 
-  await userEvent.click(await screen.findByRole("button", { name: "Done" }));
-
-  expect(await screen.findByRole("button", { name: "Undo" })).toBeInTheDocument();
-  expect(calls.find((call) => call.url === "/api/tasks/wire/state")?.init?.body).toBe(JSON.stringify({ state: "done" }));
+  await screen.findByText("Cables in the blue box.");
+  expect(screen.queryByRole("button", { name: "Done" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Start" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Save progress" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("slider")).not.toBeInTheDocument();
+  expect(calls.every((call) => call.init?.method !== "POST")).toBe(true);
 });
 
-test("a purchase uses ordering language", async () => {
+test("a purchase is changed in the chat, not by a button", async () => {
   renderTask({ kind: "purchase", state: "todo" });
 
-  expect(await screen.findByRole("button", { name: "Mark as ordered" })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "It's arrived" })).toBeInTheDocument();
+  expect(await screen.findByText("Wire the board")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Mark as ordered" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "It's arrived" })).not.toBeInTheDocument();
 });
 
-test("parents have no state buttons, because they're calculated", async () => {
+test("parents are calculated, so they have no buttons either", async () => {
   renderTask({ is_leaf: false });
 
   await screen.findByText("Cables in the blue box.");
   expect(screen.queryByRole("button", { name: "Done" })).not.toBeInTheDocument();
 });
 
-test("changing progress asks what changed", async () => {
-  const calls = renderTask();
-  const slider = await screen.findByRole("slider", { name: "Progress" });
+test("progress is shown, not set", async () => {
+  renderTask();
 
-  expect(screen.queryByRole("button", { name: "Save progress" })).not.toBeInTheDocument();
-  fireEvent.change(slider, { target: { value: "45" } });
-  expect(screen.getByRole("button", { name: "Save progress" })).toBeDisabled();
-
-  await userEvent.type(screen.getByRole("textbox", { name: "What changed?" }), "More wired");
-  await userEvent.click(screen.getByRole("button", { name: "Save progress" }));
-
-  expect(calls.find((call) => call.url === "/api/tasks/wire/progress")?.init?.body).toBe(
-    JSON.stringify({ progress: 45, reason: "More wired" }),
-  );
+  expect(await screen.findByRole("progressbar", { name: "Wire the board progress" })).toBeInTheDocument();
+  expect(screen.queryByRole("slider")).not.toBeInTheDocument();
 });
 
 test("a task that closes a zone warns about what's still in there", async () => {
@@ -118,16 +109,11 @@ test("no warning when nothing is left in the zone", async () => {
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
 
-test("photos show on the task and can be added", async () => {
-  const calls = renderTaskWithPhotos();
+test("photos show on the task", async () => {
+  renderTaskWithPhotos();
 
   expect(await screen.findByRole("img", { name: "The fuse block" })).toHaveAttribute("src", "/api/photos/abc.jpg");
-
-  const input = document.querySelector<HTMLInputElement>('input[type="file"]')!;
-  await userEvent.upload(input, new File(["x"], "board.jpg", { type: "image/jpeg" }));
-
-  expect(await screen.findByText("Photo added")).toBeInTheDocument();
-  expect(calls.find((call) => call.url === "/api/tasks/wire/photos")?.init?.method).toBe("POST");
+  expect(document.querySelector('input[type="file"]')).toBeNull();
 });
 
 function renderTaskWithPhotos() {

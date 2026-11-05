@@ -34,16 +34,12 @@ test("filters send the time and helper to the API", async () => {
   expect(screen.getByRole("button", { name: "2 hours" })).toHaveAttribute("aria-pressed", "true");
 });
 
-test("marking a purchase arrived offers undo", async () => {
-  const calls = mockApi({
-    "/api/what-now": result,
-    "/api/tasks/buy-pir/state": { change: { id: "abc", summary: "x", at: "" } },
-  });
+test("nothing on What now changes a task — the chat does that", async () => {
+  const calls = mockApi({ "/api/what-now": result });
   renderApp(<WhatNowScreen />);
 
-  await userEvent.click(await screen.findByRole("button", { name: "It's arrived" }));
-
-  expect(await screen.findByRole("button", { name: "Undo" })).toBeInTheDocument();
-  const write = calls.find((call) => call.url === "/api/tasks/buy-pir/state");
-  expect(write?.init?.body).toBe(JSON.stringify({ state: "done" }));
+  await screen.findByText("Can do now");
+  expect(screen.queryByRole("button", { name: "It's arrived" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Ordered" })).not.toBeInTheDocument();
+  expect(calls.every((call) => call.init?.method !== "POST")).toBe(true);
 });
