@@ -231,4 +231,4 @@ The one exception is onboarding. While the bundle is empty, the first interview 
 ## 8. Open questions
 
 - Transcription provider for voice notes.
-- Whether the owner keeps the Default deployment.
+- Whether the owner keeps the Default deployment. The files for it exist but haven't been run; see `docs/deployment.md`.

@@ -24,3 +24,13 @@ def bundle_path() -> Path:
 
 def app_data_path() -> Path:
     return data_path("APP_DATA_PATH", "data/app")
+
+
+def bundle_remote() -> str | None:
+    load_env()
+    return os.environ.get("BUNDLE_REMOTE", "").strip() or None
+
+
+def web_root() -> Path:
+    """The built frontend."""
+    return data_path("WEB_ROOT", "frontend/dist")

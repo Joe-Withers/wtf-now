@@ -240,3 +240,34 @@ def test_chat_over_http(tmp_path: Path) -> None:
     assert next(item for item in shown if item["type"] == "proposal")["status"] == "applied"
     assert client.post(f"/api/proposals/{proposal['id']}/approve").status_code == 422
     assert client.get("/api/sessions/nothing").status_code == 404
+
+
+@pytest.fixture
+def served(tmp_path: Path) -> TestClient:
+    web = tmp_path / "dist"
+    (web / "assets").mkdir(parents=True)
+    (web / "index.html").write_text("the app")
+    (web / "assets" / "app.js").write_text("code")
+    (tmp_path / "secret.txt").write_text("private")
+    store = Store(tmp_path / "bundle", clock=lambda: NOW)
+    store.initialise()
+    return TestClient(create_app(store, clock=lambda: NOW, static_root=web))
+
+
+def test_serves_the_built_frontend(served: TestClient) -> None:
+    assert served.get("/").text == "the app"
+    assert served.get("/assets/app.js").text == "code"
+
+
+def test_screen_links_fall_back_to_the_app(served: TestClient) -> None:
+    assert served.get("/tasks/wire-board").text == "the app"
+
+
+def test_api_routes_are_not_shadowed(served: TestClient) -> None:
+    assert served.get("/api/health").json() == {"status": "ok"}
+    assert served.get("/api/nothing").status_code == 404
+
+
+def test_files_outside_the_frontend_are_not_served(served: TestClient) -> None:
+    assert "private" not in served.get("/..%2fsecret.txt").text
+    assert "private" not in served.get("/assets/..%2f..%2fsecret.txt").text

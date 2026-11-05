@@ -15,3 +15,4 @@ dist/
 
 # Local project data
 /data/
+deploy/bundle-key*

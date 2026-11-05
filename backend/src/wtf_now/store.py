@@ -9,6 +9,7 @@ import copy
 import re
 import subprocess
 import threading
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -366,9 +367,18 @@ class Transaction:
 
 
 class Store:
-    def __init__(self, root: Path, clock: Callable[[], datetime] = lambda: datetime.now(UTC)) -> None:
+    def __init__(
+        self,
+        root: Path,
+        clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        remote: str | None = None,
+        push_retry_seconds: float = 60,
+    ) -> None:
         self.root = root
+        self.remote = remote
+        self.push_retry_seconds = push_retry_seconds
         self._clock = clock
+        self._push_wanted = threading.Event()
         self._lock = threading.RLock()
         self._signature: tuple | None = None
         self._project = Project()
@@ -376,12 +386,39 @@ class Store:
     def initialise(self) -> None:
         """Creates the bundle and its git repo if they don't exist yet."""
         with self._lock:
+            if self.remote and not (self.root / ".git").exists():
+                self._clone_remote()
             self.root.mkdir(parents=True, exist_ok=True)
             if not (self.root / ".git").exists():
                 self._git("init", "-q", "-b", "main")
+                if self.remote:
+                    self._git("remote", "add", "origin", self.remote)
+            if self._git("rev-parse", "-q", "--verify", "HEAD", check=False).returncode != 0:
                 self._write_index(self.project)
                 self._git("add", "-A")
                 self._git("commit", "-q", "-m", "Create project")
+        if self.remote:
+            threading.Thread(target=self._push_loop, daemon=True).start()
+            self._push_wanted.set()
+
+    def _clone_remote(self) -> None:
+        """Rebuilds a lost bundle from the backup. An empty or missing remote just starts afresh."""
+        self.root.parent.mkdir(parents=True, exist_ok=True)
+        clone = subprocess.run(("git", "clone", "-q", self.remote, str(self.root)), capture_output=True, text=True)
+        if clone.returncode != 0 and self.root.exists() and not any(self.root.iterdir()):
+            self.root.rmdir()
+
+    def push(self) -> bool:
+        return self._git("push", "-q", "origin", "HEAD:main", check=False).returncode == 0
+
+    def _push_loop(self) -> None:
+        """Pushes after commits. A failed push is retried, and never affects a write."""
+        while True:
+            self._push_wanted.wait()
+            self._push_wanted.clear()
+            if not self.push():
+                time.sleep(self.push_retry_seconds)
+                self._push_wanted.set()
 
     def _git(self, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
         identity = ("-c", "user.name=wtf-now", "-c", "user.email=wtf-now@localhost", "-c", "commit.gpgsign=false")
@@ -474,6 +511,7 @@ class Store:
         self._git("add", "-A")
         self._git("commit", "-q", "-m", message)
         self._signature = None
+        self._push_wanted.set()
         return Change(self._git("rev-parse", "HEAD").stdout.strip(), message, at.isoformat())
 
     def undo(self, change_id: str) -> Change:

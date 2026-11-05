@@ -1,3 +1,5 @@
+import subprocess
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -351,3 +353,71 @@ def test_without_section_keeps_everything_else() -> None:
     body = "## Current state\n\nHere.\n\n## Notes\n\nKeep me.\n"
 
     assert without_section(body, "Current state") == "## Notes\n\nKeep me."
+
+
+@pytest.fixture
+def remote(tmp_path: Path) -> str:
+    path = tmp_path / "remote.git"
+    subprocess.run(("git", "init", "-q", "--bare", "-b", "main", str(path)), check=True)
+    return str(path)
+
+
+def wait_for(condition, seconds: float = 10) -> bool:
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        if condition():
+            return True
+        time.sleep(0.05)
+    return False
+
+
+def remote_commits(remote: str) -> int:
+    result = subprocess.run(("git", "--git-dir", remote, "rev-list", "--count", "main"), capture_output=True, text=True)
+    return int(result.stdout) if result.returncode == 0 else 0
+
+
+def test_commits_are_pushed_to_the_remote(tmp_path: Path, remote: str) -> None:
+    store = Store(tmp_path / "bundle", remote=remote)
+    store.initialise()
+
+    task(store, "Wire board")
+
+    assert wait_for(lambda: remote_commits(remote) == 2)
+
+
+def test_a_new_server_rebuilds_from_the_remote(tmp_path: Path, remote: str) -> None:
+    first = Store(tmp_path / "first", remote=remote)
+    first.initialise()
+    slug = task(first, "Wire board")
+    first.apply([Op("set_progress", {"slug": slug, "progress": 40, "reason": "Started"})])
+    assert wait_for(lambda: remote_commits(remote) == 3)
+
+    second = Store(tmp_path / "second", remote=remote)
+    second.initialise()
+
+    assert second.project.tasks[slug].progress == 40
+    assert "Started" in (second.root / "log.md").read_text()
+    task(second, "Another")
+    assert wait_for(lambda: remote_commits(remote) == 4)
+
+
+def test_failed_push_never_fails_a_write_and_is_retried(tmp_path: Path, remote: str) -> None:
+    store = Store(tmp_path / "bundle", remote=remote, push_retry_seconds=0.05)
+    store.initialise()
+    assert wait_for(lambda: remote_commits(remote) == 1)
+    hidden = Path(f"{remote}-away")
+    Path(remote).rename(hidden)
+
+    slug = task(store, "Written during an outage")
+
+    assert slug in store.project.tasks
+    assert remote_commits(remote) == 0
+    hidden.rename(remote)
+    assert wait_for(lambda: remote_commits(remote) == 2)
+
+
+def test_unreachable_remote_on_first_run_still_starts(tmp_path: Path) -> None:
+    store = Store(tmp_path / "bundle", remote=str(tmp_path / "missing.git"), push_retry_seconds=60)
+    store.initialise()
+
+    assert task(store, "Wire board") in store.project.tasks

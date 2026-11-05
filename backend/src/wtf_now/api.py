@@ -3,10 +3,11 @@
 import json
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from . import views
@@ -90,7 +91,10 @@ def _sse(events: Iterator[dict[str, Any]]) -> Iterator[str]:
 
 
 def create_app(
-    store: Store, clock: Callable[[], datetime] = lambda: datetime.now(UTC), chat: Chat | None = None
+    store: Store,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    chat: Chat | None = None,
+    static_root: Path | None = None,
 ) -> FastAPI:
     app = FastAPI(title="wtf-now")
     app.state.store = store
@@ -258,5 +262,18 @@ def create_app(
     @app.post("/api/proposals/{proposal_id}/reject")
     def reject(proposal_id: str) -> Any:
         return require_chat().decide(proposal_id, approved=False)
+
+    if static_root is not None and (static_root / "index.html").exists():
+        root = static_root.resolve()
+
+        @app.get("/{path:path}", include_in_schema=False)
+        def frontend(path: str) -> FileResponse:
+            """Serves the built app. Unknown paths get index.html, so that links to screens work."""
+            if path == "api" or path.startswith("api/"):
+                raise HTTPException(404)
+            target = (root / path).resolve()
+            if target.is_file() and target.is_relative_to(root):
+                return FileResponse(target)
+            return FileResponse(root / "index.html")
 
     return app
