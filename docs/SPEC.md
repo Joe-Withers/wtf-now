@@ -30,10 +30,9 @@ A mobile-first web app, installable as a PWA, with an AI chat built in. You talk
 
 | Screen | Purpose |
 |---|---|
-| **Home** | The re-entry view: what you last did, where you left off, what's arrived, and three suggestions. Opens instantly, with no LLM call. |
+| **Plan** | The project as a graph. The areas and the work under them, drawn as nodes and edges, with the overall progress above. Tap a node to open it and see what it waits on. Replaces the old home screen and task tree. |
 | **What now?** | All available work, grouped (§5.3), filtered by time available and whether you have a helper. |
-| **Chat** | Conversation with the AI, with approve/reject cards for structural changes. |
-| **Task tree** | Expandable tree with roll-up progress bars. |
+| **Chat** | Conversation with the AI, with approve/reject cards for structural changes. It comes out of the side (§3.3). |
 | **Task detail** | Current state, notes, dependencies, photos, and a way into the chat with that task in focus. |
 | **Shopping** | Purchases to order, on order and arrived, with running cost. |
 | **Floor plan** | Zones coloured by progress. |

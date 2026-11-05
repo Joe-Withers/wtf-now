@@ -5,13 +5,12 @@ import { Layout } from "./components/Layout";
 import { ChatPage } from "./screens/Chat";
 import { FloorPlan } from "./screens/FloorPlan";
 import { GraphScreen } from "./screens/GraphScreen";
-import { Home } from "./screens/Home";
 import { LogScreen } from "./screens/LogScreen";
 import { More } from "./screens/More";
 import { NoteScreen } from "./screens/NoteScreen";
+import { PlanScreen } from "./screens/PlanScreen";
 import { ShoppingScreen } from "./screens/ShoppingScreen";
 import { TaskScreen } from "./screens/TaskScreen";
-import { Tasks } from "./screens/Tasks";
 import { WhatNowScreen } from "./screens/WhatNowScreen";
 import { Wiki } from "./screens/Wiki";
 
@@ -25,10 +24,9 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
-            <Route index element={<Home />} />
+            <Route index element={<PlanScreen />} />
             <Route path="what-now" element={<WhatNowScreen />} />
             <Route path="chat" element={<ChatPage />} />
-            <Route path="tasks" element={<Tasks />} />
             <Route path="tasks/:slug" element={<TaskScreen />} />
             <Route path="more" element={<More />} />
             <Route path="wiki" element={<Wiki />} />

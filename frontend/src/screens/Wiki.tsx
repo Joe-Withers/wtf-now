@@ -14,11 +14,13 @@ export function Wiki() {
     queryFn: () => getJson<SearchHit[]>(`/search?q=${encodeURIComponent(term)}`),
     enabled: term.length > 1,
   });
+  const toVerify = notes.data?.filter((note) => note.needs_verifying).length ?? 0;
 
   return (
     <main className="screen">
       <ScreenHead title="Wiki" />
       <input className="field" type="search" aria-label="Search" placeholder="Search tasks and notes" value={search} onChange={(event) => setSearch(event.target.value)} />
+      {toVerify > 0 && <div className="flag">{toVerify} to verify</div>}
       {term.length > 1 ? (
         <Loading query={hits}>
           {(results) =>

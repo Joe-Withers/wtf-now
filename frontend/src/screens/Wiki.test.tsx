@@ -81,11 +81,18 @@ test("the log groups lines by day", async () => {
   expect(screen.getByText("2026-08-01")).toBeInTheDocument();
 });
 
-test("the menu counts notes to verify and shows file problems", async () => {
-  mockApi({ "/api/notes": [note], "/api/problems": [{ code: "x", path: "tasks/a.md", message: "bad parent" }] });
+test("the wiki counts the notes waiting to be confirmed", async () => {
+  mockApi({ "/api/notes": [note] });
+
+  renderApp(<Wiki />);
+
+  expect(await screen.findByText("1 to verify")).toBeInTheDocument();
+});
+
+test("the menu shows problems in the project files", async () => {
+  mockApi({ "/api/problems": [{ code: "x", path: "tasks/a.md", message: "bad parent" }] });
 
   renderApp(<More />);
 
-  expect(await screen.findByText("1 to verify")).toBeInTheDocument();
   expect(await screen.findByText("tasks/a.md: bad parent")).toBeInTheDocument();
 });
