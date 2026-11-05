@@ -39,7 +39,7 @@ export type WorkItem = {
   easier_after: string[];
 };
 
-export type LogLine = { day: string; label: string; text: string };
+export type LogLine = { day: string; label: string; text: string; task: string | null };
 
 export type Home = {
   last_activity: string | null;
@@ -52,11 +52,22 @@ export type Home = {
   suggestions: WorkItem[];
 };
 
+/** Something the log says happened, and the task it was about. */
+export type RecentStep = {
+  slug: string;
+  title: string;
+  kind: Kind;
+  state: State;
+  label: string;
+  day: string;
+};
+
 export type WhatNow = {
   can_do: WorkItem[];
   order_first: WorkItem[];
   on_its_way: WorkItem[];
   decide_first: WorkItem[];
+  recent: RecentStep[];
 };
 
 export type Proposal = {

@@ -12,9 +12,16 @@ from .store import CURRENT_STATE
 SUGGESTION_COUNT = 3
 RECENT_ENTRY_COUNT = 6
 ARRIVAL_COUNT = 5
+RECENT_STEP_COUNT = 4
 
 _LINK = re.compile(r"\[([^]]*)\]\([^)]*\)")
 _LABEL = re.compile(r"^\*\*([^*]+)\*\*:\s*(.*)$")
+_TASK_LINK = re.compile(r"\[[^]]*\]\(/tasks/([a-z0-9-]+)\.md\)")
+
+# Log entries that record the project being set up, rather than work being done.
+SETUP_LABELS = {"Added", "Layout"}
+# The log says "current state"; on a flow of steps, that is progress.
+_STEP_LABELS = {"Current state": "Progress"}
 
 
 @dataclass
@@ -34,11 +41,24 @@ class WorkItem:
 
 
 @dataclass
+class RecentStep:
+    """Something the log says happened, and the task it was about."""
+
+    slug: str
+    title: str
+    kind: str
+    state: str
+    label: str
+    day: date
+
+
+@dataclass
 class WhatNow:
     can_do: list[WorkItem] = field(default_factory=list)
     order_first: list[WorkItem] = field(default_factory=list)
     on_its_way: list[WorkItem] = field(default_factory=list)
     decide_first: list[WorkItem] = field(default_factory=list)
+    recent: list[RecentStep] = field(default_factory=list)
 
 
 @dataclass
@@ -46,6 +66,7 @@ class LogLine:
     day: date
     label: str
     text: str
+    task: str | None = None
 
 
 @dataclass
@@ -92,7 +113,12 @@ def _rank(item: WorkItem, hours: float | None) -> tuple:
     return (not fits, item.state != "doing", -item.unlocks_hours, item.slug)
 
 
-def what_now(project: Project, hours: float | None = None, helper: bool = True) -> WhatNow:
+def what_now(
+    project: Project,
+    hours: float | None = None,
+    helper: bool = True,
+    log: list[LogDay] | None = None,
+) -> WhatNow:
     """Groups available work. The filters apply to hands-on work, not to ordering or deciding."""
     downstream = downstream_hours(project)
     result = WhatNow()
@@ -108,7 +134,24 @@ def what_now(project: Project, hours: float | None = None, helper: bool = True) 
             result.decide_first.append(item)
     for group in (result.can_do, result.order_first, result.on_its_way, result.decide_first):
         group.sort(key=lambda item: _rank(item, hours))
+    result.recent = recent_steps(project, log or [])
     return result
+
+
+def recent_steps(project: Project, log: list[LogDay], count: int = RECENT_STEP_COUNT) -> list[RecentStep]:
+    """The last few tasks the log mentions, newest first, one step per task."""
+    steps: list[RecentStep] = []
+    seen: set[str] = set()
+    for line in log_lines(log):
+        slug = line.task
+        if not slug or slug in seen or slug not in project.tasks or line.label in SETUP_LABELS:
+            continue
+        seen.add(slug)
+        task = project.tasks[slug]
+        steps.append(RecentStep(slug, task.title, task.kind, task.state, _STEP_LABELS.get(line.label, line.label), line.day))
+        if len(steps) >= count:
+            break
+    return steps
 
 
 def suggestions(project: Project, hours: float | None = None, helper: bool = True) -> list[WorkItem]:
@@ -128,7 +171,9 @@ def log_lines(days: list[LogDay]) -> list[LogLine]:
         for entry in day.entries:
             plain = _LINK.sub(r"\1", entry)
             match = _LABEL.match(plain)
-            lines.append(LogLine(day.day, match[1], match[2]) if match else LogLine(day.day, "", plain))
+            label, text = (match[1], match[2]) if match else ("", plain)
+            task = _TASK_LINK.search(entry)
+            lines.append(LogLine(day.day, label, text, task.group(1) if task else None))
     return lines
 
 

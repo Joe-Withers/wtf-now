@@ -142,7 +142,7 @@ def create_app(
 
     @app.get("/api/what-now")
     def get_what_now(hours: float | None = Query(default=None, gt=0), helper: bool = True) -> Any:
-        return what_now(store.project, hours, helper)
+        return what_now(store.project, hours, helper, store.log())
 
     @app.get("/api/tree")
     def get_tree() -> Any:

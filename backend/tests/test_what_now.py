@@ -2,7 +2,7 @@ from datetime import date
 
 from wtf_now.bundle import LogDay
 from wtf_now.project import build_project
-from wtf_now.what_now import home, log_lines, suggestions, what_now
+from wtf_now.what_now import home, log_lines, recent_steps, suggestions, what_now
 
 from .test_graph import HARD, SOFT
 from .test_project import project_from
@@ -111,6 +111,45 @@ def test_log_lines_strip_links_and_split_labels() -> None:
 
     assert (lines[0].label, lines[0].text) == ("Progress", "Wire board is at 40%")
     assert (lines[1].label, lines[1].text) == ("", "free text")
+    assert lines[0].task == "wire"
+    assert lines[1].task is None
+
+
+def test_recent_steps_are_the_last_tasks_the_log_mentions() -> None:
+    project = project_from({"wire": "state: doing\n", "battery": "kind: purchase\n"})
+    log = [
+        LogDay(
+            date(2026, 11, 4),
+            [
+                "**Ordered**: [Battery](/tasks/battery.md)",
+                "**Progress**: [Wire](/tasks/wire.md) is at 40%",
+                "**Note**: [Prices](/notes/prices.md)",
+            ],
+        ),
+        LogDay(date(2026, 8, 9), ["**Finished**: [Gone](/tasks/gone.md)"]),
+    ]
+
+    steps = recent_steps(project, log)
+
+    assert slugs(steps) == ["battery", "wire"]
+    assert steps[0].label == "Ordered"
+    assert steps[0].title == "battery"
+    assert steps[0].day == date(2026, 11, 4)
+    assert steps[1].state == "doing"
+
+
+def test_recent_steps_only_mention_a_task_once() -> None:
+    project = project_from({"wire": ""})
+    log = [LogDay(date(2026, 11, 4), ["**Progress**: [Wire](/tasks/wire.md) is at 40%", "**Finished**: [Wire](/tasks/wire.md)"])]
+
+    assert slugs(recent_steps(project, log)) == ["wire"]
+
+
+def test_what_now_carries_the_recent_steps() -> None:
+    project = project_from({"wire": ""})
+    log = [LogDay(date(2026, 11, 4), ["**Finished**: [Wire](/tasks/wire.md)"])]
+
+    assert slugs(what_now(project, log=log).recent) == ["wire"]
 
 
 def test_home_summarises_the_position_after_time_away() -> None:

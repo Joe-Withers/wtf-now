@@ -85,7 +85,7 @@ TOOLS = [
     _tool("get_task", "Everything about one task: notes, dependencies, blockers and dependents.", {"slug": SLUG}, ("slug",)),
     _tool(
         "what_now",
-        "Available work, grouped into can do, order first, on its way, and decide first.",
+        "Available work, grouped into can do, order first, on its way, and decide first, with the last few steps already run.",
         {
             "hours": {"type": "number", "description": "Hours available, if the owner said"},
             "helper": {"type": "boolean", "description": "Whether a second person is available"},
@@ -264,7 +264,7 @@ class Tools:
             case "get_task":
                 return _json(views.task_detail(project, args["slug"])), []
             case "what_now":
-                return _json(what_now(project, args.get("hours"), args.get("helper", True))), []
+                return _json(what_now(project, args.get("hours"), args.get("helper", True), self.store.log())), []
             case "search_wiki":
                 return _json(views.search(project, args["query"])), []
             case "read_note":
