@@ -3,7 +3,7 @@ import { createElement, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
 import { getJson, type Layout, type Shape, type Zone } from "../api";
-import { ChatLink, Loading, Pill, ScreenHead } from "../components/ui";
+import { Loading, Pill, ScreenHead } from "../components/ui";
 
 function style(zone: Zone): CSSProperties {
   if (zone.progress === null) return { fill: "var(--surface)" };
@@ -88,7 +88,7 @@ export function FloorPlan() {
 
   return (
     <main className="screen">
-      <ScreenHead title="Floor plan" action={<ChatLink />} />
+      <ScreenHead title="Floor plan" />
       <Loading query={query}>
         {(layouts) =>
           layouts.length === 0 ? (

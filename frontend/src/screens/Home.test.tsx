@@ -44,7 +44,6 @@ test("the dashboard counts what is ready, underway and on order", async () => {
   expect(await screen.findByText("ready now")).toBeInTheDocument();
   expect(screen.getByText("underway")).toBeInTheDocument();
   expect(screen.getByText("on order")).toBeInTheDocument();
-  expect(screen.getByText("Tell it →")).toHaveAttribute("href", "/chat");
 });
 
 test("an empty project points to the chat", async () => {
@@ -54,7 +53,7 @@ test("an empty project points to the chat", async () => {
 
   renderApp(<Home />);
 
-  expect(await screen.findByText("Start talking")).toHaveAttribute("href", "/chat");
+  expect(await screen.findByRole("button", { name: "Start talking" })).toBeInTheDocument();
 });
 
 test("never calls the chat or sessions API", async () => {

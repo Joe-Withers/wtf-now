@@ -116,7 +116,7 @@ test("a recent chat is restored, including decided proposals", async () => {
     },
   });
 
-  renderApp(<Chat />, "/chat?session=s9");
+  renderApp(<Chat session="s9" />);
 
   expect(await screen.findByText("Earlier message")).toBeInTheDocument();
   expect(screen.getByText("Rejected")).toBeInTheDocument();

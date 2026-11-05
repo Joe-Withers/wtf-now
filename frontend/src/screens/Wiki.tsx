@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { getJson, type NoteSummary, type SearchHit } from "../api";
-import { ChatLink, Loading, ScreenHead } from "../components/ui";
+import { Loading, ScreenHead } from "../components/ui";
 
 export function Wiki() {
   const [search, setSearch] = useState("");
@@ -17,7 +17,7 @@ export function Wiki() {
 
   return (
     <main className="screen">
-      <ScreenHead title="Wiki" action={<ChatLink />} />
+      <ScreenHead title="Wiki" />
       <input className="field" type="search" aria-label="Search" placeholder="Search tasks and notes" value={search} onChange={(event) => setSearch(event.target.value)} />
       {term.length > 1 ? (
         <Loading query={hits}>

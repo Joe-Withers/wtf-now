@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 
 import { getJson, type NoteDetail } from "../api";
-import { ChatLink, Loading, ScreenHead, useChange } from "../components/ui";
+import { Loading, ScreenHead, useChange } from "../components/ui";
 import { WikiText } from "../components/WikiText";
 
 function author(by: string): string {
@@ -20,7 +20,7 @@ export function NoteScreen() {
       <Loading query={query}>
         {(note) => (
           <>
-            <ScreenHead title={note.title} action={<ChatLink />} />
+            <ScreenHead title={note.title} />
             <div className="content">
               <section className="section">
                 <div className="meta">

@@ -2,7 +2,7 @@
 
 Work through these in number order; each one lists what it depends on. Tickets 001 to 017 get the app into use at the van, and the rest build on that.
 
-Tickets 001 to 023 are built and merged, and so are 028, which takes the buttons out of the app and leaves the chat to do the writing, and 029, which gives the screens a proper look. Tickets 024 to 027 need something from the owner: a server, their own project, a transcription provider, and an Anthropic key.
+Tickets 001 to 023 are built and merged, and so are 028, which takes the buttons out of the app and leaves the chat to do the writing, 029, which gives the screens a proper look, and 030, which moves the navigation to a rail and the chat into a drawer. Tickets 024 to 027 need something from the owner: a server, their own project, a transcription provider, and an Anthropic key.
 
 | Ticket | Title |
 |---|---|
@@ -35,3 +35,4 @@ Tickets 001 to 023 are built and merged, and so are 028, which takes the buttons
 | [027](027-swap-to-anthropic.md) | Swap to the Anthropic API |
 | [028](028-chat-first-interface.md) | Chat-first interface |
 | [029](029-redesign-the-screens.md) | Redesign the screens |
+| [030](030-rail-and-drawer.md) | A rail and a drawer |

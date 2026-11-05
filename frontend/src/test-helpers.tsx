@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 
+import { ChatProvider } from "./components/ChatShell";
 import { SnackHost } from "./components/ui";
 
 /** Serves canned JSON by path, and records every call. */
@@ -26,7 +27,9 @@ export function renderApp(ui: ReactNode, path = "/") {
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[path]}>
-        <SnackHost>{ui}</SnackHost>
+        <SnackHost>
+          <ChatProvider>{ui}</ChatProvider>
+        </SnackHost>
       </MemoryRouter>
     </QueryClientProvider>,
   );

@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { getJson, type TaskDetail, type TaskRef } from "../api";
+import { useChat } from "../chat-state";
 import { hours, Loading, Pill, ProgressBar } from "../components/ui";
 import { WikiText } from "../components/WikiText";
 
@@ -50,6 +52,13 @@ function Photos({ task }: { task: TaskDetail }) {
 export function TaskScreen() {
   const { slug = "" } = useParams();
   const query = useQuery({ queryKey: ["task", slug], queryFn: () => getJson<TaskDetail>(`/tasks/${slug}`) });
+  const { setFocus } = useChat();
+
+  // The chat is about this task while you're on it.
+  useEffect(() => {
+    setFocus(slug || null);
+    return () => setFocus(null);
+  }, [slug, setFocus]);
 
   return (
     <main className="screen" key={slug}>
@@ -120,12 +129,6 @@ export function TaskScreen() {
 
               <Link className="meta" to={`/graph?task=${task.slug}`}>
                 See what this depends on →
-              </Link>
-            </div>
-
-            <div className="cta-bar">
-              <Link className="button primary" to={`/chat?focus=${task.slug}`}>
-                Tell it what you've done
               </Link>
             </div>
           </>

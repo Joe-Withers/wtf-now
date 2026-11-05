@@ -56,7 +56,7 @@ test("a task shows where it was left and links its notes in the app", async () =
 
   expect(await screen.findByText("Cables in the blue box.")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "the torque note" })).toHaveAttribute("href", "/notes/torque");
-  expect(screen.getByRole("link", { name: /Tell it what you've done/ })).toHaveAttribute("href", "/chat?focus=wire");
+  expect(screen.queryByRole("link", { name: /Tell it/ })).not.toBeInTheDocument();
 });
 
 test("the task screen has no buttons that change the work", async () => {

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { getJson, type Graph, type GraphNode, type TaskDetail } from "../api";
-import { ChatLink, Loading, Pill, ScreenHead } from "../components/ui";
+import { Loading, Pill, ScreenHead } from "../components/ui";
 
 function Blocked({ nodes }: { nodes: GraphNode[] }) {
   const [, setParameters] = useSearchParams();
@@ -110,7 +110,7 @@ export function GraphScreen() {
 
   return (
     <main className="screen">
-      <ScreenHead title="Dependencies" action={<ChatLink />} />
+      <ScreenHead title="Dependencies" />
       {task ? <Focus key={task} slug={task} /> : <Loading query={graph}>{(data) => <Blocked nodes={data.nodes} />}</Loading>}
     </main>
   );

@@ -22,11 +22,11 @@ test("a purchase speaks in ordering language", () => {
   expect(screen.getByText("On order")).toBeInTheDocument();
 });
 
-test("a screen header carries the title and the one thing to do next", () => {
+test("a screen header carries the title and whatever you can do there", () => {
   render(
-    <ScreenHead title={<Wordmark />} action={<a href="/chat">Tell it →</a>} />,
+    <ScreenHead title={<Wordmark />} action={<a href="/log">Log</a>} />,
   );
 
   expect(screen.getByRole("heading")).toHaveTextContent("wtf-now");
-  expect(screen.getByRole("link", { name: "Tell it →" })).toHaveAttribute("href", "/chat");
+  expect(screen.getByRole("link", { name: "Log" })).toHaveAttribute("href", "/log");
 });

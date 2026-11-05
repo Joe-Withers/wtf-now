@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import {
   getJson,
@@ -167,7 +167,7 @@ function VoiceButton({ onText }: { onText: (text: string) => void }) {
   );
 }
 
-function Recent({ onPrompt }: { onPrompt: (text: string) => void }) {
+function Recent({ onPrompt, onSession }: { onPrompt: (text: string) => void; onSession: (id: string) => void }) {
   const query = useQuery({ queryKey: ["sessions"], queryFn: () => getJson<SessionSummary[]>("/sessions") });
   const started = query.data?.filter((session) => session.title) ?? [];
 
@@ -188,9 +188,9 @@ function Recent({ onPrompt }: { onPrompt: (text: string) => void }) {
           <h2>Recent chats</h2>
           <div className="card-stack">
             {started.map((session) => (
-              <Link key={session.id} className="card" to={`/chat?session=${session.id}`}>
+              <button key={session.id} className="card" onClick={() => onSession(session.id)}>
                 {session.title}
-              </Link>
+              </button>
             ))}
           </div>
         </section>
@@ -199,18 +199,33 @@ function Recent({ onPrompt }: { onPrompt: (text: string) => void }) {
   );
 }
 
-export function Chat() {
-  const [parameters] = useSearchParams();
-  const navigate = useNavigate();
+export function Chat({
+  focus = null,
+  session = null,
+  onSession,
+  onClose,
+}: {
+  focus?: string | null;
+  session?: string | null;
+  onSession?: (id: string | null) => void;
+  onClose?: () => void;
+}) {
   const client = useQueryClient();
-  const sessionId = parameters.get("session");
   const features = useQuery({ queryKey: ["features"], queryFn: () => getJson<Features>("/features") });
-  const focus = parameters.get("focus");
   const focused = useQuery({
     queryKey: ["task", focus],
     queryFn: () => getJson<TaskDetail>(`/tasks/${focus}`),
     enabled: Boolean(focus),
   });
+
+  // The drawer keeps the conversation; on its own, the page keeps it in the URL.
+  const controlled = onSession !== undefined;
+  const [own, setOwn] = useState<string | null>(null);
+  const sessionId = controlled ? session : (session ?? own);
+  const choose = (id: string | null) => {
+    setOwn(id);
+    onSession?.(id);
+  };
 
   const [items, setItems] = useState<ChatItem[]>([]);
   const [draft, setDraft] = useState("");
@@ -228,8 +243,8 @@ export function Chat() {
     }
     getJson<Session>(`/sessions/${sessionId}`)
       .then((session) => setItems(session.display))
-      .catch(() => navigate("/chat", { replace: true }));
-  }, [sessionId, navigate]);
+      .catch(() => choose(null));
+  }, [sessionId]);
 
   useEffect(() => {
     if (log.current) log.current.scrollTop = log.current.scrollHeight;
@@ -276,7 +291,7 @@ export function Chat() {
       if (!id) {
         const session = await postJson<Session>("/sessions", { focus });
         id = session.id;
-        navigate(`/chat?session=${id}`, { replace: true });
+        choose(id);
       }
       await streamMessage(id, text, keys, apply);
     } catch (error) {
@@ -290,7 +305,7 @@ export function Chat() {
   };
 
   return (
-    <main className="chat">
+    <div className="chat">
       <div className="chat-head">
         {focused.data ? (
           <Link className="chat-focus" to={`/tasks/${focused.data.slug}`}>
@@ -299,9 +314,16 @@ export function Chat() {
         ) : (
           <span className="meta">Chat</span>
         )}
+        {onClose && (
+          <button className="button icon-button" onClick={onClose} aria-label="Close the chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        )}
       </div>
       <div className="chat-log" ref={log}>
-        {items.length === 0 && !busy && <Recent onPrompt={setDraft} />}
+        {items.length === 0 && !busy && <Recent onPrompt={setDraft} onSession={choose} />}
         {items.map((item, index) => (
           <Item key={item.type === "proposal" || item.type === "change" ? item.id : index} item={item} />
         ))}
@@ -359,6 +381,29 @@ export function Chat() {
           Send
         </button>
       </form>
+    </div>
+  );
+}
+
+/** The chat on its own, for a link someone has bookmarked. */
+export function ChatPage() {
+  const [parameters, setParameters] = useSearchParams();
+  const session = parameters.get("session");
+  const focus = parameters.get("focus");
+
+  return (
+    <main className="screen chat-page">
+      <header className="screen-head">
+        <h1>Chat</h1>
+        <Link className="head-action" to="/">
+          Close
+        </Link>
+      </header>
+      <Chat
+        focus={focus}
+        session={session}
+        onSession={(id) => setParameters(id ? { session: id } : {})}
+      />
     </main>
   );
 }

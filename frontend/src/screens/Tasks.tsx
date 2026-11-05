@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { getJson, type TreeNode } from "../api";
-import { ChatLink, Loading, ProgressBar, ScreenHead } from "../components/ui";
+import { Loading, ProgressBar, ScreenHead } from "../components/ui";
 
 // Kept outside the component so the tree stays open after visiting a task.
 const opened = new Set<string>();
@@ -52,7 +52,7 @@ export function Tasks() {
 
   return (
     <main className="screen">
-      <ScreenHead title="Tasks" action={<ChatLink />} />
+      <ScreenHead title="Tasks" />
       <Loading query={query}>
         {(tree) =>
           tree.length === 0 ? (

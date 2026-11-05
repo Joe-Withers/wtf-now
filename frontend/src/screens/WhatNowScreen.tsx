@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { getJson, type WhatNow, type WorkItem } from "../api";
-import { ChatLink, Loading, ScreenHead } from "../components/ui";
+import { Loading, ScreenHead } from "../components/ui";
 import { WorkCard } from "../components/WorkCard";
 
 const TIMES: { label: string; hours: number | null }[] = [
@@ -41,7 +41,7 @@ export function WhatNowScreen() {
 
   return (
     <main className="screen">
-      <ScreenHead title="What now?" action={<ChatLink />} />
+      <ScreenHead title="What now?" />
       <div className="content">
         <section className="section" aria-label="Filters">
           <div className="scroll-row">

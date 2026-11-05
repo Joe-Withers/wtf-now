@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { Layout } from "./components/Layout";
-import { Chat } from "./screens/Chat";
+import { ChatPage } from "./screens/Chat";
 import { FloorPlan } from "./screens/FloorPlan";
 import { GraphScreen } from "./screens/GraphScreen";
 import { Home } from "./screens/Home";
@@ -27,7 +27,7 @@ export function App() {
           <Route element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="what-now" element={<WhatNowScreen />} />
-            <Route path="chat" element={<Chat />} />
+            <Route path="chat" element={<ChatPage />} />
             <Route path="tasks" element={<Tasks />} />
             <Route path="tasks/:slug" element={<TaskScreen />} />
             <Route path="more" element={<More />} />

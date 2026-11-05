@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 
 import { postJson, type ChangeResult, type Kind, type State } from "../api";
 
@@ -19,15 +18,6 @@ export function ScreenHead({ title, action }: { title: ReactNode; action?: React
       <h1>{title}</h1>
       {action}
     </header>
-  );
-}
-
-/** The way into the chat, from wherever you noticed something. */
-export function ChatLink({ to = "/chat", children = "Tell it →" }: { to?: string; children?: ReactNode }) {
-  return (
-    <Link className="head-action" to={to}>
-      {children}
-    </Link>
   );
 }
 

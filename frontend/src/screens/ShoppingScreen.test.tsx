@@ -48,10 +48,11 @@ test("nothing on the shopping list changes a task — the chat does that", async
   expect(calls.every((call) => call.init?.method !== "POST")).toBe(true);
 });
 
-test("the shopping list sends you to the chat to report an order or an arrival", async () => {
+test("the shopping list leaves the chat to the chat button", async () => {
   mockApi({ "/api/shopping": shopping });
 
   renderApp(<ShoppingScreen />);
 
-  expect(await screen.findByRole("link", { name: /Tell it/ })).toHaveAttribute("href", "/chat");
+  await screen.findByText("£80");
+  expect(screen.queryByRole("link", { name: /Tell it/ })).not.toBeInTheDocument();
 });

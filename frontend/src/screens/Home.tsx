@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { getJson, type Home as HomeData, type LogLine } from "../api";
-import { ChatLink, Loading, ProgressBar, ScreenHead, Wordmark } from "../components/ui";
+import { useChat } from "../chat-state";
+import { Loading, ProgressBar, ScreenHead, Wordmark } from "../components/ui";
 import { WorkCard } from "../components/WorkCard";
 
 function away(days: number | null): string {
@@ -26,10 +27,11 @@ function Lines({ lines }: { lines: LogLine[] }) {
 
 export function Home() {
   const query = useQuery({ queryKey: ["home"], queryFn: () => getJson<HomeData>("/home") });
+  const { openChat } = useChat();
 
   return (
     <main className="screen">
-      <ScreenHead title={<Wordmark />} action={<ChatLink />} />
+      <ScreenHead title={<Wordmark />} />
       <Loading query={query}>
         {(home) => {
           if (home.last_activity === null) {
@@ -38,9 +40,9 @@ export function Home() {
                 <section className="section">
                   <p className="lede">Nothing here yet</p>
                   <p className="meta">Tell the AI about your project, and it'll build the plan with you.</p>
-                  <Link to="/chat" className="button primary" style={{ textAlign: "center", lineHeight: "22px" }}>
+                  <button className="button primary" style={{ width: "100%" }} onClick={() => openChat()}>
                     Start talking
-                  </Link>
+                  </button>
                 </section>
               </div>
             );
