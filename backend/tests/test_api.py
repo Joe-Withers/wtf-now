@@ -366,6 +366,7 @@ def test_layouts_join_geometry_and_progress(client: TestClient) -> None:
     assert zones["rear"]["shape"]["tag"] == "rect"
     assert len(zones["rear"]["tasks"]) == 2
     assert zones["empty"]["progress"] is None
+    assert [shape["id"] for shape in layout["shapes"]] == ["rear", "empty"]
 
 
 def test_svg_scripts_and_events_are_never_passed_on(client: TestClient) -> None:
@@ -378,7 +379,7 @@ def test_svg_scripts_and_events_are_never_passed_on(client: TestClient) -> None:
     [layout] = client.get("/api/layouts").json()
     shape = next(zone for zone in layout["zones"] if zone["id"] == "rear")["shape"]
 
-    assert shape == {"tag": "rect", "attributes": {"width": "5", "height": "5"}}
+    assert shape == {"id": "rear", "tag": "rect", "attributes": {"width": "5", "height": "5"}}
 
 
 def test_broken_svg_still_lists_zones(client: TestClient) -> None:

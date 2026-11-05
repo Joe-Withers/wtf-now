@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { Layout } from "./components/Layout";
 import { Chat } from "./screens/Chat";
+import { FloorPlan } from "./screens/FloorPlan";
 import { Home } from "./screens/Home";
 import { LogScreen } from "./screens/LogScreen";
 import { More } from "./screens/More";
@@ -34,7 +35,7 @@ export function App() {
             <Route path="notes/:slug" element={<NoteScreen />} />
             <Route path="log" element={<LogScreen />} />
             <Route path="shopping" element={<ShoppingScreen />} />
-            <Route path="floor-plan" element={<Placeholder title="Floor plan" />} />
+            <Route path="floor-plan" element={<FloorPlan />} />
             <Route path="graph" element={<Placeholder title="Dependency graph" />} />
           </Route>
         </Routes>

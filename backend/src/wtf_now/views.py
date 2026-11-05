@@ -354,12 +354,19 @@ SHAPE_ATTRIBUTES = {"x", "y", "width", "height", "rx", "ry", "cx", "cy", "r", "d
 
 
 @dataclass
+class ShapeView:
+    id: str
+    tag: str
+    attributes: dict[str, str]
+
+
+@dataclass
 class ZoneView:
     id: str
     title: str
     progress: float | None
     tasks: list[TaskRef]
-    shape: dict[str, Any] | None
+    shape: ShapeView | None
 
 
 @dataclass
@@ -368,20 +375,22 @@ class LayoutView:
     title: str
     view_box: str
     zones: list[ZoneView]
+    shapes: list[ShapeView]
 
 
-def _svg_shapes(path: Path) -> tuple[str, dict[str, dict[str, Any]]]:
+def _svg_shapes(path: Path) -> tuple[str, list[ShapeView]]:
     """Reads only geometry from an SVG, so a file can't put scripts in the page."""
     try:
         root = ElementTree.fromstring(path.read_text(encoding="utf-8"))
     except (OSError, ElementTree.ParseError):
-        return "", {}
-    shapes = {}
+        return "", []
+    shapes = []
     for element in root.iter():
         tag = element.tag.rsplit("}", 1)[-1]
-        if tag in SHAPES and element.get("id"):
-            attributes = {key: value for key, value in element.attrib.items() if key in SHAPE_ATTRIBUTES}
-            shapes[element.attrib["id"]] = {"tag": tag, "attributes": attributes}
+        if tag not in SHAPES:
+            continue
+        attributes = {key: value for key, value in element.attrib.items() if key in SHAPE_ATTRIBUTES}
+        shapes.append(ShapeView(element.get("id", ""), tag, attributes))
     return root.get("viewBox", ""), shapes
 
 
@@ -397,6 +406,7 @@ def layouts(project: Project, root: Path) -> list[LayoutView]:
     for slug, concept in sorted(project.layouts.items()):
         image = str(concept.frontmatter.get("image", f"{slug}.svg"))
         view_box, shapes = _svg_shapes(root / "layouts" / Path(image).name)
+        by_id = {shape.id: shape for shape in shapes if shape.id}
         zones = []
         for entry in concept.frontmatter.get("zones") or []:
             if not isinstance(entry, dict) or not entry.get("id"):
@@ -409,8 +419,8 @@ def layouts(project: Project, root: Path) -> list[LayoutView]:
                     title=str(entry.get("title", zone_id)),
                     progress=_zone_progress(project, leaves),
                     tasks=[_ref(project, leaf) for leaf in leaves],
-                    shape=shapes.get(zone_id),
+                    shape=by_id.get(zone_id),
                 )
             )
-        views.append(LayoutView(slug, str(concept.frontmatter.get("title", slug)), view_box, zones))
+        views.append(LayoutView(slug, str(concept.frontmatter.get("title", slug)), view_box, zones, shapes))
     return views

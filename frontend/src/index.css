@@ -157,3 +157,11 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .pending-photo button { background: none; border: 0; color: var(--now); font-weight: 700; padding: 8px; }
 
 .icon-button.recording { background: var(--danger); border-color: var(--danger); color: var(--on-now); }
+
+.plan { width: 100%; height: auto; display: block; }
+.plan .zone { stroke: var(--line); stroke-width: 2; cursor: pointer; transition: fill 200ms ease; }
+.plan .zone.selected { stroke: var(--text); stroke-width: 3; }
+.plan .outline { fill: none; stroke: var(--line); stroke-width: 2; }
+.plan text { font: 600 13px var(--body); pointer-events: none; }
+.zone-list button { display: flex; justify-content: space-between; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 13px 0; text-align: left; }
+.zone-list button[aria-pressed="true"] { color: var(--now); font-weight: 600; }

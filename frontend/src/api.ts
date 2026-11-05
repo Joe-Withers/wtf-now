@@ -220,3 +220,17 @@ export async function transcribe(audio: Blob): Promise<string> {
   }
   return (await response.json()).text;
 }
+
+export type Shape = {
+  id: string;
+  tag: "rect" | "path" | "polygon" | "circle" | "ellipse";
+  attributes: Record<string, string>;
+};
+export type Zone = {
+  id: string;
+  title: string;
+  progress: number | null;
+  tasks: TaskRef[];
+  shape: Shape | null;
+};
+export type Layout = { slug: string; title: string; view_box: string; zones: Zone[]; shapes: Shape[] };
