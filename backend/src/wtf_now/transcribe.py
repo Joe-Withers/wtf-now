@@ -2,7 +2,7 @@
 
 import os
 
-import httpx
+import httpx2 as httpx
 
 from .config import load_env
 
