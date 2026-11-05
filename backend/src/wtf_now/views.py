@@ -257,3 +257,48 @@ def dependency_graph(project: Project) -> dict[str, list[dict[str, Any]]]:
     return {"nodes": nodes, "edges": edges}
 
 
+@dataclass
+class ShoppingItem:
+    slug: str
+    title: str
+    area: str | None
+    cost: float | None
+    blocked_by: list[TaskRef]
+
+
+@dataclass
+class Shopping:
+    to_order: list[ShoppingItem]
+    on_order: list[ShoppingItem]
+    arrived: list[ShoppingItem]
+    still_to_spend: float
+    spent: float
+    unpriced: int
+
+
+def shopping(project: Project) -> Shopping:
+    groups: dict[str, list[ShoppingItem]] = {"todo": [], "doing": [], "done": []}
+    for slug in sorted(project.all_leaves()):
+        task = project.tasks[slug]
+        if task.kind != "purchase":
+            continue
+        ancestors = list(project.ancestors(slug))
+        groups[task.state].append(
+            ShoppingItem(
+                slug=slug,
+                title=task.title,
+                area=project.tasks[ancestors[-1]].title if ancestors else None,
+                cost=task.cost,
+                blocked_by=[_ref(project, target) for target in blockers(project, slug)] if task.state == "todo" else [],
+            )
+        )
+    groups["todo"].sort(key=lambda item: bool(item.blocked_by))
+    unfinished = groups["todo"] + groups["doing"]
+    return Shopping(
+        to_order=groups["todo"],
+        on_order=groups["doing"],
+        arrived=groups["done"],
+        still_to_spend=sum(item.cost or 0 for item in unfinished),
+        spent=sum(item.cost or 0 for item in groups["done"]),
+        unpriced=sum(1 for item in unfinished if item.cost is None),
+    )

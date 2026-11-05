@@ -199,6 +199,34 @@ def test_writes_go_to_the_files(client: TestClient) -> None:
     assert (store.root / f"tasks/{slug}.md").exists()
 
 
+def test_shopping_groups_purchases_and_totals_costs(client: TestClient) -> None:
+    decide = new_task(client, "Choose", kind="decision")
+    new_task(client, "Blocked item", kind="purchase", cost=100, depends_on=[{"task": decide}])
+    free = new_task(client, "Free item", kind="purchase", cost=40)
+    coming = new_task(client, "Coming", kind="purchase")
+    arrived = new_task(client, "Arrived", kind="purchase", cost=25)
+    new_task(client, "Not a purchase")
+    client.post(f"/api/tasks/{coming}/state", json={"state": "doing"})
+    client.post(f"/api/tasks/{arrived}/state", json={"state": "done"})
+
+    shopping = client.get("/api/shopping").json()
+
+    assert [item["slug"] for item in shopping["to_order"]] == [free, "blocked-item"]
+    assert shopping["to_order"][1]["blocked_by"][0]["slug"] == decide
+    assert [item["slug"] for item in shopping["on_order"]] == [coming]
+    assert (shopping["still_to_spend"], shopping["spent"], shopping["unpriced"]) == (140, 25, 1)
+
+
+def test_arrival_unblocks_what_now(client: TestClient) -> None:
+    part = new_task(client, "Part", kind="purchase")
+    new_task(client, "Fit part", depends_on=[{"task": part}])
+    assert client.get("/api/what-now").json()["can_do"] == []
+
+    client.post(f"/api/tasks/{part}/state", json={"state": "done"})
+
+    assert [item["title"] for item in client.get("/api/what-now").json()["can_do"]] == ["Fit part"]
+
+
 def test_chat_routes_say_when_the_ai_is_not_configured(client: TestClient) -> None:
     assert client.post("/api/sessions", json={}).status_code == 503
 

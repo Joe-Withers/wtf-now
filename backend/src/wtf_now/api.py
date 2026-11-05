@@ -139,6 +139,10 @@ def create_app(
     def get_graph() -> Any:
         return views.dependency_graph(store.project)
 
+    @app.get("/api/shopping")
+    def get_shopping() -> Any:
+        return views.shopping(store.project)
+
     @app.get("/api/problems")
     def get_problems() -> Any:
         return store.project.problems

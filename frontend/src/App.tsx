@@ -8,6 +8,7 @@ import { LogScreen } from "./screens/LogScreen";
 import { More } from "./screens/More";
 import { NoteScreen } from "./screens/NoteScreen";
 import { Placeholder } from "./screens/Placeholder";
+import { ShoppingScreen } from "./screens/ShoppingScreen";
 import { TaskScreen } from "./screens/TaskScreen";
 import { Tasks } from "./screens/Tasks";
 import { WhatNowScreen } from "./screens/WhatNowScreen";
@@ -32,7 +33,7 @@ export function App() {
             <Route path="wiki" element={<Wiki />} />
             <Route path="notes/:slug" element={<NoteScreen />} />
             <Route path="log" element={<LogScreen />} />
-            <Route path="shopping" element={<Placeholder title="Shopping" />} />
+            <Route path="shopping" element={<ShoppingScreen />} />
             <Route path="floor-plan" element={<Placeholder title="Floor plan" />} />
             <Route path="graph" element={<Placeholder title="Dependency graph" />} />
           </Route>
