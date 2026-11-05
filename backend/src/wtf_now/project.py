@@ -13,7 +13,7 @@ from .bundle import Concept, ConceptError
 
 TASK_DIR = "tasks/"
 NOTE_DIR = "notes/"
-LAYOUT_DIR = "layouts/"
+DRAWINGS_DIR = "layouts/"  # the bundle keeps its directory: concept ids are file paths
 KINDS = ("build", "purchase", "research", "decision")
 STATES = ("todo", "doing", "done")
 STRENGTHS = ("hard", "soft")
@@ -84,14 +84,14 @@ class Project:
     children: dict[str, list[str]] = field(default_factory=dict)
     roots: list[str] = field(default_factory=list)
     notes: dict[str, Concept] = field(default_factory=dict)
-    layouts: dict[str, Concept] = field(default_factory=dict)
+    drawings: dict[str, Concept] = field(default_factory=dict)
     problems: list[Problem] = field(default_factory=list)
 
     def zones(self) -> dict[str, str]:
-        """Zone titles by id, across all layouts."""
+        """Zone titles by id, across all drawings."""
         found: dict[str, str] = {}
-        for layout in self.layouts.values():
-            for zone in layout.frontmatter.get("zones") or []:
+        for drawing in self.drawings.values():
+            for zone in drawing.frontmatter.get("zones") or []:
                 if isinstance(zone, dict) and zone.get("id"):
                     found[str(zone["id"])] = str(zone.get("title", zone["id"]))
         return found
@@ -247,7 +247,7 @@ def _check_zones(project: Project) -> None:
     for task in project.tasks.values():
         for key, zone in (("zone", task.zone), ("closes_zone", task.closes_zone)):
             if zone is not None and zone not in known:
-                project.problems.append(Problem("unknown-zone", task.path, f"{key} {zone!r} isn't in any layout"))
+                project.problems.append(Problem("unknown-zone", task.path, f"{key} {zone!r} isn't in any drawing"))
 
 
 def effective_dependencies(project: Project, leaf: str) -> list[Dependency]:
@@ -292,8 +292,8 @@ def build_project(concepts: Iterable[Concept], errors: Iterable[ConceptError] = 
             project.tasks[concept.slug] = _task_from_concept(concept, project.problems)
         elif concept.path.startswith(NOTE_DIR):
             project.notes[concept.slug] = concept
-        elif concept.path.startswith(LAYOUT_DIR):
-            project.layouts[concept.slug] = concept
+        elif concept.path.startswith(DRAWINGS_DIR):
+            project.drawings[concept.slug] = concept
 
     _link_tree(project)
     _check_parents(project)

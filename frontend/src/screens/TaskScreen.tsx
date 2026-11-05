@@ -5,7 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import { getJson, type TaskDetail, type TaskRef } from "../api";
 import { useChat } from "../chat-state";
 import { hours, Loading, Pill, ProgressBar } from "../components/ui";
-import { WikiText } from "../components/WikiText";
+import { Markdown } from "../components/Markdown";
 
 function Refs({ title, items }: { title: string; items: TaskRef[] }) {
   if (items.length === 0) return null;
@@ -123,7 +123,7 @@ export function TaskScreen() {
               {task.notes && (
                 <section className="section">
                   <h2>Notes</h2>
-                  <WikiText text={task.notes} />
+                  <Markdown text={task.notes} />
                 </section>
               )}
 

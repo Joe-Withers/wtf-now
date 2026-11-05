@@ -317,7 +317,7 @@ def plan(client: TestClient) -> Store:
     store.apply(
         [
             Op(
-                "write_layout",
+                "write_drawing",
                 {
                     "title": "Plan",
                     "slug": "plan",
@@ -363,21 +363,21 @@ def test_zone_is_inherited_from_a_parent(client: TestClient) -> None:
     assert [ref["slug"] for ref in client.get(f"/api/tasks/{closing}").json()["preflight"]] == [child]
 
 
-def test_layouts_join_geometry_and_progress(client: TestClient) -> None:
+def test_drawings_join_geometry_and_progress(client: TestClient) -> None:
     plan(client)
     done = new_task(client, "Big", zone="rear", effort_hours=3)
     new_task(client, "Small", zone="rear", effort_hours=1)
     client.post(f"/api/tasks/{done}/state", json={"state": "done"})
 
-    [layout] = client.get("/api/layouts").json()
-    zones = {zone["id"]: zone for zone in layout["zones"]}
+    [drawing] = client.get("/api/drawings").json()
+    zones = {zone["id"]: zone for zone in drawing["zones"]}
 
-    assert layout["view_box"] == "0 0 100 80"
+    assert drawing["view_box"] == "0 0 100 80"
     assert zones["rear"]["progress"] == 75
     assert zones["rear"]["shape"]["tag"] == "rect"
     assert len(zones["rear"]["tasks"]) == 2
     assert zones["empty"]["progress"] is None
-    assert [shape["id"] for shape in layout["shapes"]] == ["rear", "empty"]
+    assert [shape["id"] for shape in drawing["shapes"]] == ["rear", "empty"]
 
 
 def test_svg_scripts_and_events_are_never_passed_on(client: TestClient) -> None:
@@ -387,8 +387,8 @@ def test_svg_scripts_and_events_are_never_passed_on(client: TestClient) -> None:
         '<rect id="rear" width="5" height="5" onclick="alert(1)" style="x"/></svg>'
     )
 
-    [layout] = client.get("/api/layouts").json()
-    shape = next(zone for zone in layout["zones"] if zone["id"] == "rear")["shape"]
+    [drawing] = client.get("/api/drawings").json()
+    shape = next(zone for zone in drawing["zones"] if zone["id"] == "rear")["shape"]
 
     assert shape == {"id": "rear", "tag": "rect", "attributes": {"width": "5", "height": "5"}}
 
@@ -397,6 +397,6 @@ def test_broken_svg_still_lists_zones(client: TestClient) -> None:
     store = plan(client)
     (store.root / "layouts" / "plan.svg").write_text("not xml")
 
-    [layout] = client.get("/api/layouts").json()
+    [drawing] = client.get("/api/drawings").json()
 
-    assert [zone["shape"] for zone in layout["zones"]] == [None, None]
+    assert [zone["shape"] for zone in drawing["zones"]] == [None, None]

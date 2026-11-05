@@ -13,7 +13,7 @@ const LINKS = [
   { to: "/", label: "Plan", icon: "M6 5h4v4H6zM14 15h4v4h-4zM6 15h4v4H6zM8 9v6h6" },
   { to: "/what-now", label: "What now", icon: "M4 12h15M13 6l6 6-6 6" },
   { to: "/shopping", label: "Shopping", icon: "M3 4h2l2.5 11h10L20 7H6M9 20h.01M17 20h.01" },
-  { to: "/wiki", label: "Wiki", icon: "M14 3H6v18h12V7zM14 3v4h4M9 13h6M9 17h4" },
+  { to: "/docs", label: "Docs", icon: "M4 5h16v11H4zM4 16l4-4 4 4 3-3 5 5M9 9h.01" },
   { to: "/log", label: "Log", icon: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2" },
   { to: "/more", label: "More", icon: "M5 12h.01M12 12h.01M19 12h.01" },
 ];

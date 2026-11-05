@@ -24,7 +24,7 @@ Everything here is decided unless it's marked **Default** (a choice made on the 
 
 ## 3. Product
 
-A mobile-first web app, installable as a PWA, with an AI chat built in. You talk to it about the project, and it maintains the tasks and wiki. The screens show you the state of things; the chat is where the work gets recorded.
+A mobile-first web app, installable as a PWA, with an AI chat built in. You talk to it about the project, and it maintains the tasks and the docs. The screens show you the state of things; the chat is where the work gets recorded.
 
 ### 3.1 Screens
 
@@ -35,9 +35,9 @@ A mobile-first web app, installable as a PWA, with an AI chat built in. You talk
 | **Chat** | Conversation with the AI, with approve/reject cards for structural changes. It comes out of the side (§3.3). |
 | **Task detail** | Current state, notes, dependencies, photos, and a way into the chat with that task in focus. |
 | **Shopping** | Purchases to order, on order and arrived, with running cost. |
-| **Floor plan** | Zones coloured by progress. |
+| **Docs** | The project's documentation: the drawings and the notes, with one search over both. |
+| **Drawing** | One drawing full size: its zones coloured by progress, and the tasks in each zone. |
 | **Dependency graph** | The task graph. |
-| **Wiki** | Browse and search notes. |
 | **Log** | Project history, newest first. |
 
 ### 3.2 The screens read, the chat writes
@@ -84,6 +84,8 @@ Project data is an Open Knowledge Format (OKF) v0.2 bundle: a directory of markd
 ```
 
 Photos don't go in the bundle or in git. They're stored in S3-compatible object storage, and notes and tasks reference them by key.
+
+The app calls what's in `layouts/` a drawing, and `notes/` and `layouts/` together the docs. The directories keep their names because a concept's id is its file path, so files must not move.
 
 Facts about OKF that shape this design:
 
@@ -133,7 +135,7 @@ Torque settings are in [the battery manual notes](/notes/battery-manual.md).
 | `progress` | leaves | 0–100, an AI estimate. `done` implies 100, `todo` implies 0. |
 | `progress_reason` | leaves | Why the estimate is what it is. |
 | `effort_hours` | leaves | Rough AI estimate. Drives roll-ups and the time filter. |
-| `zone` | optional | A zone id from a Layout. |
+| `zone` | optional | A zone id from a drawing. |
 | `closes_zone` | optional | A zone id this task makes inaccessible (§5.4). |
 | `needs_helper` | leaves, optional | Needs a second person. |
 | `cost` | purchases, optional | Expected or actual cost. |
@@ -145,9 +147,12 @@ A task with children is a parent. Parents don't store `state`, `progress` or `ef
 
 There are no separate state lists. A multi-step task is simply a task with children, so dependencies can attach to the exact step they block.
 
-### 4.3 Wiki
+### 4.3 Docs
 
-- Everything worth remembering goes in the wiki, written as it comes up and never saved for the end of a session.
+The docs are the project's memory: the notes and the drawings. The app calls the whole thing Docs; the bundle keeps its directories, because a concept's id is its file path and files must not move.
+
+- Everything worth remembering goes in a note, written as it comes up and never saved for the end of a session.
+- A drawing is a set of named zones with an SVG alongside it. The AI draws them from rectangles when the owner describes a shape; zones carry the progress of the work inside them, and a task can close a zone off.
 - Each task page keeps a `## Current state` section, rewritten as things change, so where you left off is always in a predictable place.
 - `log.md` is the history. Every progress change appends an entry.
 - `notes/inventory.md` records tools and stock on hand. The AI uses it to judge whether you have what a task needs.
@@ -219,7 +224,7 @@ Claude subscription tokens are not a supported credential; use an API key. See t
 | Tool | Effect |
 |---|---|
 | `query_tasks`, `get_task`, `what_now` | Read |
-| `search_wiki`, `read_note`, `read_log` | Read |
+| `search_docs`, `read_note`, `list_notes`, `list_drawings`, `read_log` | Read |
 | `set_progress` | Applies directly; logs and commits |
 | `set_state` | Applies directly; logs and commits |
 | `update_current_state` | Applies directly; commits |
@@ -237,7 +242,7 @@ The one exception is onboarding. While the bundle is empty, the first interview 
 ### 6.3 Sessions
 
 - Each session starts with assembled context: project summary, recent log, in-progress tasks, and the task in focus with its neighbours and linked notes.
-- The wiki is the memory, so nothing has to survive from one chat to the next.
+- The docs are the memory, so nothing has to survive from one chat to the next.
 - Transcripts are stored outside the bundle so a recent chat can be resumed. **Default:** kept for 30 days.
 
 ---

@@ -16,7 +16,7 @@ from .graph import (
     soft_warnings,
     transitive_dependents,
 )
-from .project import Dependency, Project
+from .project import DRAWINGS_DIR, Dependency, Project
 from .store import CURRENT_STATE
 
 UNVERIFIED_BY_DEFAULT = "Measurement"
@@ -280,6 +280,9 @@ def search(project: Project, query: str) -> list[SearchHit]:
     for concept in project.notes.values():
         data = concept.frontmatter
         consider("note", concept.slug, str(data.get("title", concept.slug)), str(data.get("description", "")), concept.body)
+    for concept in project.drawings.values():
+        data = concept.frontmatter
+        consider("drawing", concept.slug, str(data.get("title", concept.slug)), str(data.get("description", "")), concept.body)
     return hits[:SEARCH_LIMIT]
 
 
@@ -380,12 +383,33 @@ class ZoneView:
 
 
 @dataclass
-class LayoutView:
+class DrawingView:
     slug: str
     title: str
     view_box: str
     zones: list[ZoneView]
     shapes: list[ShapeView]
+
+
+@dataclass
+class DrawingZones:
+    """A drawing and the zones in it, so the AI can put tasks in the right place."""
+
+    slug: str
+    title: str
+    zones: list[str]
+
+
+def drawing_zones(project: Project) -> list[DrawingZones]:
+    out = []
+    for slug, concept in sorted(project.drawings.items()):
+        zones = [
+            str(entry["id"])
+            for entry in concept.frontmatter.get("zones") or []
+            if isinstance(entry, dict) and entry.get("id")
+        ]
+        out.append(DrawingZones(slug, str(concept.frontmatter.get("title", slug)), zones))
+    return out
 
 
 def _svg_shapes(path: Path) -> tuple[str, list[ShapeView]]:
@@ -411,11 +435,11 @@ def _zone_progress(project: Project, leaves: list[str]) -> float | None:
     return sum(project.tasks[leaf].effort_hours * project.tasks[leaf].progress for leaf in leaves) / total
 
 
-def layouts(project: Project, root: Path) -> list[LayoutView]:
+def drawings(project: Project, root: Path) -> list[DrawingView]:
     views = []
-    for slug, concept in sorted(project.layouts.items()):
+    for slug, concept in sorted(project.drawings.items()):
         image = str(concept.frontmatter.get("image", f"{slug}.svg"))
-        view_box, shapes = _svg_shapes(root / "layouts" / Path(image).name)
+        view_box, shapes = _svg_shapes(root / DRAWINGS_DIR / Path(image).name)
         by_id = {shape.id: shape for shape in shapes if shape.id}
         zones = []
         for entry in concept.frontmatter.get("zones") or []:
@@ -432,5 +456,5 @@ def layouts(project: Project, root: Path) -> list[LayoutView]:
                     shape=by_id.get(zone_id),
                 )
             )
-        views.append(LayoutView(slug, str(concept.frontmatter.get("title", slug)), view_box, zones, shapes))
+        views.append(DrawingView(slug, str(concept.frontmatter.get("title", slug)), view_box, zones, shapes))
     return views

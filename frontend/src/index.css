@@ -274,6 +274,12 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .zone-list button { display: flex; justify-content: space-between; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 13px 0; text-align: left; }
 .zone-list button[aria-pressed="true"] { color: var(--now); font-weight: 600; }
 
+/* A drawing at a glance: a thumbnail of the shape of it. */
+.drawing-card { display: flex; flex-direction: column; gap: 10px; }
+.drawing-preview { display: block; width: 100%; height: auto; max-height: 110px; background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 5px; }
+.drawing-preview .zone { stroke: var(--line); stroke-width: 2; }
+.drawing-preview .outline { fill: none; stroke: var(--line); stroke-width: 2; }
+
 .focus-card { border: 2px solid var(--now); }
 .link-list { display: flex; flex-direction: column; gap: 6px; }
 .link-card { display: flex; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 11px 12px; width: 100%; text-align: left; }

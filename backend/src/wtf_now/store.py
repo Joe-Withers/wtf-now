@@ -35,7 +35,7 @@ from .bundle import (
 )
 from .project import (
     KINDS,
-    LAYOUT_DIR,
+    DRAWINGS_DIR,
     LEAF_ONLY_FIELDS,
     NOTE_DIR,
     STATES,
@@ -115,7 +115,7 @@ class Transaction:
         "update_current_state",
         "write_note",
         "verify_note",
-        "write_layout",
+        "write_drawing",
         "attach_photo",
     )
 
@@ -363,10 +363,10 @@ class Transaction:
         if parsed.tzinfo is None:
             raise ChangeRejected(f"{value!r} needs a UTC offset")
 
-    def write_layout(self, title: str, zones: list[dict[str, Any]], slug: str | None = None) -> str:
-        """Creates a schematic plan from rectangles. Each zone needs id, title, x, y, width and height."""
+    def write_drawing(self, title: str, zones: list[dict[str, Any]], slug: str | None = None) -> str:
+        """Creates a drawing from rectangles. Each zone needs id, title, x, y, width and height."""
         if not zones:
-            raise ChangeRejected("A layout needs at least one zone")
+            raise ChangeRejected("A drawing needs at least one zone")
         cleaned = []
         for zone in zones:
             if not is_valid_slug(str(zone.get("id", ""))):
@@ -383,12 +383,12 @@ class Transaction:
             raise ChangeRejected(f"{slug!r} isn't a valid slug")
         data = CommentedMap(type="Layout", title=title, image=f"{slug}.svg")
         data["zones"] = [CommentedMap(id=zone["id"], title=zone["title"]) for zone in cleaned]
-        concept = Concept(f"{LAYOUT_DIR}{slug}.md", data, "")
+        concept = Concept(f"{DRAWINGS_DIR}{slug}.md", data, "")
         self.concepts[concept.path] = concept
         width = max(zone["x"] + zone["width"] for zone in cleaned)
         height = max(zone["y"] + zone["height"] for zone in cleaned)
-        self.files[f"{LAYOUT_DIR}{slug}.svg"] = render_layout_svg(title, width, height, cleaned)
-        self._record("Layout", self._link(concept))
+        self.files[f"{DRAWINGS_DIR}{slug}.svg"] = render_drawing_svg(title, width, height, cleaned)
+        self._record("Drawing", self._link(concept))
         return slug
 
     def attach_photo(self, slug: str, key: str, caption: str = "") -> None:
@@ -411,7 +411,7 @@ class Transaction:
         self._record("Verified", self._link(concept))
 
 
-def render_layout_svg(title: str, width: float, height: float, zones: list[dict[str, Any]]) -> str:
+def render_drawing_svg(title: str, width: float, height: float, zones: list[dict[str, Any]]) -> str:
     lines = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:g} {height:g}">', f"  <title>{escape(title)}</title>"]
     for zone in zones:
         lines.append(
@@ -551,10 +551,10 @@ class Store:
                 for c in concepts
             ]
 
-        by_directory = {"Tasks": [], "Notes": [], "Layouts": []}
+        by_directory = {"Tasks": [], "Notes": [], "Drawings": []}
         for concept in project.concepts.values():
             directory = concept.path.split("/")[0]
-            section = {"tasks": "Tasks", "notes": "Notes", "layouts": "Layouts"}.get(directory)
+            section = {"tasks": "Tasks", "notes": "Notes", "layouts": "Drawings"}.get(directory)
             if section:
                 by_directory[section].append(concept)
         sections = {name: entries(concepts) for name, concepts in by_directory.items()}

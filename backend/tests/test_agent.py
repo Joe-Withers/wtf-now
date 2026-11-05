@@ -233,18 +233,30 @@ def test_endless_tool_use_is_stopped(store: Store, proposals: ProposalStore) -> 
 
 def test_read_tools_all_run(store: Store, proposals: ProposalStore) -> None:
     store.apply([Op("write_note", {"title": "Height", "body": "1420mm"})])
+    store.apply([Op("write_drawing", {"title": "Plan", "zones": [{"id": "rear", "title": "Rear", "x": 0, "y": 0, "width": 9, "height": 9}]})])
     tools = Tools(store, proposals, "session", "actor")
 
     for name, args in [
         ("list_tasks", {}),
         ("what_now", {"hours": 2}),
-        ("search_wiki", {"query": "1420"}),
+        ("search_docs", {"query": "1420"}),
         ("read_note", {"slug": "height"}),
         ("list_notes", {}),
+        ("list_drawings", {}),
         ("read_log", {}),
     ]:
         output, events = tools.run(name, args)
         assert output and events == []
+
+
+def test_list_drawings_gives_the_ai_the_zone_ids(store: Store, proposals: ProposalStore) -> None:
+    store.apply([Op("write_drawing", {"title": "Plan", "zones": [{"id": "rear", "title": "Rear", "x": 0, "y": 0, "width": 9, "height": 9}]})])
+    tools = Tools(store, proposals, "session", "actor")
+
+    output, _ = tools.run("list_drawings", {})
+
+    assert "rear" in output
+    assert "Plan" in output
 
 
 def test_describe_uses_titles() -> None:
@@ -258,7 +270,7 @@ def test_describe_uses_titles() -> None:
 def zoned(store: Store) -> Store:
     store.apply(
         [
-            Op("write_layout", {"title": "Plan", "zones": [{"id": "rear", "title": "Rear", "x": 0, "y": 0, "width": 9, "height": 9}]}),
+            Op("write_drawing", {"title": "Plan", "zones": [{"id": "rear", "title": "Rear", "x": 0, "y": 0, "width": 9, "height": 9}]}),
             Op("update_task", {"slug": "wire-board", "zone": "rear"}),
             Op("update_task", {"slug": "fit-battery", "closes_zone": "rear"}),
         ]
@@ -298,16 +310,16 @@ def test_progress_on_a_closing_task_is_held_too(zoned: Store, proposals: Proposa
     assert zoned.project.tasks["fit-battery"].state == "todo"
 
 
-def test_ai_can_propose_a_plan_of_zones(store: Store, proposals: ProposalStore) -> None:
+def test_ai_can_propose_a_drawing_of_zones(store: Store, proposals: ProposalStore) -> None:
     zones = [{"id": "rear", "title": "Rear", "x": 0, "y": 0, "width": 9, "height": 9}]
     model = ScriptedModel(
-        [call("propose_changes", summary="Add a plan", changes=[{"operation": "write_layout", "args": {"title": "Plan", "zones": zones}}])],
+        [call("propose_changes", summary="Add a drawing", changes=[{"operation": "write_drawing", "args": {"title": "Plan", "zones": zones}}])],
         [text("Have a look.")],
     )
 
     events, _ = converse(store, proposals, model)
     [proposal] = of_type(events, "proposal")
-    assert proposal["descriptions"] == ["Create the plan “Plan” with 1 zones"]
+    assert proposal["descriptions"] == ["Create the drawing “Plan” with 1 zones"]
 
     proposals.approve(proposal["id"])
 

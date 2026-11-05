@@ -23,7 +23,7 @@ const ACTIVITY: Record<string, string> = {
   set_progress: "Updating progress…",
   set_state: "Updating the task…",
   update_current_state: "Noting where things are…",
-  write_note: "Writing to the wiki…",
+  write_note: "Writing to the docs…",
   propose_changes: "Preparing some changes…",
 };
 
@@ -174,7 +174,7 @@ function Recent({ onPrompt, onSession }: { onPrompt: (text: string) => void; onS
   return (
     <>
       <p className="lede">What's happened?</p>
-      <p className="meta">Tell me what you've done, what's gone wrong, or what you're stuck on. Everything worth keeping goes in the wiki.</p>
+      <p className="meta">Tell me what you've done, what's gone wrong, or what you're stuck on. Everything worth keeping goes in the docs.</p>
       <div className="suggestions">
         {PROMPTS.map((prompt) => (
           <button key={prompt} className="suggestion" onClick={() => onPrompt(prompt)}>

@@ -244,7 +244,7 @@ export type Zone = {
   tasks: TaskRef[];
   shape: Shape | null;
 };
-export type Layout = { slug: string; title: string; view_box: string; zones: Zone[]; shapes: Shape[] };
+export type Drawing = { slug: string; title: string; view_box: string; zones: Zone[]; shapes: Shape[] };
 
 export type GraphNode = {
   slug: string;

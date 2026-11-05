@@ -1,11 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
 import { createElement, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
-import { getJson, type Layout, type Shape, type Zone } from "../api";
-import { Loading, Pill, ScreenHead } from "../components/ui";
+import type { Drawing, Shape, Zone } from "../api";
+import { Pill } from "./ui";
 
-function style(zone: Zone): CSSProperties {
+function fill(zone: Zone): CSSProperties {
   if (zone.progress === null) return { fill: "var(--surface)" };
   if (zone.progress >= 100) return { fill: "var(--done)" };
   return { fill: `color-mix(in srgb, var(--now) ${Math.round(zone.progress * 0.75 + 15)}%, var(--surface))` };
@@ -13,6 +12,10 @@ function style(zone: Zone): CSSProperties {
 
 function label(zone: Zone): string {
   return zone.progress === null ? "no tasks" : `${Math.round(zone.progress)}%`;
+}
+
+function shapes(drawing: Drawing): Shape[] {
+  return drawing.shapes.length > 0 ? drawing.shapes : drawing.zones.flatMap((zone) => zone.shape ?? []);
 }
 
 function ZoneLabel({ zone }: { zone: Zone }) {
@@ -31,34 +34,56 @@ function ZoneLabel({ zone }: { zone: Zone }) {
   );
 }
 
-function Plan({ layout }: { layout: Layout }) {
+/** A drawing at a glance: the shape of it, coloured by how far the work has got. */
+export function DrawingPreview({ drawing }: { drawing: Drawing }) {
+  const list = shapes(drawing);
+  if (!drawing.view_box || list.length === 0) return null;
+  const zones = new Map(drawing.zones.map((zone) => [zone.id, zone]));
+  return (
+    <svg className="drawing-preview" viewBox={drawing.view_box} aria-hidden="true">
+      {list.map((shape, index) => {
+        const owner = zones.get(shape.id);
+        return createElement(shape.tag, {
+          ...shape.attributes,
+          ...(shape.id ? { id: shape.id } : {}),
+          key: shape.id || index,
+          className: owner ? "zone" : "outline",
+          style: owner ? fill(owner) : undefined,
+        });
+      })}
+    </svg>
+  );
+}
+
+/** A drawing full size: its zones, and what's in them. */
+export function DrawingView({ drawing }: { drawing: Drawing }) {
   const [selected, setSelected] = useState<string | null>(null);
-  const zone = layout.zones.find((candidate) => candidate.id === selected);
-  const zones = new Map(layout.zones.map((candidate) => [candidate.id, candidate]));
-  const shapes: Shape[] = layout.shapes.length > 0 ? layout.shapes : layout.zones.flatMap((candidate) => candidate.shape ?? []);
+  const zone = drawing.zones.find((candidate) => candidate.id === selected);
+  const zones = new Map(drawing.zones.map((candidate) => [candidate.id, candidate]));
+  const list = shapes(drawing);
 
   return (
     <section className="section">
-      {layout.view_box && shapes.length > 0 && (
-        <svg className="plan" viewBox={layout.view_box} role="img" aria-label={layout.title}>
-          {shapes.map((shape, index) => {
+      {drawing.view_box && list.length > 0 && (
+        <svg className="plan" viewBox={drawing.view_box} role="img" aria-label={drawing.title}>
+          {list.map((shape, index) => {
             const owner = zones.get(shape.id);
             return createElement(shape.tag, {
               ...shape.attributes,
               ...(shape.id ? { id: shape.id } : {}),
               key: shape.id || index,
               className: owner ? `zone${owner.id === selected ? " selected" : ""}` : "outline",
-              style: owner ? style(owner) : undefined,
+              style: owner ? fill(owner) : undefined,
               onClick: owner ? () => setSelected(owner.id) : undefined,
             });
           })}
-          {layout.zones.map((item) => (
+          {drawing.zones.map((item) => (
             <ZoneLabel key={item.id} zone={item} />
           ))}
         </svg>
       )}
       <div className="zone-list">
-        {layout.zones.map((item) => (
+        {drawing.zones.map((item) => (
           <button key={item.id} aria-pressed={item.id === selected} onClick={() => setSelected(item.id)}>
             <span>{item.title}</span>
             <span className="meta">{label(item)}</span>
@@ -80,29 +105,5 @@ function Plan({ layout }: { layout: Layout }) {
         </section>
       )}
     </section>
-  );
-}
-
-export function FloorPlan() {
-  const query = useQuery({ queryKey: ["layouts"], queryFn: () => getJson<Layout[]>("/layouts") });
-
-  return (
-    <main className="screen">
-      <ScreenHead title="Floor plan" />
-      <Loading query={query}>
-        {(layouts) =>
-          layouts.length === 0 ? (
-            <section className="section">
-              <p className="empty">No plan yet. Describe the layout to the AI, and it can draw a simple one.</p>
-              <Link className="button" to="/chat" style={{ textAlign: "center", lineHeight: "22px" }}>
-                Open the chat
-              </Link>
-            </section>
-          ) : (
-            layouts.map((layout) => <Plan key={layout.slug} layout={layout} />)
-          )
-        }
-      </Loading>
-    </main>
   );
 }

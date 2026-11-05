@@ -156,9 +156,9 @@ def create_app(
     def get_shopping() -> Any:
         return views.shopping(store.project)
 
-    @app.get("/api/layouts")
-    def get_layouts() -> Any:
-        return views.layouts(store.project, store.root)
+    @app.get("/api/drawings")
+    def get_drawings() -> Any:
+        return views.drawings(store.project, store.root)
 
     @app.get("/api/problems")
     def get_problems() -> Any:

@@ -2,7 +2,7 @@
 
 For when you open the van doors after three months and think "wtf now?"
 
-An LLM-centred project planner for long-running physical builds: nested tasks, dependency tracking, progress state and a self-maintaining wiki that remembers where you got to.
+An LLM-centred project planner for long-running physical builds: nested tasks, dependency tracking, progress state and self-maintaining docs that remember where you got to.
 
 ## The problem
 
@@ -21,7 +21,7 @@ You talk to an AI about your project. From that conversation it builds and maint
 - **A task tree**: tasks and sub-tasks that nest as deep as needed.
 - **A dependency graph**: what has to happen before what. The AI makes sensible assumptions to start with, and you correct them as you go ("if I fit this cabinet now I can't insulate behind it").
 - **Progress state**: not just done/not done, but where each task actually is ("electronics mounted on ply, not yet connected to battery or solar, not in the van"). Progress rolls up by effort, so wiring a circuit board counts for more than hammering in a nail.
-- **A project wiki**: research, decisions, measurements and part numbers, organised around the tasks. AI sessions are throwaway; the wiki *is* the memory, and each new session uses it as context.
+- **The project docs**: research, decisions, measurements and part numbers, organised around the tasks, with the drawings of the thing itself — a plan, a cabinet, a layout. AI sessions are throwaway; the docs *are* the memory, and each new session uses them as context.
 
 The headline feature is the answer to "what can I do right now?" — tasks that are unblocked, split into what you can do with what you have, what needs ordering first, and what needs deciding first.
 
@@ -43,6 +43,6 @@ The frontend runs on http://localhost:5173 and proxies `/api` to the backend on 
 
 ## Status
 
-Built, ticket by ticket. The whole product works against a made-up van conversion: tasks and dependencies, progress that rolls up, a wiki the AI keeps up to date, chat that proposes changes for approval, photos, voice notes, a floor plan and a dependency graph.
+Built, ticket by ticket. The whole product works against a made-up van conversion: tasks and dependencies, progress that rolls up, docs the AI keeps up to date, chat that proposes changes for approval, photos, voice notes, drawings and a dependency graph.
 
 Not done yet: it hasn't been deployed to a real server, and the example project is invented. See [`docs/SPEC.md`](docs/SPEC.md) and [`docs/tickets/`](docs/tickets/).

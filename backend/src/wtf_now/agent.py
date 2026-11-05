@@ -21,7 +21,7 @@ PROPOSABLE = (
     "delete_task",
     "add_dependency",
     "remove_dependency",
-    "write_layout",
+    "write_drawing",
 )
 
 
@@ -91,9 +91,10 @@ TOOLS = [
             "helper": {"type": "boolean", "description": "Whether a second person is available"},
         },
     ),
-    _tool("search_wiki", "Search tasks and notes for text.", {"query": TEXT}, ("query",)),
-    _tool("read_note", "Read a wiki note.", {"slug": TEXT}, ("slug",)),
-    _tool("list_notes", "List wiki notes, including their type and whether they're verified or stale."),
+    _tool("search_docs", "Search tasks, notes and drawings for text.", {"query": TEXT}, ("query",)),
+    _tool("read_note", "Read a note.", {"slug": TEXT}, ("slug",)),
+    _tool("list_notes", "List the notes, including their type and whether they're verified or stale."),
+    _tool("list_drawings", "List the drawings, with the zones in each one."),
     _tool("read_log", "Read recent project history, newest first."),
     _tool(
         "set_progress",
@@ -142,7 +143,7 @@ TOOLS = [
         "depends_on: [{task, strength}]); update_task(slug, reason, title, description, kind, zone, closes_zone, "
         "effort_hours, needs_helper, cost); move_task(slug, parent); delete_task(slug); "
         "add_dependency(task, depends_on, strength); remove_dependency(task, depends_on); "
-        "write_layout(title, slug, zones: [{id, title, x, y, width, height}]), a simple plan of rectangles with "
+        "write_drawing(title, slug, zones: [{id, title, x, y, width, height}]), a simple drawing of rectangles with "
         "zones for tasks to refer to; closes_zone marks a task that makes a zone inaccessible. "
         "Strength is hard if the order is physically forced, soft if one order is just easier. "
         "Kind is build, purchase, research or decision.",
@@ -198,8 +199,8 @@ def describe(project_titles: dict[str, str], operation: str, args: dict[str, Any
             return f"{title(args.get('task'))} needs {title(args.get('depends_on'))} first ({args.get('strength', 'hard')})"
         case "remove_dependency":
             return f"{title(args.get('task'))} no longer needs {title(args.get('depends_on'))}"
-        case "write_layout":
-            return f"Create the plan “{args.get('title')}” with {len(args.get('zones') or [])} zones"
+        case "write_drawing":
+            return f"Create the drawing “{args.get('title')}” with {len(args.get('zones') or [])} zones"
     return operation
 
 
@@ -265,12 +266,14 @@ class Tools:
                 return _json(views.task_detail(project, args["slug"])), []
             case "what_now":
                 return _json(what_now(project, args.get("hours"), args.get("helper", True), self.store.log())), []
-            case "search_wiki":
+            case "search_docs":
                 return _json(views.search(project, args["query"])), []
             case "read_note":
                 return _json(views.note_detail(project, args["slug"], self.clock())), []
             case "list_notes":
                 return _json(views.notes(project, self.clock())), []
+            case "list_drawings":
+                return _json(views.drawing_zones(project)), []
             case "read_log":
                 return _json(log_lines(self.store.log())[:LOG_LINES]), []
             case "set_progress" | "set_state":

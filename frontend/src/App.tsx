@@ -3,7 +3,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { Layout } from "./components/Layout";
 import { ChatPage } from "./screens/Chat";
-import { FloorPlan } from "./screens/FloorPlan";
+import { Docs } from "./screens/Docs";
+import { DrawingScreen } from "./screens/DrawingScreen";
 import { GraphScreen } from "./screens/GraphScreen";
 import { LogScreen } from "./screens/LogScreen";
 import { More } from "./screens/More";
@@ -12,7 +13,6 @@ import { PlanScreen } from "./screens/PlanScreen";
 import { ShoppingScreen } from "./screens/ShoppingScreen";
 import { TaskScreen } from "./screens/TaskScreen";
 import { WhatNowScreen } from "./screens/WhatNowScreen";
-import { Wiki } from "./screens/Wiki";
 
 const client = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 5_000 } },
@@ -29,11 +29,11 @@ export function App() {
             <Route path="chat" element={<ChatPage />} />
             <Route path="tasks/:slug" element={<TaskScreen />} />
             <Route path="more" element={<More />} />
-            <Route path="wiki" element={<Wiki />} />
+            <Route path="docs" element={<Docs />} />
             <Route path="notes/:slug" element={<NoteScreen />} />
             <Route path="log" element={<LogScreen />} />
             <Route path="shopping" element={<ShoppingScreen />} />
-            <Route path="floor-plan" element={<FloorPlan />} />
+            <Route path="drawings/:slug" element={<DrawingScreen />} />
             <Route path="graph" element={<GraphScreen />} />
           </Route>
         </Routes>

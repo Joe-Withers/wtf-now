@@ -19,7 +19,7 @@ _LABEL = re.compile(r"^\*\*([^*]+)\*\*:\s*(.*)$")
 _TASK_LINK = re.compile(r"\[[^]]*\]\(/tasks/([a-z0-9-]+)\.md\)")
 
 # Log entries that record the project being set up, rather than work being done.
-SETUP_LABELS = {"Added", "Layout"}
+SETUP_LABELS = {"Added", "Layout", "Drawing"}
 # The log says "current state"; on a flow of steps, that is progress.
 _STEP_LABELS = {"Current state": "Progress"}
 

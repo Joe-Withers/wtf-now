@@ -1,4 +1,4 @@
-import Markdown from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import { Link } from "react-router-dom";
 
 /** Bundle links point at markdown files; in the app they're screens. */
@@ -7,10 +7,10 @@ function route(href = ""): string | null {
   return match ? `/${match[1]}/${match[2]}` : null;
 }
 
-export function WikiText({ text }: { text: string }) {
+export function Markdown({ text }: { text: string }) {
   return (
     <div className="prose">
-      <Markdown
+      <ReactMarkdown
         components={{
           a({ href, children }) {
             const to = route(href);
@@ -25,7 +25,7 @@ export function WikiText({ text }: { text: string }) {
         }}
       >
         {text}
-      </Markdown>
+      </ReactMarkdown>
     </div>
   );
 }

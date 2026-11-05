@@ -1,8 +1,9 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Route, Routes } from "react-router-dom";
 
 import { mockApi, renderApp } from "../test-helpers";
-import { FloorPlan } from "./FloorPlan";
+import { DrawingScreen } from "./DrawingScreen";
 
 const shape = (id: string) => ({ id, tag: "rect" as const, attributes: { x: "0", y: "0", width: "100", height: "40" } });
 
@@ -15,8 +16,8 @@ const zone = (id: string, title: string, overrides = {}) => ({
   ...overrides,
 });
 
-const layout = {
-  slug: "plan",
+const drawing = {
+  slug: "van-plan",
   title: "Van plan",
   view_box: "0 0 100 100",
   zones: [
@@ -27,10 +28,18 @@ const layout = {
   shapes: [shape("rear"), shape("bed"), shape("wall")],
 };
 
-test("draws the zones and lists their progress", async () => {
-  mockApi({ "/api/layouts": [layout] });
+function renderDrawing() {
+  mockApi({ "/api/drawings": [drawing] });
+  renderApp(
+    <Routes>
+      <Route path="/drawings/:slug" element={<DrawingScreen />} />
+    </Routes>,
+    "/drawings/van-plan",
+  );
+}
 
-  renderApp(<FloorPlan />);
+test("draws the zones and lists their progress", async () => {
+  renderDrawing();
 
   const plan = await screen.findByRole("img", { name: "Van plan" });
   expect(plan.querySelectorAll("rect")).toHaveLength(3);
@@ -42,9 +51,7 @@ test("draws the zones and lists their progress", async () => {
 });
 
 test("a finished zone is coloured as done", async () => {
-  mockApi({ "/api/layouts": [layout] });
-
-  renderApp(<FloorPlan />);
+  renderDrawing();
 
   const plan = await screen.findByRole("img", { name: "Van plan" });
   const bed = plan.querySelector('rect.zone[id="bed"]');
@@ -52,8 +59,7 @@ test("a finished zone is coloured as done", async () => {
 });
 
 test("tapping a zone lists its tasks", async () => {
-  mockApi({ "/api/layouts": [layout] });
-  renderApp(<FloorPlan />);
+  renderDrawing();
 
   await userEvent.click(await screen.findByRole("button", { name: /Rear cabinet/ }));
 
@@ -61,10 +67,14 @@ test("tapping a zone lists its tasks", async () => {
   expect(within(section).getByRole("link", { name: /Wire the board/ })).toHaveAttribute("href", "/tasks/wire");
 });
 
-test("explains what to do when there's no plan", async () => {
-  mockApi({ "/api/layouts": [] });
+test("says so when the drawing isn't there", async () => {
+  mockApi({ "/api/drawings": [] });
+  renderApp(
+    <Routes>
+      <Route path="/drawings/:slug" element={<DrawingScreen />} />
+    </Routes>,
+    "/drawings/nope",
+  );
 
-  renderApp(<FloorPlan />);
-
-  expect(await screen.findByText(/it can draw a simple one/)).toBeInTheDocument();
+  expect(await screen.findByText("No drawing called that.")).toBeInTheDocument();
 });

@@ -429,8 +429,8 @@ ZONES = [
 ]
 
 
-def test_write_layout_creates_a_concept_and_an_svg(store: Store) -> None:
-    store.apply([Op("write_layout", {"title": "Van plan", "zones": ZONES})])
+def test_write_drawing_creates_a_concept_and_an_svg(store: Store) -> None:
+    store.apply([Op("write_drawing", {"title": "Van plan", "zones": ZONES})])
 
     assert store.project.zones() == {"rear": "Rear cabinet", "left": "Left wall"}
     svg = (store.root / "layouts" / "van-plan.svg").read_text()
@@ -442,27 +442,27 @@ def test_write_layout_creates_a_concept_and_an_svg(store: Store) -> None:
     "zones",
     [[], [{"id": "Bad Id", "x": 0, "y": 0, "width": 1, "height": 1}], [{"id": "a"}], ZONES + ZONES],
 )
-def test_bad_layouts_are_rejected(store: Store, zones: list) -> None:
+def test_bad_drawings_are_rejected(store: Store, zones: list) -> None:
     with pytest.raises(ChangeRejected):
-        store.apply([Op("write_layout", {"title": "Plan", "zones": zones})])
+        store.apply([Op("write_drawing", {"title": "Plan", "zones": zones})])
 
 
-def test_layout_text_is_escaped_in_the_svg(store: Store) -> None:
-    store.apply([Op("write_layout", {"title": "<script>alert(1)</script>", "slug": "plan", "zones": ZONES})])
+def test_drawing_text_is_escaped_in_the_svg(store: Store) -> None:
+    store.apply([Op("write_drawing", {"title": "<script>alert(1)</script>", "slug": "plan", "zones": ZONES})])
 
     assert "<script>" not in (store.root / "layouts" / "plan.svg").read_text()
 
 
-def test_tasks_must_use_known_zones_once_a_layout_exists(store: Store) -> None:
-    store.apply([Op("write_layout", {"title": "Plan", "zones": ZONES})])
+def test_tasks_must_use_known_zones_once_a_drawing_exists(store: Store) -> None:
+    store.apply([Op("write_drawing", {"title": "Plan", "zones": ZONES})])
 
     assert task(store, "Good", zone="rear") in store.project.tasks
-    with pytest.raises(ChangeRejected, match="isn't in any layout"):
+    with pytest.raises(ChangeRejected, match="isn't in any drawing"):
         task(store, "Bad", zone="nowhere")
 
 
-def test_undo_removes_a_layout_and_its_svg(store: Store) -> None:
-    change, _ = store.apply([Op("write_layout", {"title": "Plan", "zones": ZONES})])
+def test_undo_removes_a_drawing_and_its_svg(store: Store) -> None:
+    change, _ = store.apply([Op("write_drawing", {"title": "Plan", "zones": ZONES})])
 
     store.undo(change.id)
 

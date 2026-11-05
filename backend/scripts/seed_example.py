@@ -28,8 +28,8 @@ def easier_after(slug: str) -> dict[str, str]:
     return {"task": slug, "strength": "soft"}
 
 
-LAYOUT = Op(
-    "write_layout",
+DRAWING = Op(
+    "write_drawing",
     {
         "title": "Van plan",
         "slug": "van-plan",
@@ -46,7 +46,7 @@ LAYOUT = Op(
 )
 
 PLAN = [
-    LAYOUT,
+    DRAWING,
     task("Floor", "floor", description="Everything from the bare metal to the finished floor."),
     task("Clean and treat rust", "floor-rust", "floor", effort_hours=3, zone="floor"),
     task("Lay battens and insulation", "floor-insulation", "floor", effort_hours=5, zone="floor", depends_on=needs("floor-rust")),

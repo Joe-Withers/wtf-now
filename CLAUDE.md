@@ -2,7 +2,7 @@
 
 ## Project
 
-wtf-now: an AI-centred planner for long-running physical builds (first user: a van conversion). A mobile-first web app whose tasks, dependencies, progress and wiki are stored as an Open Knowledge Format (OKF) v0.2 bundle of markdown files.
+wtf-now: an AI-centred planner for long-running physical builds (first user: a van conversion). A mobile-first web app whose tasks, dependencies, progress and docs are stored as an Open Knowledge Format (OKF) v0.2 bundle of markdown files.
 
 ## Where things are
 
@@ -13,7 +13,9 @@ wtf-now: an AI-centred planner for long-running physical builds (first user: a v
 
 ## Current phase
 
-Tickets 001 to 023 are built and merged, and so is 028. The app runs end to end: tasks, dependencies, progress, the wiki, chat with the AI, photos, voice, the floor plan and the dependency graph. The screens read the plan; the chat records the work.
+Tickets 001 to 023 are built and merged, and so are 028 to 033. The app runs end to end: tasks, dependencies, progress, the docs, chat with the AI, photos, voice, the drawings and the dependency graph. The screens read the plan; the chat records the work.
+
+The last few tickets were a redesign of the interface: the navigation is a rail down the left, the chat comes out of the side, the project is a graph, What now is a flow, and the drawings and notes are one thing called the docs.
 
 The rest of the work needs something from the owner, and is written up in `docs/tickets/024-*.md` onwards:
 

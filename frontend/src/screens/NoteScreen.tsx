@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 import { getJson, type NoteDetail } from "../api";
 import { Loading, ScreenHead, useChange } from "../components/ui";
-import { WikiText } from "../components/WikiText";
+import { Markdown } from "../components/Markdown";
 
 function author(by: string): string {
   if (!by) return "";
@@ -41,7 +41,7 @@ export function NoteScreen() {
                   </button>
                 </section>
               )}
-              <WikiText text={note.body} />
+              <Markdown text={note.body} />
             </div>
           </>
         )}
