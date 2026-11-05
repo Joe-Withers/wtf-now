@@ -24,7 +24,8 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
-            <Route index element={<PlanScreen />} />
+            <Route index element={<GraphScreen />} />
+            <Route path="plan" element={<PlanScreen />} />
             <Route path="what-now" element={<WhatNowScreen />} />
             <Route path="chat" element={<ChatPage />} />
             <Route path="tasks/:slug" element={<TaskScreen />} />
@@ -34,7 +35,6 @@ export function App() {
             <Route path="log" element={<LogScreen />} />
             <Route path="shopping" element={<ShoppingScreen />} />
             <Route path="drawings/:slug" element={<DrawingScreen />} />
-            <Route path="graph" element={<GraphScreen />} />
           </Route>
         </Routes>
       </BrowserRouter>

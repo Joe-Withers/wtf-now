@@ -328,6 +328,7 @@ class Transaction:
         type: str = "Note",
         description: str = "",
         stale_after: str | None = None,
+        related: str | None = None,
     ) -> str:
         if slug is not None and not is_valid_slug(slug):
             raise ChangeRejected(f"{slug!r} isn't a valid slug")
@@ -335,6 +336,8 @@ class Transaction:
             raise ChangeRejected("Notes can't have type Task")
         if stale_after is not None:
             self._check_timestamp(stale_after)
+        if related is not None:
+            self._task(related)  # a note can only document a task that exists
         slug = slug or self._unique_slug(NOTE_DIR, slugify(title))
         path = f"{NOTE_DIR}{slug}.md"
         existing = self.concepts.get(path)
@@ -350,6 +353,10 @@ class Transaction:
             data.pop("stale_after", None)
         else:
             data["stale_after"] = stale_after
+        if related is None:
+            data.pop("related", None)
+        else:
+            data["related"] = related
         concept.body = body if body.endswith("\n") else f"{body}\n"
         self.concepts[path] = concept
         self._record("Note", self._link(concept))

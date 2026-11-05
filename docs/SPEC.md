@@ -30,14 +30,14 @@ A mobile-first web app, installable as a PWA, with an AI chat built in. You talk
 
 | Screen | Purpose |
 |---|---|
-| **Plan** | The project as a graph. The areas and the work under them, drawn as nodes and edges, with the overall progress above. Tap a node to open it and see what it waits on. Replaces the old home screen and task tree. |
+| **Graph** | The home screen. The project as a map: its groups in a ring around the centre, the work in each as a cluster of dots, the next task of each group glowing and labelled. Pick a group to focus it, pick a task to see its steps, what it needs and what it unblocks. |
+| **Plan** | The project as a tree of cards, for reading it rather than seeing it. |
 | **What now?** | The work as a flow: the last few steps you ran, then the tasks you could start now, with the one to start on picked out. Filtered by time available and whether you have a helper. |
 | **Chat** | Conversation with the AI, with approve/reject cards for structural changes. It comes out of the side (§3.3). |
 | **Task detail** | Current state, notes, dependencies, photos, and a way into the chat with that task in focus. |
 | **Shopping** | Purchases to order, on order and arrived, with running cost. |
 | **Docs** | The project's documentation: the drawings and the notes, with one search over both. |
 | **Drawing** | One drawing full size: its zones coloured by progress, and the tasks in each zone. |
-| **Dependency graph** | The task graph. |
 | **Log** | Project history, newest first. |
 
 ### 3.2 The screens read, the chat writes
@@ -153,6 +153,7 @@ There are no separate state lists. A multi-step task is simply a task with child
 The docs are the project's memory: the notes and the drawings. The app calls the whole thing Docs; the bundle keeps its directories, because a concept's id is its file path and files must not move.
 
 - Everything worth remembering goes in a note, written as it comes up and never saved for the end of a session.
+- A note can name the task it documents (`related`), so the map can show it beside that task and the AI can find it again.
 - A drawing is a set of named zones with an SVG alongside it. The AI draws them from rectangles when the owner describes a shape; zones carry the progress of the work inside them, and a task can close a zone off.
 - Each task page keeps a `## Current state` section, rewritten as things change, so where you left off is always in a predictable place.
 - `log.md` is the history. Every progress change appends an entry.

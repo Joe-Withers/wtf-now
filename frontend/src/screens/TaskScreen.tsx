@@ -127,8 +127,8 @@ export function TaskScreen() {
                 </section>
               )}
 
-              <Link className="meta" to={`/graph?task=${task.slug}`}>
-                See what this depends on →
+              <Link className="meta" to={`/?task=${task.slug}`}>
+                See it on the map →
               </Link>
             </div>
           </>

@@ -308,3 +308,106 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .link-card.finished { color: var(--muted); }
 .link-card .why { flex: none; font-size: 0.78rem; color: var(--muted); }
 .link-card .why.blocking { color: var(--warn); font-weight: 600; }
+
+/* The map: the project drawn as the groups it's made of, and the work in each. */
+.cat-0 { --cat: #e6b450; }
+.cat-1 { --cat: #5b9bff; }
+.cat-2 { --cat: #ff7a2e; }
+.cat-3 { --cat: #4fd1a5; }
+.cat-4 { --cat: #b48cff; }
+.cat-5 { --cat: #ff6f91; }
+
+@media (prefers-color-scheme: light) {
+  .cat-0 { --cat: #a97a12; }
+  .cat-1 { --cat: #2f6fd0; }
+  .cat-2 { --cat: #d9570f; }
+  .cat-3 { --cat: #1f8f6c; }
+  .cat-4 { --cat: #7c4fd8; }
+  .cat-5 { --cat: #d14268; }
+}
+
+.graph-screen { padding: 0; gap: 0; overflow: hidden; }
+.graph-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.graph-toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; flex: none; }
+.segmented { display: flex; gap: 2px; margin-left: auto; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-raised); }
+.segmented a { padding: 6px 15px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+.segmented a.active { background: var(--surface); color: var(--text); }
+.graph-canvas { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+.graph-lines { position: absolute; top: 0; left: 0; pointer-events: none; }
+.graph-line { stroke: var(--line); stroke-width: 1; opacity: 0.55; }
+.graph-line.hub { opacity: 0.35; }
+.graph-line.note { stroke: var(--muted); opacity: 0.22; }
+.graph-line.dependency { stroke: var(--muted); opacity: 0.4; }
+.graph-line.cross { stroke: var(--muted); stroke-dasharray: 4 5; opacity: 0.7; }
+.graph-centre { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--text); box-shadow: 0 0 0 4px color-mix(in srgb, var(--text) 16%, transparent); }
+.graph-hub { position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--cat); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px color-mix(in srgb, var(--cat) 45%, transparent); }
+.graph-dot { position: absolute; transform: translate(-50%, -50%); border: 0; padding: 0; border-radius: 50%; background: var(--cat); }
+.graph-dot.done { background: var(--muted); opacity: 0.5; }
+.graph-dot.next { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cat) 28%, transparent), 0 0 16px color-mix(in srgb, var(--cat) 70%, transparent); }
+.graph-note { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--muted); opacity: 0.65; }
+.dim { opacity: 0.12; }
+.graph-pill { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; max-width: var(--pill-max, 190px); padding: 5px 6px 5px 10px; border-radius: 999px; background: var(--surface-raised); border: 1px solid color-mix(in srgb, var(--cat) 40%, var(--line)); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28); font-size: 0.82rem; font-weight: 600; }
+.graph-pill.right { transform: translate(0, -50%); }
+.graph-pill.left { transform: translate(-100%, -50%); }
+.graph-pill.above { transform: translate(-50%, -100%); }
+.graph-pill.below { transform: translate(-50%, 0); }
+.graph-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cat); flex: none; }
+.graph-pill .pill-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.graph-pill .pill-kind { flex: none; font-size: 0.68rem; font-weight: 600; color: var(--muted); background: var(--surface); border-radius: 999px; padding: 3px 8px; }
+.graph-legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 10px 14px; font-size: 0.74rem; color: var(--muted); }
+.graph-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); opacity: 0.6; }
+.swatch.next { background: var(--now); opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--now) 25%, transparent); }
+.swatch.note { width: 6px; height: 6px; }
+.swatch.cross { width: 16px; height: 0; border-radius: 0; border-top: 1px dashed var(--muted); opacity: 1; background: none; }
+
+/* The project, and the groups it's made of. */
+.project-panel { flex: none; display: flex; flex-direction: column; gap: 14px; padding: 13px 14px; border-bottom: 1px solid var(--line); }
+.panel-stats { display: flex; flex-direction: column; gap: 6px; }
+.panel-figure { font-family: var(--heading); font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.panel-categories { display: flex; flex-direction: column; gap: 8px; }
+.category-list { display: flex; flex-direction: column; gap: 2px; }
+.category-row { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 7px 9px; border: 0; border-radius: 10px; background: none; text-align: left; }
+.category-row[aria-pressed="true"] { background: var(--surface-raised); }
+.category-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.88rem; }
+.category-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cat, var(--muted)); flex: none; }
+.category-row .bar { height: 4px; }
+.category-row .bar > span { background: var(--cat); }
+
+/* The task you've picked. */
+.task-panel { flex: none; border-top: 1px solid var(--line); background: var(--surface); padding: 15px 16px; display: flex; flex-direction: column; gap: 14px; max-height: 46vh; overflow-y: auto; }
+.panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.panel-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; text-transform: none; color: var(--text); }
+.panel-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 0.85rem; margin-top: 5px; }
+.panel-body { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 22px; }
+.panel-steps, .panel-facts { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.steps { list-style: none; margin: 0; padding: 0; }
+.step { display: flex; align-items: center; gap: 10px; min-height: 36px; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+.step.here { color: var(--now); font-weight: 600; }
+.mark { width: 16px; height: 16px; flex: none; }
+.step-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel-note { color: var(--text); font-size: 0.9rem; line-height: 1.5; }
+.chip.small { padding: 5px 11px; min-height: 30px; font-size: 0.82rem; }
+
+/* On a phone the project sits along the top and the groups scroll sideways. */
+@media (max-width: 999px) {
+  .panel-stats { flex-direction: row; align-items: center; gap: 12px; }
+  .panel-stats h2 { display: none; }
+  .panel-stats .bar { flex: 1; }
+  .category-list { flex-direction: row; overflow-x: auto; scrollbar-width: none; gap: 8px; }
+  .category-list::-webkit-scrollbar { display: none; }
+  .category-row { flex: none; width: 150px; }
+  .panel-body { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .segmented a { padding: 6px 11px; font-size: 0.82rem; }
+}
+
+/* On a laptop the project is a sidebar, and the map fills the rest. */
+@media (min-width: 1000px) {
+  .graph-screen { flex-direction: row; }
+  .project-panel { width: 268px; overflow-y: auto; border-bottom: 0; border-right: 1px solid var(--line); padding: 20px 16px; }
+  .panel-stats { flex-direction: column; align-items: stretch; }
+  .panel-stats h2 { display: block; }
+  .category-list { flex-direction: column; overflow: visible; gap: 2px; }
+  .category-row { width: 100%; }
+}

@@ -77,6 +77,7 @@ class NewNote(BaseModel):
     type: str = "Note"
     description: str = ""
     stale_after: str | None = None
+    related: str | None = None
 
 
 class NewSession(BaseModel):
@@ -148,9 +149,9 @@ def create_app(
     def get_tree() -> Any:
         return views.tree(store.project)
 
-    @app.get("/api/graph")
-    def get_graph() -> Any:
-        return views.dependency_graph(store.project)
+    @app.get("/api/map")
+    def get_map() -> Any:
+        return views.project_map(store.project)
 
     @app.get("/api/shopping")
     def get_shopping() -> Any:

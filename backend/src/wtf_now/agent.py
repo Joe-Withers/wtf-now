@@ -118,7 +118,7 @@ TOOLS = [
         "write_note",
         "Create or replace a wiki note. Use type Measurement for dimensions, Research for findings, Decision for "
         "choices and why, Part for part numbers, Inventory for tools and stock. Set stale_after on prices, as an "
-        "ISO 8601 time with a UTC offset.",
+        "ISO 8601 time with a UTC offset. Set related to the slug of the task the note documents.",
         {
             "title": TEXT,
             "body": {"type": "string", "description": "Markdown"},
@@ -126,6 +126,7 @@ TOOLS = [
             "type": TEXT,
             "description": TEXT,
             "stale_after": TEXT,
+            "related": {"type": "string", "description": "Slug of the task this note documents"},
         },
         ("title", "body"),
     ),

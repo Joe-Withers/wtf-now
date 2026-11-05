@@ -246,12 +246,40 @@ export type Zone = {
 };
 export type Drawing = { slug: string; title: string; view_box: string; zones: Zone[]; shapes: Shape[] };
 
-export type GraphNode = {
+/** A task, as the map shows it: a dot in a cluster, or a card in a run of jobs. */
+export type MapTask = {
   slug: string;
   title: string;
+  kind: Kind;
   state: State;
-  blocked: boolean;
+  progress: number;
+  category: string;
+  parent: string | null;
   is_leaf: boolean;
-  waiting_on: string[];
+  needs: string[];
+  blocks: string[];
+  children: string[];
+  note: string;
 };
-export type Graph = { nodes: GraphNode[]; edges: { from: string; to: string; strength: "hard" | "soft" }[] };
+
+/** A top-level group: the cluster a task belongs to. */
+export type MapCategory = {
+  slug: string;
+  title: string;
+  colour: number;
+  total: number;
+  done: number;
+  progress: number;
+  next: string | null;
+};
+
+export type MapNote = { slug: string; title: string; task: string | null };
+
+export type ProjectMap = {
+  total: number;
+  done: number;
+  progress: number;
+  categories: MapCategory[];
+  tasks: MapTask[];
+  notes: MapNote[];
+};

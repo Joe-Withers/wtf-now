@@ -1,6 +1,7 @@
 """Read models shared by the REST API and the AI's tools."""
 
 import xml.etree.ElementTree as ElementTree
+import zlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -10,13 +11,15 @@ from .bundle import Concept, get_section, without_section
 from .graph import (
     blockers,
     derived_state,
+    downstream_hours,
     is_done,
+    overall_progress,
     progress,
     remaining_hours,
     soft_warnings,
     transitive_dependents,
 )
-from .project import DRAWINGS_DIR, Dependency, Project
+from .project import DRAWINGS_DIR, Dependency, Project, effective_dependencies
 from .store import CURRENT_STATE
 
 UNVERIFIED_BY_DEFAULT = "Measurement"
@@ -286,33 +289,179 @@ def search(project: Project, query: str) -> list[SearchHit]:
     return hits[:SEARCH_LIMIT]
 
 
-def dependency_graph(project: Project) -> dict[str, list[dict[str, Any]]]:
-    nodes = []
-    for slug in project.tasks:
-        task = project.tasks[slug]
-        waiting = []
-        if project.is_leaf(slug) and task.state != "done":
-            waiting = [
-                project.tasks[target].title
-                for target in blockers(project, slug)
-                if project.tasks[target].state != "done"
-            ]
-        nodes.append(
-            {
-                "slug": slug,
-                "title": task.title,
-                "state": _state(project, slug),
-                "blocked": _leaf_blocked(project, slug),
-                "is_leaf": project.is_leaf(slug),
-                "waiting_on": waiting,
-            }
+CATEGORY_COLOURS = 6
+
+
+def _colour(slug: str, taken: set[int] | None = None) -> int:
+    """A stable colour for a category, so it keeps the same colour between visits.
+
+    Two groups never share a colour: if the usual one is taken, the next free
+    one is used instead.
+    """
+    start = zlib.crc32(slug.encode()) % CATEGORY_COLOURS
+    if taken is None:
+        taken = set()
+    for step in range(CATEGORY_COLOURS):
+        colour = (start + step) % CATEGORY_COLOURS
+        if colour not in taken:
+            taken.add(colour)
+            return colour
+    return start
+
+
+def _category_of(project: Project, slug: str) -> str:
+    """The top-level group a task belongs to."""
+    roots = list(project.ancestors(slug))
+    return roots[-1] if roots else slug
+
+
+def _waiting_on(project: Project, slug: str) -> list[str]:
+    """The things this task is waiting on, which aren't finished yet."""
+    if project.is_leaf(slug):
+        waiting = blockers(project, slug)
+    else:
+        waiting = [target for leaf in project.leaves(slug) for target in blockers(project, leaf)]
+    return [target for target in dict.fromkeys(waiting) if not is_done(project, target)]
+
+
+def _blocks(project: Project, slug: str) -> list[str]:
+    """The tasks waiting on this one."""
+    found = []
+    for other in project.tasks.values():
+        if other.slug == slug or is_done(project, other.slug):
+            continue
+        targets = (
+            [dependency.task for dependency in effective_dependencies(project, other.slug)]
+            if project.is_leaf(other.slug)
+            else [dependency.task for dependency in other.depends_on]
         )
-    edges = [
-        {"from": dependency.task, "to": task.slug, "strength": dependency.strength}
-        for task in project.tasks.values()
-        for dependency in task.depends_on
+        if slug in targets:
+            found.append(other.slug)
+    return found
+
+
+@dataclass
+class MapTask:
+    """A task as the map shows it: a dot in a cluster, or a card in a run of jobs."""
+
+    slug: str
+    title: str
+    kind: str
+    state: str
+    progress: float
+    category: str
+    parent: str | None
+    is_leaf: bool
+    needs: list[str]
+    blocks: list[str]
+    children: list[str]
+    note: str
+
+
+@dataclass
+class MapCategory:
+    """A top-level group: the cluster a task belongs to."""
+
+    slug: str
+    title: str
+    colour: int
+    total: int
+    done: int
+    progress: float
+    next: str | None
+
+
+@dataclass
+class MapNote:
+    """A note, and the task it documents if it says so."""
+
+    slug: str
+    title: str
+    task: str | None
+
+
+@dataclass
+class ProjectMap:
+    """The whole project, as the map and What now draw it."""
+
+    total: int
+    done: int
+    progress: float
+    categories: list[MapCategory]
+    tasks: list[MapTask]
+    notes: list[MapNote]
+
+
+def _categories(project: Project) -> list[MapCategory]:
+    downstream = downstream_hours(project)
+    taken: set[int] = set()
+    categories = []
+    for root in project.roots:
+        leaves = project.leaves(root)
+        waiting = [
+            leaf
+            for leaf in leaves
+            if project.tasks[leaf].state != "done" and not blockers(project, leaf)
+        ]
+        nxt = (
+            max(waiting, key=lambda leaf: (project.tasks[leaf].state == "doing", downstream.get(leaf, 0.0)))
+            if waiting
+            else None
+        )
+        categories.append(
+            MapCategory(
+                slug=root,
+                title=project.tasks[root].title,
+                colour=_colour(root, taken),
+                total=len(leaves),
+                done=sum(1 for leaf in leaves if project.tasks[leaf].state == "done"),
+                progress=progress(project, root),
+                next=nxt,
+            )
+        )
+    return categories
+
+
+def _tasks(project: Project) -> list[MapTask]:
+    return [
+        MapTask(
+            slug=slug,
+            title=task.title,
+            kind=task.kind,
+            state=_state(project, slug),
+            progress=progress(project, slug),
+            category=_category_of(project, slug),
+            parent=task.parent,
+            is_leaf=project.is_leaf(slug),
+            needs=_waiting_on(project, slug),
+            blocks=_blocks(project, slug),
+            children=list(project.children.get(slug, [])),
+            note=get_section(task.body, CURRENT_STATE),
+        )
+        for slug, task in project.tasks.items()
     ]
-    return {"nodes": nodes, "edges": edges}
+
+
+def _notes(project: Project) -> list[MapNote]:
+    notes = []
+    for slug, concept in project.notes.items():
+        related = concept.frontmatter.get("related")
+        task = str(related) if related and str(related) in project.tasks else None
+        notes.append(MapNote(slug, str(concept.frontmatter.get("title", slug)), task))
+    return notes
+
+
+def project_map(project: Project) -> ProjectMap:
+    """Everything the map and What now need, in one read."""
+    leaves = project.all_leaves()
+    return ProjectMap(
+        total=len(leaves),
+        done=sum(1 for leaf in leaves if project.tasks[leaf].state == "done"),
+        progress=overall_progress(project),
+        categories=_categories(project),
+        tasks=_tasks(project),
+        notes=_notes(project),
+    )
 
 
 @dataclass

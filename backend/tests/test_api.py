@@ -173,25 +173,44 @@ def test_log_is_paged_newest_first(client: TestClient) -> None:
     assert lines[0]["text"] == "Two"
 
 
-def test_graph(client: TestClient) -> None:
-    a = new_task(client, "A")
-    b = new_task(client, "B", depends_on=[{"task": a, "strength": "soft"}])
-
-    graph = client.get("/api/graph").json()
-
-    assert {node["slug"] for node in graph["nodes"]} == {a, b}
-    assert graph["edges"] == [{"from": a, "to": b, "strength": "soft"}]
-
-
-def test_graph_says_what_a_blocked_task_is_waiting_on(client: TestClient) -> None:
+def test_the_map_says_what_each_task_waits_on(client: TestClient) -> None:
     a = new_task(client, "A")
     b = new_task(client, "B", depends_on=[{"task": a, "strength": "hard"}])
 
-    nodes = {node["slug"]: node for node in client.get("/api/graph").json()["nodes"]}
+    project_map = client.get("/api/map").json()
+    tasks = {task["slug"]: task for task in project_map["tasks"]}
 
-    assert nodes[b]["blocked"] is True
-    assert nodes[b]["waiting_on"] == ["A"]
-    assert nodes[a]["waiting_on"] == []
+    assert project_map["total"] == 2
+    assert tasks[b]["needs"] == [a]
+    assert tasks[a]["blocks"] == [b]
+
+
+def test_the_map_groups_the_tasks_into_categories(client: TestClient) -> None:
+    parent = new_task(client, "Electrics")
+    child = new_task(client, "Wire the board", parent=parent)
+
+    project_map = client.get("/api/map").json()
+
+    [category] = project_map["categories"]
+    assert category["slug"] == parent
+    assert category["title"] == "Electrics"
+    assert category["total"] == 1
+    assert category["next"] == child
+    assert next(task for task in project_map["tasks"] if task["slug"] == child)["category"] == parent
+
+
+def test_a_note_can_document_a_task(client: TestClient) -> None:
+    slug = new_task(client, "Wire the board")
+
+    client.post("/api/notes", json={"title": "Fuse sizes", "body": "30A for the board.", "related": slug})
+
+    assert client.get("/api/map").json()["notes"][0]["task"] == slug
+
+
+def test_a_note_cannot_document_a_task_that_isnt_there(client: TestClient) -> None:
+    response = client.post("/api/notes", json={"title": "Fuse sizes", "body": "30A.", "related": "nothing"})
+
+    assert response.status_code == 422
 
 
 def test_problems_are_exposed(client: TestClient) -> None:
