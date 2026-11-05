@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
@@ -7,6 +7,7 @@ import {
   getJson,
   postJson,
   streamMessage,
+  uploadPhoto,
   type ChatEvent,
   type ChatItem,
   type Proposal,
@@ -95,7 +96,12 @@ function ChangeLine({ id, summary }: { id: string; summary: string }) {
 function Item({ item }: { item: ChatItem }) {
   switch (item.type) {
     case "user":
-      return <div className="bubble user">{item.text}</div>;
+      return (
+        <div className="bubble user">
+          {item.photos?.map((key) => <img key={key} className="chat-photo" src={`/api/photos/${key}`} alt="Attached" />)}
+          {item.text}
+        </div>
+      );
     case "assistant":
       return (
         <div className="bubble">
@@ -147,6 +153,7 @@ export function Chat() {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [activity, setActivity] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
   const log = useRef<HTMLDivElement>(null);
   const streaming = useRef(false);
 
@@ -164,6 +171,11 @@ export function Chat() {
   useEffect(() => {
     if (log.current) log.current.scrollTop = log.current.scrollHeight;
   }, [items, activity]);
+
+  const preview = useMemo(() => (photo ? URL.createObjectURL(photo) : ""), [photo]);
+  useEffect(() => () => {
+    if (preview) URL.revokeObjectURL(preview);
+  }, [preview]);
 
   const apply = (event: ChatEvent) => {
     if (event.type === "text") {
@@ -184,19 +196,26 @@ export function Chat() {
 
   const send = async () => {
     const text = draft.trim();
-    if (!text || busy) return;
+    if ((!text && !photo) || busy) return;
+    const attached = photo;
     setDraft("");
+    setPhoto(null);
     setBusy(true);
     streaming.current = true;
-    setItems((current) => [...current, { type: "user", text }]);
+    const shown: ChatItem = { type: "user", text };
+    setItems((current) => [...current, shown]);
     try {
+      const keys = attached ? [(await uploadPhoto(attached)).key] : [];
+      if (keys.length > 0) {
+        setItems((current) => current.map((item) => (item === shown ? { ...shown, photos: keys } : item)));
+      }
       let id = sessionId;
       if (!id) {
         const session = await postJson<Session>("/sessions", { focus });
         id = session.id;
         navigate(`/chat?session=${id}`, { replace: true });
       }
-      await streamMessage(id, text, apply);
+      await streamMessage(id, text, keys, apply);
     } catch (error) {
       setItems((current) => [...current, { type: "error", message: (error as Error).message }]);
     } finally {
@@ -220,6 +239,14 @@ export function Chat() {
           </p>
         )}
       </div>
+      {photo && (
+        <div className="pending-photo">
+          <img src={preview} alt="To send" />
+          <button type="button" onClick={() => setPhoto(null)}>
+            Remove
+          </button>
+        </div>
+      )}
       <form
         className="composer"
         onSubmit={(event) => {
@@ -227,6 +254,19 @@ export function Chat() {
           void send();
         }}
       >
+        <label className="button file-button icon-button" aria-label="Add a photo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 8h3l2-3h6l2 3h3v11H4zM12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+          </svg>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(event) => {
+              setPhoto(event.target.files?.[0] ?? null);
+              event.target.value = "";
+            }}
+          />
+        </label>
         <textarea
           aria-label="Message"
           placeholder="Tell me what happened…"
@@ -240,7 +280,7 @@ export function Chat() {
             }
           }}
         />
-        <button className="button primary" type="submit" disabled={busy || !draft.trim()}>
+        <button className="button primary" type="submit" disabled={busy || (!draft.trim() && !photo)}>
           Send
         </button>
       </form>

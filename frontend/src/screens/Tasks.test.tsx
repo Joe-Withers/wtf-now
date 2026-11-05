@@ -24,13 +24,14 @@ const detail = {
   current_state: "Cables in the blue box.", notes: "See [the torque note](/notes/torque.md).",
   breadcrumbs: [{ slug: "electrics", title: "Electrics", state: "doing" }], children: [], depends_on: [],
   dependents: [{ slug: "fit", title: "Fit battery", state: "todo" }],
-  blocked_by: [], easier_after: [], closes_zone_title: null, preflight: [],
+  blocked_by: [], easier_after: [], closes_zone_title: null, preflight: [], photos: [],
 };
 
 const renderTask = (overrides = {}) => {
   const calls = mockApi({
     "/api/tasks/wire/state": { change: { id: "c1", summary: "", at: "" } },
     "/api/tasks/wire/progress": { change: { id: "c2", summary: "", at: "" } },
+    "/api/tasks/wire/photos": { change: { id: "c3", summary: "", at: "" } },
     "/api/tasks/wire": { ...detail, ...overrides },
   });
   renderApp(
@@ -116,3 +117,19 @@ test("no warning when nothing is left in the zone", async () => {
   await screen.findByText("Cables in the blue box.");
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
+
+test("photos show on the task and can be added", async () => {
+  const calls = renderTaskWithPhotos();
+
+  expect(await screen.findByRole("img", { name: "The fuse block" })).toHaveAttribute("src", "/api/photos/abc.jpg");
+
+  const input = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  await userEvent.upload(input, new File(["x"], "board.jpg", { type: "image/jpeg" }));
+
+  expect(await screen.findByText("Photo added")).toBeInTheDocument();
+  expect(calls.find((call) => call.url === "/api/tasks/wire/photos")?.init?.method).toBe("POST");
+});
+
+function renderTaskWithPhotos() {
+  return renderTask({ photos: [{ key: "abc.jpg", caption: "The fuse block" }] });
+}

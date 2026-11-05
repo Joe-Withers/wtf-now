@@ -34,3 +34,23 @@ def bundle_remote() -> str | None:
 def web_root() -> Path:
     """The built frontend."""
     return data_path("WEB_ROOT", "frontend/dist")
+
+
+def photo_store():
+    """S3-compatible storage if it's configured, otherwise a local folder."""
+    from .photos import LocalPhotos, S3Photos
+
+    load_env()
+    bucket = os.environ.get("S3_BUCKET", "").strip()
+    if not bucket:
+        return LocalPhotos(app_data_path() / "photos")
+
+    import boto3
+
+    client = boto3.client(
+        "s3",
+        endpoint_url=os.environ.get("S3_ENDPOINT", "").strip() or None,
+        aws_access_key_id=os.environ.get("S3_ACCESS_KEY", "").strip(),
+        aws_secret_access_key=os.environ.get("S3_SECRET_KEY", "").strip(),
+    )
+    return S3Photos(client, bucket)

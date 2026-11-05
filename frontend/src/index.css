@@ -143,3 +143,15 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .card.warning { border-color: var(--warn); }
 .card.warning ul { margin: 6px 0; padding-left: 18px; }
 .card.warning a { text-decoration: underline; }
+
+.photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.photos img, .chat-photo { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; display: block; }
+.chat-photo { width: 120px; margin-bottom: 6px; }
+.file-button { display: inline-flex; align-items: center; justify-content: center; }
+.file-button input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.file-button:focus-within { outline: 2px solid var(--now); outline-offset: 2px; }
+.icon-button { flex: none; width: 44px; height: 44px; padding: 0; }
+.icon-button svg { width: 22px; height: 22px; }
+.pending-photo { display: flex; align-items: center; gap: 8px; padding: 6px 12px 0; }
+.pending-photo img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
+.pending-photo button { background: none; border: 0; color: var(--now); font-weight: 700; padding: 8px; }

@@ -137,3 +137,27 @@ test("a failed message shows the error", async () => {
 
   await waitFor(() => expect(screen.getByText("The AI isn't configured.")).toBeInTheDocument());
 });
+
+test("a photo is uploaded and sent with the message", async () => {
+  vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:x", revokeObjectURL: () => {} }));
+  const bodies: string[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: RequestInit) => {
+      if (url === "/api/photos") return { ok: true, json: async () => ({ key: "abc.jpg" }) };
+      if (url.endsWith("/messages")) {
+        bodies.push(String(init?.body));
+        return { ok: true, body: sse([{ type: "done" }]) };
+      }
+      if (url === "/api/sessions" && init?.method === "POST") return { ok: true, json: async () => ({ id: "s1" }) };
+      return { ok: true, json: async () => [] };
+    }),
+  );
+  renderApp(<Chat />);
+
+  await userEvent.upload(screen.getByLabelText("Add a photo"), new File(["x"], "board.jpg", { type: "image/jpeg" }));
+  await userEvent.click(screen.getByRole("button", { name: "Send" }));
+
+  await waitFor(() => expect(bodies).toEqual([JSON.stringify({ text: "", photos: ["abc.jpg"] })]));
+  expect(await screen.findByRole("img", { name: "Attached" })).toHaveAttribute("src", "/api/photos/abc.jpg");
+});

@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { getJson, type State, type TaskDetail, type TaskRef } from "../api";
-import { hours, Loading, ProgressBar, useChange } from "../components/ui";
+import { addTaskPhoto, getJson, postJson, type State, type TaskDetail, type TaskRef } from "../api";
+import { hours, Loading, ProgressBar, useChange, useSnack } from "../components/ui";
 import { WikiText } from "../components/WikiText";
 
 function actions(task: TaskDetail): { state: State; label: string; primary?: boolean }[] {
@@ -128,6 +128,53 @@ function Progress({ task }: { task: TaskDetail }) {
   );
 }
 
+function Photos({ task }: { task: TaskDetail }) {
+  const client = useQueryClient();
+  const snack = useSnack();
+  const undo = useMutation({
+    mutationFn: (id: string) => postJson(`/changes/${id}/undo`),
+    onSuccess: () => client.invalidateQueries(),
+  });
+  const add = useMutation({
+    mutationFn: (file: File) => addTaskPhoto(task.slug, file),
+    onSuccess: (result) => {
+      client.invalidateQueries();
+      snack({ message: "Photo added", undo: () => undo.mutate(result.change.id) });
+    },
+    onError: (error) => snack({ message: error.message }),
+  });
+
+  return (
+    <section className="section">
+      <h2>Photos</h2>
+      {task.photos.length > 0 && (
+        <div className="photos">
+          {task.photos.map((photo) => (
+            <a key={photo.key} href={`/api/photos/${photo.key}`} target="_blank" rel="noreferrer">
+              <img src={`/api/photos/${photo.key}`} alt={photo.caption || `Photo of ${task.title}`} loading="lazy" />
+            </a>
+          ))}
+        </div>
+      )}
+      <div>
+        <label className="button file-button">
+          {add.isPending ? "Uploading…" : "Add a photo"}
+          <input
+            type="file"
+            accept="image/*"
+            disabled={add.isPending}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) add.mutate(file);
+              event.target.value = "";
+            }}
+          />
+        </label>
+      </div>
+    </section>
+  );
+}
+
 export function TaskScreen() {
   const { slug = "" } = useParams();
   const query = useQuery({ queryKey: ["task", slug], queryFn: () => getJson<TaskDetail>(`/tasks/${slug}`) });
@@ -202,6 +249,8 @@ export function TaskScreen() {
 
             <CurrentState key={task.current_state} task={task} />
             {task.is_leaf && task.state === "doing" && <Progress key={task.progress} task={task} />}
+
+            <Photos task={task} />
 
             <Refs title="Subtasks" items={task.children} />
             <Refs title="Easier after" items={task.easier_after} />

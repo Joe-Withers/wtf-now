@@ -116,6 +116,7 @@ class Transaction:
         "write_note",
         "verify_note",
         "write_layout",
+        "attach_photo",
     )
 
     def __init__(self, concepts: dict[str, Concept], now: datetime, actor: str) -> None:
@@ -389,6 +390,17 @@ class Transaction:
         self.files[f"{LAYOUT_DIR}{slug}.svg"] = render_layout_svg(title, width, height, cleaned)
         self._record("Layout", self._link(concept))
         return slug
+
+    def attach_photo(self, slug: str, key: str, caption: str = "") -> None:
+        concept = self._task(slug)
+        photos = concept.frontmatter.setdefault("photos", [])
+        if any(photo["key"] == key for photo in photos):
+            raise ChangeRejected("That photo is already on this task")
+        entry = CommentedMap(key=key)
+        if caption:
+            entry["caption"] = caption
+        photos.append(entry)
+        self._record("Photo", f"{self._link(concept)}{f': {caption}' if caption else ''}")
 
     def verify_note(self, slug: str) -> None:
         concept = self.concepts.get(f"{NOTE_DIR}{slug}.md")

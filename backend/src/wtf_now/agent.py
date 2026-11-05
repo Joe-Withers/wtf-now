@@ -129,6 +129,12 @@ TOOLS = [
         ("title", "body"),
     ),
     _tool(
+        "attach_photo",
+        "Attach a photo from this chat to a task, as evidence of where it got to. The key is given with the photo.",
+        {"slug": SLUG, "key": TEXT, "caption": TEXT},
+        ("slug", "key"),
+    ),
+    _tool(
         "propose_changes",
         "Propose structural changes as one group for the owner to approve. Put everything related in a single call. "
         "Tasks created in the group can be referred to by the slug you give them. Argument names by operation: "
@@ -271,7 +277,7 @@ class Tools:
                 if hold := self._preflight_hold(args):
                     return hold, []
                 return self._direct(Op(name, args))
-            case "update_current_state" | "write_note":
+            case "update_current_state" | "write_note" | "attach_photo":
                 return self._direct(Op(name, args))
             case "propose_changes":
                 return self._propose(args["summary"], args["changes"])

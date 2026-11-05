@@ -28,6 +28,8 @@ The app is one container that serves the API and the built frontend. It sits beh
 
 Follow the same steps with the same `BUNDLE_REMOTE`. With an empty data volume, the app clones the project from the remote.
 
+Photos are only backed up if `S3_BUCKET` is set. Create a bucket with Cloudflare R2 or Backblaze B2, and put its details in `.env`. Without it, photos stay on the server's volume.
+
 Chat history and pending proposals are not backed up. They're short-lived, and everything worth keeping is in the wiki.
 
 ## Updating

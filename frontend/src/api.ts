@@ -68,7 +68,7 @@ export type Proposal = {
 };
 
 export type ChatItem =
-  | { type: "user"; text: string }
+  | { type: "user"; text: string; photos?: string[] }
   | { type: "assistant"; text: string }
   | { type: "change"; id: string; summary: string }
   | ({ type: "proposal" } & Proposal)
@@ -84,11 +84,16 @@ export type SessionSummary = { id: string; title: string; updated_at: string; fo
 export type Session = { id: string; title: string; focus: string | null; display: ChatItem[] };
 
 /** Sends a message and calls `onEvent` for each server-sent event. */
-export async function streamMessage(sessionId: string, text: string, onEvent: (event: ChatEvent) => void) {
+export async function streamMessage(
+  sessionId: string,
+  text: string,
+  photos: string[],
+  onEvent: (event: ChatEvent) => void,
+) {
   const response = await fetch(`/api/sessions/${sessionId}/messages`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, photos }),
   });
   if (!response.ok || !response.body) throw new ApiError(`Request failed (${response.status})`);
 
@@ -142,6 +147,7 @@ export type TaskDetail = {
   easier_after: TaskRef[];
   closes_zone_title: string | null;
   preflight: TaskRef[];
+  photos: { key: string; caption: string }[];
 };
 
 export type NoteSummary = {
@@ -167,3 +173,37 @@ export type Shopping = {
   spent: number;
   unpriced: number;
 };
+
+const MAX_PHOTO_SIDE = 1600;
+
+/** Shrinks a photo before upload, because signal can be poor. Falls back to the original. */
+export async function shrinkPhoto(file: File): Promise<Blob> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_PHOTO_SIDE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+    return blob ?? file;
+  } catch {
+    return file;
+  }
+}
+
+async function sendPhoto<T>(path: string, file: File, caption?: string): Promise<T> {
+  const form = new FormData();
+  const photo = await shrinkPhoto(file);
+  form.append("file", photo, "photo");
+  if (caption) form.append("caption", caption);
+  const response = await fetch(`/api${path}`, { method: "POST", body: form });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new ApiError(body?.detail ?? `Upload failed (${response.status})`);
+  }
+  return response.json();
+}
+
+export const uploadPhoto = (file: File) => sendPhoto<{ key: string }>("/photos", file);
+export const addTaskPhoto = (slug: string, file: File) => sendPhoto<ChangeResult>(`/tasks/${slug}/photos`, file);

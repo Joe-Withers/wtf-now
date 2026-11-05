@@ -1,5 +1,6 @@
 """Chat sessions. Transcripts live outside the bundle, because the wiki is the memory."""
 
+import base64
 import json
 import uuid
 from collections.abc import Callable, Iterator
@@ -11,6 +12,7 @@ from typing import Any
 from .agent import Model, Tools, run_conversation
 from .bundle import write_text_atomic
 from .context import build_system
+from .photos import media_type_of
 from .proposals import ProposalStore
 from .store import Store
 from .views import NotFound
@@ -85,6 +87,19 @@ def _is_tool_result(message: dict[str, Any]) -> bool:
     return isinstance(content, list) and any(part.get("type") == "tool_result" for part in content)
 
 
+def _image_block(key: str, data: bytes) -> dict[str, Any]:
+    source = {"type": "base64", "media_type": media_type_of(key), "data": base64.b64encode(data).decode()}
+    return {"type": "image", "source": source}
+
+
+def _without_images(message: dict[str, Any]) -> dict[str, Any]:
+    """Images are only sent on their own turn, so transcripts stay small."""
+    content = message["content"]
+    if message["role"] != "user" or not isinstance(content, list):
+        return message
+    return {**message, "content": [part for part in content if part.get("type") != "image"]}
+
+
 class Chat:
     def __init__(
         self,
@@ -104,15 +119,20 @@ class Chat:
     def actor(self) -> str:
         return f"wtf-now/{self.llm.model}"
 
-    def send(self, session_id: str, text: str, content: list[dict[str, Any]] | None = None) -> Iterator[dict[str, Any]]:
-        """Runs one owner message. `content` adds blocks such as images to it."""
+    def send(self, session_id: str, text: str, photos: list[tuple[str, bytes]] | None = None) -> Iterator[dict[str, Any]]:
+        """Runs one owner message. `photos` are (key, data) pairs the AI can see this turn."""
+        photos = photos or []
         session = self.sessions.get(session_id)
-        session.title = session.title or text[:TITLE_LENGTH]
-        session.display.append({"type": "user", "text": text})
+        session.title = session.title or text[:TITLE_LENGTH] or "Photo"
+        session.display.append({"type": "user", "text": text, "photos": [key for key, _ in photos]})
 
-        said = "\n".join([*(f"[{note}]" for note in session.notes), text])
+        keys = [f"[Photo attached, key {key}]" for key, _ in photos]
+        said = "\n".join([*(f"[{note}]" for note in session.notes), *keys, text])
         session.notes = []
-        session.messages.append({"role": "user", "content": [*(content or []), {"type": "text", "text": said}] if content else said})
+        content: Any = said
+        if photos:
+            content = [*(_image_block(key, data) for key, data in photos), {"type": "text", "text": said}]
+        session.messages.append({"role": "user", "content": content})
 
         tools = Tools(self.store, self.proposals, session.id, self.actor, self.clock)
         system = build_system(self.store, self.clock(), self.proposals.pending(), session.focus)
@@ -132,7 +152,7 @@ class Chat:
         finally:
             if reply:
                 session.display.append({"type": "assistant", "text": "".join(reply)})
-            session.messages = history
+            session.messages = [_without_images(message) for message in history]
             self.sessions.save(session)
 
     def decide(self, proposal_id: str, approved: bool) -> Any:

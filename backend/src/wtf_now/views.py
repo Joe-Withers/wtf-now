@@ -83,6 +83,7 @@ class TaskDetail:
     easier_after: list[TaskRef]
     closes_zone_title: str | None
     preflight: list[TaskRef]
+    photos: list[dict[str, str]]
 
 
 @dataclass
@@ -152,6 +153,15 @@ def _dependency_view(project: Project, dependency: Dependency, inherited_from: s
     return DependencyView(target.slug, target.title, dependency.strength, is_done(project, target.slug), inherited_from)
 
 
+def _photos(concept: Concept) -> list[dict[str, str]]:
+    entries = concept.frontmatter.get("photos") or []
+    return [
+        {"key": str(entry["key"]), "caption": str(entry.get("caption", ""))}
+        for entry in entries
+        if isinstance(entry, dict) and entry.get("key")
+    ]
+
+
 def preflight(project: Project, slug: str) -> list[TaskRef]:
     """Unfinished work in the zone a task will close off.
 
@@ -206,6 +216,7 @@ def task_detail(project: Project, slug: str) -> TaskDetail:
         easier_after=[_ref(project, target) for target in warnings],
         closes_zone_title=project.zones().get(task.closes_zone or "", task.closes_zone),
         preflight=preflight(project, slug),
+        photos=_photos(project.concepts[task.path]),
     )
 
 

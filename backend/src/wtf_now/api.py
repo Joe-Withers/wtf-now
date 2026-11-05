@@ -6,12 +6,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from . import views
 from .chat import Chat
+from .photos import InvalidPhoto, PhotoStore, media_type_of, store_photo
 from .store import ChangeRejected, Op, Store, UndoConflict
 from .what_now import home, log_lines, what_now
 
@@ -82,7 +83,8 @@ class NewSession(BaseModel):
 
 
 class NewMessage(BaseModel):
-    text: str = Field(min_length=1)
+    text: str = Field(default="")
+    photos: list[str] = []
 
 
 def _sse(events: Iterator[dict[str, Any]]) -> Iterator[str]:
@@ -95,6 +97,7 @@ def create_app(
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     chat: Chat | None = None,
     static_root: Path | None = None,
+    photos: PhotoStore | None = None,
 ) -> FastAPI:
     app = FastAPI(title="wtf-now")
     app.state.store = store
@@ -106,6 +109,10 @@ def create_app(
     @app.exception_handler(UndoConflict)
     def conflict(_: Request, error: UndoConflict) -> JSONResponse:
         return JSONResponse({"detail": str(error)}, status_code=409)
+
+    @app.exception_handler(InvalidPhoto)
+    def invalid_photo(_: Request, error: InvalidPhoto) -> JSONResponse:
+        return JSONResponse({"detail": str(error)}, status_code=422)
 
     @app.exception_handler(views.NotFound)
     def not_found(_: Request, error: views.NotFound) -> JSONResponse:
@@ -227,6 +234,27 @@ def create_app(
     def undo(change_id: str) -> Any:
         return {"change": store.undo(change_id)}
 
+    def require_photos() -> PhotoStore:
+        if photos is None:
+            raise HTTPException(503, "Photo storage isn't configured.")
+        return photos
+
+    @app.post("/api/photos", status_code=201)
+    def upload_photo(file: UploadFile = File(...)) -> dict[str, str]:
+        key = store_photo(require_photos(), file.content_type or "", file.file.read())
+        return {"key": key}
+
+    @app.get("/api/photos/{key}")
+    def get_photo(key: str) -> Response:
+        data = require_photos().get(key)
+        return Response(data, media_type=media_type_of(key), headers={"Cache-Control": "private, max-age=31536000"})
+
+    @app.post("/api/tasks/{slug}/photos", status_code=201)
+    def add_task_photo(slug: str, file: UploadFile = File(...), caption: str = Form("")) -> Any:
+        require_task(slug)
+        key = store_photo(require_photos(), file.content_type or "", file.file.read())
+        return change(Op("attach_photo", {"slug": slug, "key": key, "caption": caption}))
+
     def require_chat() -> Chat:
         if chat is None:
             raise HTTPException(503, "The AI isn't configured. Set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL.")
@@ -257,7 +285,10 @@ def create_app(
     def send_message(session_id: str, body: NewMessage) -> StreamingResponse:
         active = require_chat()
         active.sessions.get(session_id)
-        return StreamingResponse(_sse(active.send(session_id, body.text)), media_type="text/event-stream")
+        if not body.text.strip() and not body.photos:
+            raise HTTPException(422, "Say something or add a photo")
+        images = [(key, require_photos().get(key)) for key in body.photos]
+        return StreamingResponse(_sse(active.send(session_id, body.text, images)), media_type="text/event-stream")
 
     @app.get("/api/proposals")
     def get_proposals() -> Any:

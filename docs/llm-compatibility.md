@@ -23,6 +23,6 @@ Results of `scripts/check_llm.py`, run from `backend/` with `uv run python scrip
 
 ## Not tested
 
-- Real photos. Solid colours show that images reach the model, not how well it reads a photo of a wiring job. Ticket 020 should test this.
+- Real photos. `MiniMax-M3` correctly read the labels and a handwritten-style note on a drawn fuse board, but that's a clean image, not a dim photo from inside a van.
 - Prompt caching and extended thinking. We don't rely on either.
 - Anthropic's API. The module uses nothing MiniMax-specific, but this script should be run against it before swapping.
