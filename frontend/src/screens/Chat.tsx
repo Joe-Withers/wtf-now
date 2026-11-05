@@ -15,6 +15,7 @@ import {
   type Proposal,
   type Session,
   type SessionSummary,
+  type TaskDetail,
 } from "../api";
 import { useSnack } from "../components/ui";
 
@@ -25,6 +26,8 @@ const ACTIVITY: Record<string, string> = {
   write_note: "Writing to the wiki…",
   propose_changes: "Preparing some changes…",
 };
+
+const PROMPTS = ["I've ordered the …", "The … has turned up", "I've finished …", "What should I do next?"];
 
 function ProposalCard({ proposal }: { proposal: Proposal }) {
   const client = useQueryClient();
@@ -164,14 +167,21 @@ function VoiceButton({ onText }: { onText: (text: string) => void }) {
   );
 }
 
-function Recent() {
+function Recent({ onPrompt }: { onPrompt: (text: string) => void }) {
   const query = useQuery({ queryKey: ["sessions"], queryFn: () => getJson<SessionSummary[]>("/sessions") });
   const started = query.data?.filter((session) => session.title) ?? [];
 
   return (
     <>
-      <h1>What's happened?</h1>
+      <p className="lede">What's happened?</p>
       <p className="meta">Tell me what you've done, what's gone wrong, or what you're stuck on. Everything worth keeping goes in the wiki.</p>
+      <div className="suggestions">
+        {PROMPTS.map((prompt) => (
+          <button key={prompt} className="suggestion" onClick={() => onPrompt(prompt)}>
+            {prompt}
+          </button>
+        ))}
+      </div>
       {query.isError && <p className="status error">{query.error.message}</p>}
       {started.length > 0 && (
         <section className="section">
@@ -196,6 +206,11 @@ export function Chat() {
   const sessionId = parameters.get("session");
   const features = useQuery({ queryKey: ["features"], queryFn: () => getJson<Features>("/features") });
   const focus = parameters.get("focus");
+  const focused = useQuery({
+    queryKey: ["task", focus],
+    queryFn: () => getJson<TaskDetail>(`/tasks/${focus}`),
+    enabled: Boolean(focus),
+  });
 
   const [items, setItems] = useState<ChatItem[]>([]);
   const [draft, setDraft] = useState("");
@@ -276,8 +291,17 @@ export function Chat() {
 
   return (
     <main className="chat">
+      <div className="chat-head">
+        {focused.data ? (
+          <Link className="chat-focus" to={`/tasks/${focused.data.slug}`}>
+            {focused.data.title}
+          </Link>
+        ) : (
+          <span className="meta">Chat</span>
+        )}
+      </div>
       <div className="chat-log" ref={log}>
-        {items.length === 0 && !busy && <Recent />}
+        {items.length === 0 && !busy && <Recent onPrompt={setDraft} />}
         {items.map((item, index) => (
           <Item key={item.type === "proposal" || item.type === "change" ? item.id : index} item={item} />
         ))}

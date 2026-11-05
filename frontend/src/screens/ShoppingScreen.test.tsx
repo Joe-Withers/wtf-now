@@ -23,8 +23,18 @@ test("shows totals and what each item is waiting on", async () => {
   renderApp(<ShoppingScreen />);
 
   expect(await screen.findByText("£80")).toBeInTheDocument();
-  expect(screen.getByText("Still to spend, 1 unpriced")).toBeInTheDocument();
+  expect(screen.getByText("Still to spend, 1 not priced yet")).toBeInTheDocument();
   expect(screen.getByText("Waiting on Lithium or AGM")).toBeInTheDocument();
+});
+
+test("the spend card shows how much is left and how much is gone", async () => {
+  mockApi({ "/api/shopping": shopping });
+
+  renderApp(<ShoppingScreen />);
+
+  expect(await screen.findByText("£80")).toBeInTheDocument();
+  expect(screen.getByText("£40 spent")).toBeInTheDocument();
+  expect(screen.getByText("£120 all told")).toBeInTheDocument();
 });
 
 test("nothing on the shopping list changes a task — the chat does that", async () => {

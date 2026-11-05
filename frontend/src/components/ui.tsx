@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
-import { postJson, type ChangeResult } from "../api";
+import { postJson, type ChangeResult, type Kind, type State } from "../api";
 
 export function Wordmark() {
   return (
@@ -9,6 +10,34 @@ export function Wordmark() {
       wtf-<b>now</b>
     </span>
   );
+}
+
+/** The header every screen opens with: where you are, and the one thing you might do next. */
+export function ScreenHead({ title, action }: { title: ReactNode; action?: ReactNode }) {
+  return (
+    <header className="screen-head">
+      <h1>{title}</h1>
+      {action}
+    </header>
+  );
+}
+
+/** The way into the chat, from wherever you noticed something. */
+export function ChatLink({ to = "/chat", children = "Tell it →" }: { to?: string; children?: ReactNode }) {
+  return (
+    <Link className="head-action" to={to}>
+      {children}
+    </Link>
+  );
+}
+
+const STATE_LABELS: Record<State, string> = { todo: "Not started", doing: "Underway", done: "Done" };
+const PURCHASE_LABELS: Record<State, string> = { todo: "To order", doing: "On order", done: "Arrived" };
+
+/** One way of showing where a task is, used the same everywhere. */
+export function Pill({ state, kind }: { state: State; kind?: Kind }) {
+  const labels = kind === "purchase" ? PURCHASE_LABELS : STATE_LABELS;
+  return <span className={`pill ${state}`}>{labels[state]}</span>;
 }
 
 export function ProgressBar({ value, label }: { value: number; label: string }) {

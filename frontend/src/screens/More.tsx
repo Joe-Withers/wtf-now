@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { getJson, type NoteSummary, type Problem } from "../api";
+import { ChatLink, ScreenHead } from "../components/ui";
 
 const LINKS = [
   { to: "/shopping", label: "Shopping" },
@@ -18,7 +19,7 @@ export function More() {
 
   return (
     <main className="screen">
-      <h1>More</h1>
+      <ScreenHead title="More" action={<ChatLink />} />
       <nav className="menu" aria-label="More">
         {LINKS.map((link) => (
           <Link key={link.to} to={link.to}>

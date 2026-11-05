@@ -171,6 +171,15 @@ test("the mic stays hidden until voice is configured", async () => {
   expect(screen.queryByRole("button", { name: "Record a voice note" })).not.toBeInTheDocument();
 });
 
+test("a starter lands in the message box, to check before sending", async () => {
+  server([]);
+  renderApp(<Chat />);
+
+  await userEvent.click(await screen.findByRole("button", { name: "I've ordered the …" }));
+
+  expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue("I've ordered the …");
+});
+
 test("a voice note lands in the message box to check before sending", async () => {
   const stop = vi.fn();
   class FakeRecorder {

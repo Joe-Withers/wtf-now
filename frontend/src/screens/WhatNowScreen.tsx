@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 
 import { getJson, type WhatNow, type WorkItem } from "../api";
-import { Loading } from "../components/ui";
+import { ChatLink, Loading, ScreenHead } from "../components/ui";
 import { WorkCard } from "../components/WorkCard";
 
 const TIMES: { label: string; hours: number | null }[] = [
@@ -14,11 +13,11 @@ const TIMES: { label: string; hours: number | null }[] = [
   { label: "All day", hours: 8 },
 ];
 
-function Group({ title, items }: { title: string; items: WorkItem[] }) {
+function Group({ title, items, accent }: { title: string; items: WorkItem[]; accent?: boolean }) {
   if (items.length === 0) return null;
   return (
     <section className="section">
-      <h2>{title}</h2>
+      <h2 className={accent ? "now" : undefined}>{title}</h2>
       <div className="card-stack">
         {items.map((item) => (
           <WorkCard key={item.slug} item={item} />
@@ -42,35 +41,32 @@ export function WhatNowScreen() {
 
   return (
     <main className="screen">
-      <h1>What now?</h1>
-      <Link className="meta" to="/chat">
-        Finished something? Tell it →
-      </Link>
-      <section className="section" aria-label="Filters">
-        <div className="chips">
-          {TIMES.map((option) => (
-            <button key={option.label} className="chip" aria-pressed={time === option.hours} onClick={() => setTime(option.hours)}>
-              {option.label}
+      <ScreenHead title="What now?" action={<ChatLink />} />
+      <div className="content">
+        <section className="section" aria-label="Filters">
+          <div className="scroll-row">
+            {TIMES.map((option) => (
+              <button key={option.label} className="chip" aria-pressed={time === option.hours} onClick={() => setTime(option.hours)}>
+                {option.label}
+              </button>
+            ))}
+            <button className="chip" aria-pressed={solo} onClick={() => setSolo(!solo)}>
+              On my own
             </button>
-          ))}
-        </div>
-        <div className="chips">
-          <button className="chip" aria-pressed={solo} onClick={() => setSolo(!solo)}>
-            On my own
-          </button>
-        </div>
-      </section>
-      <Loading query={query}>
-        {(result) => (
-          <>
-            {result.can_do.length === 0 && <p className="empty">Nothing hands-on fits that right now.</p>}
-            <Group title="Can do now" items={result.can_do} />
-            <Group title="Order first" items={result.order_first} />
-            <Group title="On its way" items={result.on_its_way} />
-            <Group title="Decide or research first" items={result.decide_first} />
-          </>
-        )}
-      </Loading>
+          </div>
+        </section>
+        <Loading query={query}>
+          {(result) => (
+            <>
+              {result.can_do.length === 0 && <p className="empty">Nothing hands-on fits that right now.</p>}
+              <Group title="Can do now" items={result.can_do} accent />
+              <Group title="Order first" items={result.order_first} />
+              <Group title="On its way" items={result.on_its_way} />
+              <Group title="Decide or research first" items={result.decide_first} />
+            </>
+          )}
+        </Loading>
+      </div>
     </main>
   );
 }

@@ -3,7 +3,7 @@ import { createElement, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
 import { getJson, type Layout, type Shape, type Zone } from "../api";
-import { Loading } from "../components/ui";
+import { ChatLink, Loading, Pill, ScreenHead } from "../components/ui";
 
 function style(zone: Zone): CSSProperties {
   if (zone.progress === null) return { fill: "var(--surface)" };
@@ -73,7 +73,7 @@ function Plan({ layout }: { layout: Layout }) {
             {zone.tasks.map((task) => (
               <Link key={task.slug} className="ref" to={`/tasks/${task.slug}`}>
                 <span>{task.title}</span>
-                <span className="meta">{task.state === "done" ? "Done" : task.state === "doing" ? "Underway" : "Not started"}</span>
+                <Pill state={task.state} />
               </Link>
             ))}
           </div>
@@ -88,7 +88,7 @@ export function FloorPlan() {
 
   return (
     <main className="screen">
-      <h1>Floor plan</h1>
+      <ScreenHead title="Floor plan" action={<ChatLink />} />
       <Loading query={query}>
         {(layouts) =>
           layouts.length === 0 ? (

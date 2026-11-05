@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { getJson, type Shopping, type ShoppingItem } from "../api";
-import { Loading } from "../components/ui";
+import { ChatLink, Loading, ScreenHead } from "../components/ui";
 
 const money = (value: number) => `£${value.toLocaleString("en-GB", { maximumFractionDigits: 2 })}`;
 
@@ -38,28 +38,33 @@ export function ShoppingScreen() {
 
   return (
     <main className="screen">
-      <h1>Shopping</h1>
+      <ScreenHead title="Shopping" action={<ChatLink />} />
       <Loading query={query}>
-        {(shopping) => (
-          <>
-            <Link className="meta" to="/chat">
-              Ordered something, or did it turn up? Tell it →
-            </Link>
-            <section className="totals">
-              <div className="card">
-                <div className="total">{money(shopping.still_to_spend)}</div>
-                <div className="meta">Still to spend{shopping.unpriced > 0 ? `, ${shopping.unpriced} unpriced` : ""}</div>
-              </div>
-              <div className="card">
-                <div className="total">{money(shopping.spent)}</div>
-                <div className="meta">Spent so far</div>
-              </div>
-            </section>
-            <Group title="To order" items={shopping.to_order} />
-            <Group title="On order" items={shopping.on_order} />
-            <Group title="Arrived" items={shopping.arrived} />
-          </>
-        )}
+        {(shopping) => {
+          const total = shopping.spent + shopping.still_to_spend;
+          const spentPercent = total > 0 ? (shopping.spent / total) * 100 : 0;
+          return (
+            <div className="content">
+              <section className="spend">
+                <div className="figure">{money(shopping.still_to_spend)}</div>
+                <div className="meta">
+                  Still to spend{shopping.unpriced > 0 ? `, ${shopping.unpriced} not priced yet` : ""}
+                </div>
+                <div className="bar" role="progressbar" aria-label="Budget spent" aria-valuenow={Math.round(spentPercent)} aria-valuemin={0} aria-valuemax={100}>
+                  <span style={{ width: `${spentPercent}%` }} />
+                </div>
+                <div className="split">
+                  <span>{money(shopping.spent)} spent</span>
+                  <span>{money(total)} all told</span>
+                </div>
+              </section>
+
+              <Group title="To order" items={shopping.to_order} />
+              <Group title="On order" items={shopping.on_order} />
+              <Group title="Arrived" items={shopping.arrived} />
+            </div>
+          );
+        }}
       </Loading>
     </main>
   );

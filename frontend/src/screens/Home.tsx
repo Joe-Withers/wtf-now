@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { getJson, type Home as HomeData, type LogLine } from "../api";
-import { Loading, ProgressBar, Wordmark } from "../components/ui";
+import { ChatLink, Loading, ProgressBar, ScreenHead, Wordmark } from "../components/ui";
 import { WorkCard } from "../components/WorkCard";
 
 function away(days: number | null): string {
@@ -29,21 +29,20 @@ export function Home() {
 
   return (
     <main className="screen">
-      <Wordmark />
-      <Link to="/chat" className="meta">
-        Tell it what you've done →
-      </Link>
+      <ScreenHead title={<Wordmark />} action={<ChatLink />} />
       <Loading query={query}>
         {(home) => {
           if (home.last_activity === null) {
             return (
-              <section className="section">
-                <h1>Nothing here yet</h1>
-                <p className="meta">Tell the AI about your project, and it'll build the plan with you.</p>
-                <Link to="/chat" className="button primary" style={{ textAlign: "center", lineHeight: "22px" }}>
-                  Start talking
-                </Link>
-              </section>
+              <div className="content">
+                <section className="section">
+                  <p className="lede">Nothing here yet</p>
+                  <p className="meta">Tell the AI about your project, and it'll build the plan with you.</p>
+                  <Link to="/chat" className="button primary" style={{ textAlign: "center", lineHeight: "22px" }}>
+                    Start talking
+                  </Link>
+                </section>
+              </div>
             );
           }
           const [next, ...others] = home.suggestions;
@@ -51,9 +50,9 @@ export function Home() {
             (item) => !home.suggestions.some((suggestion) => suggestion.slug === item.slug),
           );
           return (
-            <>
+            <div className="content">
               <section className="section">
-                <h1>{away(home.days_away)}</h1>
+                <p className="lede">{away(home.days_away)}</p>
                 <ProgressBar value={home.overall_progress} label="Overall progress" />
                 <div className="meta">{Math.round(home.overall_progress)}% of the whole project</div>
               </section>
@@ -62,13 +61,32 @@ export function Home() {
                 <section className="section">
                   <h2>Do this next</h2>
                   <WorkCard item={next} lead />
-                  {others.length > 0 && (
-                    <div className="card-stack">
-                      {others.map((item) => (
-                        <WorkCard key={item.slug} item={item} />
-                      ))}
-                    </div>
-                  )}
+                </section>
+              )}
+
+              <section className="stats">
+                <div className="stat">
+                  <div className="figure">{home.suggestions.length}</div>
+                  <div className="label">ready now</div>
+                </div>
+                <div className="stat">
+                  <div className="figure">{home.in_progress.length}</div>
+                  <div className="label">underway</div>
+                </div>
+                <div className="stat">
+                  <div className="figure">{home.on_order.length}</div>
+                  <div className="label">on order</div>
+                </div>
+              </section>
+
+              {others.length > 0 && (
+                <section className="section">
+                  <h2>Also next</h2>
+                  <div className="card-stack">
+                    {others.map((item) => (
+                      <WorkCard key={item.slug} item={item} />
+                    ))}
+                  </div>
                   <Link to="/what-now" className="meta">
                     See everything you could do →
                   </Link>
@@ -108,7 +126,7 @@ export function Home() {
                 <h2>Last session</h2>
                 <Lines lines={home.last_session} />
               </section>
-            </>
+            </div>
           );
         }}
       </Loading>

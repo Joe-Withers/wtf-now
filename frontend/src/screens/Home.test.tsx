@@ -36,6 +36,17 @@ test("a task already suggested is not repeated as in progress", async () => {
   expect(screen.queryByText("Also in progress")).not.toBeInTheDocument();
 });
 
+test("the dashboard counts what is ready, underway and on order", async () => {
+  mockApi({ "/api/home": home });
+
+  renderApp(<Home />);
+
+  expect(await screen.findByText("ready now")).toBeInTheDocument();
+  expect(screen.getByText("underway")).toBeInTheDocument();
+  expect(screen.getByText("on order")).toBeInTheDocument();
+  expect(screen.getByText("Tell it →")).toHaveAttribute("href", "/chat");
+});
+
 test("an empty project points to the chat", async () => {
   mockApi({
     "/api/home": { ...home, last_activity: null, days_away: null, suggestions: [], in_progress: [], on_order: [], arrived: [], last_session: [] },

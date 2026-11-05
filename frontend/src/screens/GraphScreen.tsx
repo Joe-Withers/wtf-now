@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { getJson, type Graph, type GraphNode, type TaskDetail } from "../api";
-import { Loading } from "../components/ui";
+import { ChatLink, Loading, Pill, ScreenHead } from "../components/ui";
 
 function Blocked({ nodes }: { nodes: GraphNode[] }) {
   const [, setParameters] = useSearchParams();
@@ -71,7 +71,10 @@ function Focus({ slug }: { slug: string }) {
             </section>
 
             <section className="card focus-card">
-              <div className="card-title lead">{task.title}</div>
+              <div className="card-head">
+                <div className="card-title lead">{task.title}</div>
+                <Pill state={task.state} kind={task.kind} />
+              </div>
               <div className="meta">{blocking.size > 0 ? "Blocked" : task.state === "done" ? "Done" : "Ready"}</div>
               <Link className="meta" to={`/tasks/${task.slug}`}>
                 Open this task →
@@ -107,7 +110,7 @@ export function GraphScreen() {
 
   return (
     <main className="screen">
-      <h1>Dependencies</h1>
+      <ScreenHead title="Dependencies" action={<ChatLink />} />
       {task ? <Focus key={task} slug={task} /> : <Loading query={graph}>{(data) => <Blocked nodes={data.nodes} />}</Loading>}
     </main>
   );

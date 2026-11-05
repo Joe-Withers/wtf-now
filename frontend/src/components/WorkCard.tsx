@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 import type { WorkItem } from "../api";
-import { hours, ProgressBar } from "./ui";
+import { hours, Pill, ProgressBar } from "./ui";
 
 export function details(item: WorkItem): string {
   const parts = [item.area, hours(item.remaining_hours)];
@@ -12,8 +12,11 @@ export function details(item: WorkItem): string {
 
 export function WorkCard({ item, lead = false }: { item: WorkItem; lead?: boolean }) {
   return (
-    <Link to={`/tasks/${item.slug}`} className={`card${lead ? " next" : ""}`}>
-      <div className={`card-title${lead ? " lead" : ""}`}>{item.title}</div>
+    <Link to={`/tasks/${item.slug}`} className={`card${lead ? " hero" : ""}`}>
+      <div className="card-head">
+        <div className="card-title">{item.title}</div>
+        {item.state !== "todo" && <Pill state={item.state} kind={item.kind} />}
+      </div>
       <div className="meta">{details(item)}</div>
       {item.state === "doing" && item.progress > 0 && (
         <div style={{ marginTop: 8 }}>

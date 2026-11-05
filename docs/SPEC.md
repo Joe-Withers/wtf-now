@@ -55,6 +55,16 @@ Three taps survive, because each of them is the owner's judgement rather than a 
 
 Every screen keeps a way into the chat, and the task screen opens it with that task in focus, so reporting work is one tap from wherever you noticed it.
 
+### 3.3 Look and feel
+
+The app is one system, not a set of screens that happen to sit together.
+
+- **One header.** Every screen opens with a sticky header: the title on the left, and the way into the chat on the right.
+- **One type scale.** Screen titles, section eyebrows, card titles and metadata each have a fixed size, so a card looks like a card wherever it appears.
+- **One way of showing state.** A task's state is a pill — Not started, Underway, Done — and a purchase says To order, On order, Arrived. The same pill everywhere, never a stray word.
+- **The chat is the centre.** Its tab in the nav wears the accent colour, and the task screen keeps "Tell it what you've done" pinned within reach while you read.
+- **Warm, high contrast, dark or light.** A workshop palette that stays readable in a dusty van.
+
 ---
 
 ## 4. Storage
