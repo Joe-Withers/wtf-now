@@ -141,3 +141,17 @@ export type TaskDetail = {
   blocked_by: TaskRef[];
   easier_after: TaskRef[];
 };
+
+export type NoteSummary = {
+  slug: string;
+  title: string;
+  type: string;
+  description: string;
+  generated_by: string;
+  verified: boolean;
+  needs_verifying: boolean;
+  stale: boolean;
+};
+export type NoteDetail = NoteSummary & { body: string };
+export type SearchHit = { kind: "task" | "note"; slug: string; title: string; snippet: string };
+export type Problem = { code: string; path: string; message: string };

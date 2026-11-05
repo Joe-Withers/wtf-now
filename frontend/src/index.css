@@ -127,3 +127,10 @@ button { cursor: pointer; }
 .prose a { color: var(--now); text-decoration: underline; }
 .field { width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px 12px; }
 input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
+
+.menu a { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--line); font-weight: 600; }
+.menu .meta { font-weight: 400; }
+.flag { font-size: 0.78rem; font-weight: 600; color: var(--warn); }
+.log-day { font-family: var(--heading); font-weight: 600; margin-top: 8px; }
+.log-line { padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 0.93rem; overflow-wrap: anywhere; }
+.log-line strong { color: var(--muted); font-weight: 600; }
