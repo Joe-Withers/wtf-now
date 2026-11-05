@@ -13,7 +13,14 @@ wtf-now: an AI-centred planner for long-running physical builds (first user: a v
 
 ## Current phase
 
-Spec and tickets written. No code yet. Start at `docs/tickets/001-*.md`.
+Tickets 001 to 023 are built and merged. The app runs end to end: tasks, dependencies, progress, the wiki, chat with the AI, photos, voice, the floor plan and the dependency graph.
+
+The rest of the work needs something from the owner, and is written up in `docs/tickets/024-*.md` onwards:
+
+- a VPS to deploy to, and a private remote for the bundle
+- the owner's own brain dump, to replace the made-up van in the seed script
+- a transcription provider, so voice notes work
+- an Anthropic API key, to swap away from MiniMax
 
 We're building the full product, ticket by ticket, not an MVP.
 

@@ -41,4 +41,6 @@ The frontend runs on http://localhost:5173 and proxies `/api` to the backend on 
 
 ## Status
 
-In design. See [`docs/SPEC.md`](docs/SPEC.md) and [`docs/tickets/`](docs/tickets/).
+Built, ticket by ticket. The whole product works against a made-up van conversion: tasks and dependencies, progress that rolls up, a wiki the AI keeps up to date, chat that proposes changes for approval, photos, voice notes, a floor plan and a dependency graph.
+
+Not done yet: it hasn't been deployed to a real server, and the example project is invented. See [`docs/SPEC.md`](docs/SPEC.md) and [`docs/tickets/`](docs/tickets/).
