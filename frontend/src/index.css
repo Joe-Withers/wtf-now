@@ -94,3 +94,16 @@ button { cursor: pointer; }
 
 .snack { position: fixed; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(calc(100% - 32px), 600px); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface-raised); border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 14px; z-index: 10; font-size: 0.92rem; }
 .snack button { background: none; border: 0; color: var(--now); font-weight: 700; padding: 8px 10px; }
+
+.chat { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.chat-log { flex: 1; min-height: 0; overflow-y: auto; padding: max(16px, env(safe-area-inset-top)) 16px 12px; display: flex; flex-direction: column; gap: 10px; }
+.bubble { max-width: 88%; align-self: flex-start; overflow-wrap: anywhere; }
+.bubble.user { align-self: flex-end; background: var(--surface-raised); border-radius: 14px 14px 4px 14px; padding: 9px 13px; white-space: pre-wrap; }
+.bubble p + p, .bubble ul, .bubble ol { margin-top: 8px; }
+.bubble ul, .bubble ol { padding-left: 20px; margin-bottom: 0; }
+.activity { color: var(--muted); font-size: 0.85rem; }
+.change-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-left: 2px solid var(--done); padding-left: 10px; color: var(--muted); font-size: 0.88rem; }
+.change-line button { background: none; border: 0; color: var(--now); font-weight: 700; padding: 8px; flex: none; }
+.proposal ul { margin: 8px 0 12px; padding-left: 18px; }
+.composer { display: flex; gap: 8px; align-items: flex-end; padding: 8px 12px; border-top: 1px solid var(--line); }
+.composer textarea { flex: 1; resize: none; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px 12px; min-height: 44px; max-height: 140px; }

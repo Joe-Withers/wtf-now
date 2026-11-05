@@ -58,3 +58,50 @@ export type WhatNow = {
   on_its_way: WorkItem[];
   decide_first: WorkItem[];
 };
+
+export type Proposal = {
+  id: string;
+  summary: string;
+  descriptions: string[];
+  status: "pending" | "applied" | "rejected" | "failed";
+  error?: string | null;
+};
+
+export type ChatItem =
+  | { type: "user"; text: string }
+  | { type: "assistant"; text: string }
+  | { type: "change"; id: string; summary: string }
+  | ({ type: "proposal" } & Proposal)
+  | { type: "error"; message: string };
+
+export type ChatEvent =
+  | { type: "text"; text: string }
+  | { type: "tool"; name: string }
+  | { type: "done" }
+  | Exclude<ChatItem, { type: "user" } | { type: "assistant" }>;
+
+export type SessionSummary = { id: string; title: string; updated_at: string; focus: string | null };
+export type Session = { id: string; title: string; focus: string | null; display: ChatItem[] };
+
+/** Sends a message and calls `onEvent` for each server-sent event. */
+export async function streamMessage(sessionId: string, text: string, onEvent: (event: ChatEvent) => void) {
+  const response = await fetch(`/api/sessions/${sessionId}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!response.ok || !response.body) throw new ApiError(`Request failed (${response.status})`);
+
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) return;
+    buffer += value;
+    const events = buffer.split("\n\n");
+    buffer = events.pop() ?? "";
+    for (const event of events) {
+      if (event.startsWith("data: ")) onEvent(JSON.parse(event.slice(6)));
+    }
+  }
+}
