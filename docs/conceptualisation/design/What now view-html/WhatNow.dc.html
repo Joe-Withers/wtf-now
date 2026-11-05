@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>wtf-now what now view</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#A8A49C}a:hover{color:#ECEAE4}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #121214; font-family: Inter, system-ui, sans-serif; color: #ECEAE4">
+
+<aside style="position: absolute; left: 0; top: 0; width: 300px; height: 900px; box-sizing: border-box; background: #16161A; border-right: 1px solid #232328; padding: 28px 20px; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: center; gap: 10px">
+<svg width="40" height="20" viewBox="10 24 172 72" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M18 72 C 14 34, 66 28, 60 60 C 54 92, 16 84, 32 56 C 48 28, 92 38, 82 70 C 74 96, 46 72, 74 54 C 94 42, 108 60, 122 60" stroke="#F4F1EA" stroke-width="10"></path>
+<path d="M122 60 L 176 60 M 158 42 L 176 60 L 158 78" stroke="#FF7A2E" stroke-width="12"></path>
+</svg>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.5px">wtf-<span style="color: #FF7A2E">now</span></span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #8A877F">PROJECT</span>
+<span style="font-size: 18px; font-weight: 600">Van build</span>
+<span style="font-size: 13px; color: #8A877F">99 tasks · 37 done</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 40px; font-weight: 700; letter-spacing: -1px; line-height: 1">37%</span>
+<div style="height: 4px; border-radius: 2px; background: #26262C; overflow: hidden"><div style="height: 4px; width: 37%; background: #ECEAE4"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #8A877F; padding: 0 12px 6px">CATEGORIES</span>
+<sc-for list="{{sideCats}}" as="c" hint-placeholder-count="6">
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 12px">
+<span style="display: flex; align-items: center; gap: 10px; font-size: 14px">
+<span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: {{c.color}}"></span>
+<span style="flex: 1">{{c.name}}</span>
+<span style="font-size: 12px; color: #8A877F">{{c.label}}</span>
+</span>
+<span style="display: block; height: 3px; border-radius: 2px; background: #26262C; overflow: hidden"><span style="display: block; height: 3px; width: {{c.pct}}%; background: {{c.color}}"></span></span>
+</div>
+</sc-for>
+</div>
+</aside>
+
+<div style="position: absolute; top: 24px; right: 24px; display: flex; padding: 3px; border-radius: 999px; background: #1C1C21; border: 1px solid #2C2C33">
+<a href="GraphView.dc.html" style="display: flex; align-items: center; min-height: 30px; padding: 0 14px; border-radius: 999px; color: #A8A49C; font-size: 13px; text-decoration: none">Graph</a>
+<span aria-current="page" style="display: flex; align-items: center; min-height: 30px; padding: 0 14px; border-radius: 999px; background: #2C2C33; color: #ECEAE4; font-size: 13px">What now</span>
+</div>
+
+<div style="position: absolute; left: 340px; top: 36px; display: flex; flex-direction: column; gap: 8px">
+<h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; letter-spacing: -1px; line-height: 1.1">What now?</h1>
+<p style="margin: 0; font-size: 14px; color: #A8A49C">5 things you can do right now: 2 builds, 1 to buy, 1 to decide, 1 to research.</p>
+</div>
+
+<div style="position: absolute; left: 340px; top: 112px; display: flex; gap: 8px">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{f.pressed}}" onClick="{{f.pick}}" style="min-height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid {{f.border}}; background: {{f.bg}}; color: {{f.color}}; font: inherit; font-size: 13px; cursor: pointer">{{f.label}}</button>
+</sc-for>
+</div>
+
+<sc-for list="{{cols}}" as="h" hint-placeholder-count="4">
+<div style="position: absolute; left: {{h.x}}px; top: 172px; width: 220px; display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: 1px; color: {{h.color}}">
+<span>{{h.label}}</span><span style="color: #6E6B65">{{h.count}}</span>
+</div>
+</sc-for>
+
+<div aria-hidden="true">
+<sc-for list="{{edges}}" as="e" hint-placeholder-count="0">
+<div style="position: absolute; left: {{e.l}}px; top: {{e.t}}px; width: {{e.w}}px; height: {{e.h}}px; background: {{e.c}}"></div>
+</sc-for>
+</div>
+
+<sc-for list="{{cards}}" as="c" hint-placeholder-count="17">
+<button type="button" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}" style="position: absolute; left: {{c.x}}px; top: {{c.y}}px; width: 220px; height: 44px; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 8px; border: 1px solid {{c.border}}; background: {{c.bg}}; color: {{c.titleColor}}; font: inherit; font-size: 13px; text-align: left; cursor: pointer; opacity: {{c.op}}">
+<sc-if value="{{c.isDone}}" hint-placeholder-val="{{false}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-label="Done" role="img"><circle cx="8" cy="8" r="8" fill="#3FB950"></circle><path d="M4.5 8.2l2.2 2.2 4.6-4.8" fill="none" stroke="#121214" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+<sc-if value="{{c.isReady}}" hint-placeholder-val="{{false}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-label="Ready" role="img"><circle cx="8" cy="8" r="6" fill="none" stroke="#FF7A2E" stroke-width="2"></circle></svg></sc-if>
+<sc-if value="{{c.isProgress}}" hint-placeholder-val="{{false}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-label="In progress" role="img"><circle cx="8" cy="8" r="6" fill="none" stroke="#3A3A42" stroke-width="2"></circle><circle cx="8" cy="8" r="6" fill="none" stroke="#FF7A2E" stroke-width="2" stroke-dasharray="{{c.arc}} 100" transform="rotate(-90 8 8)"></circle></svg></sc-if>
+<sc-if value="{{c.isBlocked}}" hint-placeholder-val="{{false}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-label="Waiting" role="img"><circle cx="8" cy="8" r="6" fill="none" stroke="#55555E" stroke-width="1.6" stroke-dasharray="2.5 2.5"></circle></svg></sc-if>
+<span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{c.title}}</span>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #8A877F; white-space: nowrap">
+<sc-if value="{{c.isGroup}}" hint-placeholder-val="{{false}}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="#8A877F" stroke-width="1.4" stroke-linejoin="round"><path d="M8 2l6 3-6 3-6-3z"></path><path d="M2 8l6 3 6-3"></path><path d="M2 11l6 3 6-3"></path></svg></sc-if>
+<sc-if value="{{c.isBuild}}" hint-placeholder-val="{{false}}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="#8A877F" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 13.5l6.5-6.5"></path><path d="M8 3.5l2-1.5 4 4-1.5 2z"></path></svg></sc-if>
+<sc-if value="{{c.isBuy}}" hint-placeholder-val="{{false}}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="#8A877F" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 2h2l1.6 8h7.2l1.4-5.5H4.3"></path><circle cx="6.2" cy="13.2" r="1"></circle><circle cx="11.8" cy="13.2" r="1"></circle></svg></sc-if>
+<sc-if value="{{c.isDecide}}" hint-placeholder-val="{{false}}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="#8A877F" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14V8.5"></path><path d="M8 8.5L3.5 4"></path><path d="M8 8.5L12.5 4"></path><path d="M3.5 7V4h3"></path><path d="M12.5 7V4h-3"></path></svg></sc-if>
+<sc-if value="{{c.isResearch}}" hint-placeholder-val="{{false}}"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="#8A877F" stroke-width="1.4" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5L14 14"></path></svg></sc-if>
+<span>{{c.meta}}</span>
+<span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: {{c.catColor}}"></span>
+</span>
+</button>
+</sc-for>
+
+<section aria-label="Selected task" style="position: absolute; left: 340px; top: 520px; width: 1060px; height: 356px; box-sizing: border-box; background: #16161A; border: 1px solid #232328; border-radius: 12px; padding: 24px 28px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 600">{{d.title}}</h2>
+<div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #A8A49C">
+<span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: {{d.catColor}}"></span>{{d.catName}}</span>
+<span aria-hidden="true">·</span>
+<span>{{d.kind}}</span>
+<span aria-hidden="true">·</span>
+<span style="color: {{d.statusColor}}">{{d.statusText}}</span>
+</div>
+</div>
+<div style="display: flex; gap: 10px">
+<button type="button" style="min-height: 38px; padding: 0 16px; border-radius: 8px; border: 1px solid #2C2C33; background: transparent; color: #ECEAE4; font: inherit; font-size: 13px; cursor: pointer">Open in wiki</button>
+<button type="button" style="min-height: 38px; padding: 0 16px; border-radius: 8px; border: none; background: #FF7A2E; color: #16161A; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">{{d.action}}</button>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 40px; flex: 1; min-height: 0">
+<div style="display: flex; flex-direction: column">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #8A877F; padding-bottom: 6px">STEPS</span>
+<sc-if value="{{d.hasSteps}}" hint-placeholder-val="{{true}}">
+<sc-for list="{{d.steps}}" as="s" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; gap: 12px; height: 36px; border-bottom: 1px solid #222227; font-size: 14px">
+<sc-if value="{{s.isDone}}" hint-placeholder-val="{{false}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-label="Done" role="img"><circle cx="8" cy="8" r="8" fill="#3FB950"></circle><path d="M4.5 8.2l2.2 2.2 4.6-4.8" fill="none" stroke="#121214" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+<sc-if value="{{s.isCur}}" hint-placeholder-val="{{false}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-label="Next" role="img"><circle cx="8" cy="8" r="6" fill="none" stroke="#FF7A2E" stroke-width="2"></circle><circle cx="8" cy="8" r="2.5" fill="#FF7A2E"></circle></svg></sc-if>
+<sc-if value="{{s.isTodo}}" hint-placeholder-val="{{true}}"><svg width="16" height="16" viewBox="0 0 16 16" aria-label="To do" role="img"><circle cx="8" cy="8" r="6" fill="none" stroke="#45454D" stroke-width="1.6"></circle></svg></sc-if>
+<span style="flex: 1; color: {{s.color}}">{{s.name}}</span>
+<span style="font-size: 12px; color: #8A877F">{{s.meta}}</span>
+</div>
+</sc-for>
+</sc-if>
+<sc-if value="{{d.noSteps}}" hint-placeholder-val="{{false}}">
+<p style="margin: 8px 0 0; font-size: 14px; color: #A8A49C">{{d.groupText}}</p>
+</sc-if>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #8A877F">NEEDS</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{d.needs}}" as="n" hint-placeholder-count="1">
+<button type="button" onClick="{{n.pick}}" style="display: flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #2C2C33; background: #1C1C21; color: #ECEAE4; font: inherit; font-size: 12px; cursor: pointer"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: {{n.color}}"></span>{{n.title}}</button>
+</sc-for>
+<sc-if value="{{d.noNeeds}}" hint-placeholder-val="{{false}}"><span style="font-size: 13px; color: #8A877F">Nothing, it's ready</span></sc-if>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #8A877F">UNBLOCKS</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{d.unblocks}}" as="n" hint-placeholder-count="1">
+<button type="button" onClick="{{n.pick}}" style="display: flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #2C2C33; background: #1C1C21; color: #ECEAE4; font: inherit; font-size: 12px; cursor: pointer"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: {{n.color}}"></span>{{n.title}}</button>
+</sc-for>
+<sc-if value="{{d.noUnblocks}}" hint-placeholder-val="{{false}}"><span style="font-size: 13px; color: #8A877F">Nothing yet</span></sc-if>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #8A877F">FROM THE WIKI</span>
+<p style="margin: 0; font-size: 13px; line-height: 1.55; color: #C9C6BE">{{d.note}}</p>
+</div>
+</div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+var CAT = {
+  electrics: { name: 'Electrics', color: '#FFC21A', n: 22, d: 10 },
+  insulation: { name: 'Insulation', color: '#5B9BFF', n: 16, d: 11 },
+  carpentry: { name: 'Carpentry', color: '#FF7A2E', n: 26, d: 4 },
+  plumbing: { name: 'Plumbing', color: '#3FD0C8', n: 12, d: 1 },
+  ventilation: { name: 'Ventilation', color: '#B48CFF', n: 9, d: 3 },
+  exterior: { name: 'Roof & exterior', color: '#FF6B9A', n: 14, d: 8 }
+};
+
+var T = [
+  { id: 'g-ins', col: 0, title: 'Insulation', cat: 'insulation', kind: 'Group', status: 'done', count: 11 },
+  { id: 'g-ele', col: 0, title: 'Electrics', cat: 'electrics', kind: 'Group', status: 'done', count: 10 },
+  { id: 'g-roof', col: 0, title: 'Roof & exterior', cat: 'exterior', kind: 'Group', status: 'done', count: 8 },
+  { id: 'g-carp', col: 0, title: 'Carpentry', cat: 'carpentry', kind: 'Group', status: 'done', count: 4 },
+
+  { id: 'board', col: 1, title: 'Wire board to battery', cat: 'electrics', kind: 'Build', status: 'progress', deps: ['g-ele'],
+    states: ['Mount components on ply', 'Wire board internally', 'Connect to leisure battery', 'Connect solar', 'Install in van'], reached: 1,
+    note: 'MPPT and shunt are mounted on a 12mm ply board. Fuse sizes and cable runs are in Electrics / Fusing.' },
+  { id: 'pir', col: 1, title: 'Order PIR for rear doors', cat: 'insulation', kind: 'Buy', status: 'ready', deps: ['g-ins'],
+    states: ['Measure door cavities', 'Choose thickness', 'Order'], reached: 1,
+    note: 'Door cavities measured. Thickness to choose once you have checked the trim clips still fit.' },
+  { id: 'bed', col: 1, title: 'Decide bed height', cat: 'carpentry', kind: 'Decide', status: 'ready', deps: ['g-carp'],
+    states: ['Check clearance needed underneath', 'Check sitting headroom', 'Decide'], reached: 0,
+    note: 'Trade-off between storage underneath and sitting up in bed. Measurements go in Carpentry / Bed.' },
+  { id: 'tank', col: 1, title: 'Research tank options', cat: 'plumbing', kind: 'Research', status: 'ready', deps: [],
+    states: ['Under-floor vs inboard', 'Shortlist tanks', 'Pick one'], reached: 0,
+    note: 'No research yet. Start a chat on this task and the findings will be saved here.' },
+  { id: 'fan', col: 1, title: 'Cut roof fan hole', cat: 'ventilation', kind: 'Build', status: 'ready', deps: ['g-roof'],
+    states: ['Mark out between roof ribs', 'Drill and cut', 'Prime cut edges'], reached: 0,
+    note: 'Position chosen between the second and third roof ribs. See Ventilation / Roof fan.' },
+
+  { id: 'doors', col: 2, title: 'Insulate rear doors', cat: 'insulation', kind: 'Build', deps: ['pir'],
+    states: ['Cut PIR to fit', 'Bond in place', 'Tape seams'], reached: 0, note: 'Waiting on the PIR order.' },
+  { id: 'solar', col: 2, title: 'Connect solar to MPPT', cat: 'electrics', kind: 'Build', deps: ['board'],
+    states: ['Run cable through gland', 'Fit isolator', 'Connect and test'], reached: 0, note: 'Roof cable gland is already fitted.' },
+  { id: 'frame', col: 2, title: 'Frame bed', cat: 'carpentry', kind: 'Build', deps: ['bed'],
+    states: ['Cut timber', 'Fix to wall battens', 'Fit slats'], reached: 0, note: 'Needs the bed height decision first.' },
+  { id: 'fittank', col: 2, title: 'Fit water tank', cat: 'plumbing', kind: 'Build', deps: ['tank'],
+    states: ['Fit mounts', 'Fit tank', 'Plumb in'], reached: 0, note: 'Depends on which tank you pick.' },
+  { id: 'fitfan', col: 2, title: 'Fit roof fan', cat: 'ventilation', kind: 'Build', deps: ['fan'],
+    states: ['Seal flange', 'Fit fan', 'Wire to fuse box'], reached: 0, note: '' },
+
+  { id: 'walls', col: 3, title: 'Line walls with ply', cat: 'carpentry', kind: 'Build', deps: ['doors'],
+    states: ['Cut panels', 'Fix to battens'], reached: 0, note: '' },
+  { id: 'install', col: 3, title: 'Install electrics in van', cat: 'electrics', kind: 'Build', deps: ['solar', 'frame'],
+    states: ['Mount board in cabinet', 'Connect loads', 'Test'], reached: 0, note: 'The board lives in the rear-right cabinet under the bed.' },
+  { id: 'kitchen', col: 3, title: 'Build kitchen unit', cat: 'carpentry', kind: 'Build', deps: ['frame', 'fittank'],
+    states: ['Carcass', 'Worktop', 'Sink and tap'], reached: 0, note: '' }
+];
+
+var COLX = [340, 616, 892, 1168];
+var COLS = [
+  { label: 'DONE', color: '#8A877F' },
+  { label: 'READY NOW', color: '#FF7A2E' },
+  { label: 'UP NEXT', color: '#8A877F' },
+  { label: 'LATER', color: '#8A877F' }
+];
+
+function layout() {
+  var byId = {}, counts = [0, 0, 0, 0], rows = [0, 0, 0, 0];
+  T.forEach(function (t) { counts[t.col]++; });
+  T.forEach(function (t) {
+    var y = 208 + (5 - counts[t.col]) * 29 + rows[t.col] * 58;
+    rows[t.col]++;
+    byId[t.id] = { x: COLX[t.col], y: y };
+  });
+  return { byId: byId, counts: counts };
+}
+
+function statusOf(t) { return t.status || 'blocked'; }
+
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var s = this.state || {};
+    var sel = s.sel || 'board';
+    var filter = s.filter || 'All';
+    if (!this._L) this._L = layout();
+    var byId = this._L.byId;
+    var find = function (id) { return T.filter(function (x) { return x.id === id; })[0]; };
+    var pick = function (id) { return function () { self.setState({ sel: id }); }; };
+
+    var cards = T.map(function (t) {
+      var p = byId[t.id], st = statusOf(t), on = sel === t.id;
+      var total = (t.states || []).length, reached = t.reached || 0;
+      return {
+        title: t.title, x: p.x, y: p.y,
+        border: on ? '#FF7A2E' : '#2A2A31', bg: on ? '#201B18' : '#1A1A1F',
+        op: (filter !== 'All' && t.kind !== filter) ? 0.3 : 1,
+        titleColor: st === 'blocked' ? '#A8A49C' : '#ECEAE4',
+        isDone: st === 'done', isReady: st === 'ready', isProgress: st === 'progress', isBlocked: st === 'blocked',
+        arc: (37.7 * reached / Math.max(total, 1)).toFixed(1),
+        isGroup: t.kind === 'Group', isBuild: t.kind === 'Build', isBuy: t.kind === 'Buy', isDecide: t.kind === 'Decide', isResearch: t.kind === 'Research',
+        meta: t.kind === 'Group' ? t.count + ' done' : (st === 'progress' ? reached + '/' + total : t.kind),
+        catColor: CAT[t.cat].color, pressed: on ? 'true' : 'false', pick: pick(t.id)
+      };
+    });
+
+    var cold = [], hot = [];
+    T.forEach(function (t) {
+      (t.deps || []).forEach(function (d) {
+        var a = byId[d], b = byId[t.id];
+        var isHot = sel === d || sel === t.id;
+        var c = isHot ? '#FF7A2E' : '#2E2E35';
+        var x1 = a.x + 220, y1 = a.y + 22, x2 = b.x, y2 = b.y + 22, mx = Math.round((x1 + x2) / 2);
+        var segs = [
+          { l: x1, t: y1 - 1, w: mx - x1, h: 2, c: c },
+          { l: mx - 1, t: Math.min(y1, y2) - 1, w: 2, h: Math.abs(y2 - y1) + 2, c: c },
+          { l: mx, t: y2 - 1, w: x2 - mx, h: 2, c: c }
+        ];
+        (isHot ? hot : cold).push.apply(isHot ? hot : cold, segs);
+      });
+    });
+
+    var cols = COLS.map(function (h, i) { return { label: h.label, color: h.color, count: this._L.counts[i], x: COLX[i] }; }, this);
+
+    var filters = ['All', 'Build', 'Buy', 'Decide', 'Research'].map(function (f) {
+      var on = filter === f;
+      return {
+        label: f, pressed: on ? 'true' : 'false',
+        bg: on ? '#ECEAE4' : 'transparent', color: on ? '#16161A' : '#C9C6BE', border: on ? '#ECEAE4' : '#2C2C33',
+        pick: function () { self.setState({ filter: f }); }
+      };
+    });
+
+    var t = find(sel) || T[4];
+    var st = statusOf(t);
+    var reached = t.reached || 0, total = (t.states || []).length;
+    var chip = function (id) { var x = find(id); return { title: x.title, color: CAT[x.cat].color, pick: pick(id) }; };
+    var needs = (t.deps || []).map(chip);
+    var unblocks = T.filter(function (x) { return (x.deps || []).indexOf(t.id) >= 0; }).map(function (x) { return chip(x.id); });
+    var steps = (t.states || []).map(function (name, i) {
+      var done = i < reached, cur = !done && i === reached && st !== 'blocked';
+      return { name: name, isDone: done, isCur: cur, isTodo: !done && !cur, meta: done ? 'Done' : (cur ? 'Next' : ''), color: done ? '#A8A49C' : '#ECEAE4' };
+    });
+    var statusText = st === 'done' ? 'Done' : st === 'progress' ? 'In progress · ' + reached + ' of ' + total + ' steps'
+      : st === 'ready' ? 'Ready now' : 'Waiting on ' + needs.length + (needs.length === 1 ? ' task' : ' tasks');
+    var statusColor = st === 'done' ? '#3FB950' : (st === 'ready' || st === 'progress') ? '#FF7A2E' : '#A8A49C';
+    var action = t.kind === 'Buy' ? 'Mark as ordered' : t.kind === 'Decide' ? 'Record decision' : t.kind === 'Research' ? 'Research with AI' : t.kind === 'Group' ? 'Show tasks' : 'Log progress';
+
+    var sideCats = Object.keys(CAT).map(function (k) {
+      var c = CAT[k];
+      return { name: c.name, color: c.color, label: c.d + '/' + c.n, pct: Math.round(100 * c.d / c.n) };
+    });
+
+    return {
+      cards: cards, edges: cold.concat(hot), cols: cols, filters: filters, sideCats: sideCats,
+      d: {
+        title: t.title, catName: CAT[t.cat].name, catColor: CAT[t.cat].color,
+        kind: t.kind === 'Group' ? 'Group' : t.kind, statusText: statusText, statusColor: statusColor, action: action,
+        steps: steps, hasSteps: steps.length > 0, noSteps: steps.length === 0,
+        groupText: t.count ? t.count + ' tasks complete in ' + CAT[t.cat].name + '.' : '',
+        needs: needs, noNeeds: needs.length === 0, unblocks: unblocks, noUnblocks: unblocks.length === 0,
+        note: t.note || 'No wiki notes yet.'
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

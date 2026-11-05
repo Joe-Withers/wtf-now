@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>wtf-now graph view</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#A8A49C}a:hover{color:#ECEAE4}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #121214; font-family: Inter, system-ui, sans-serif; color: #ECEAE4">
+
+<div role="img" aria-label="Graph of the van build: completed tasks in grey, remaining tasks coloured by category, with the next available task in each category labelled" style="position: absolute; left: 0; top: 0; width: 1440px; height: 900px">
+<sc-for list="{{edges}}" as="e" hint-placeholder-count="0">
+<div aria-hidden="true" style="position: absolute; left: {{e.x}}px; top: {{e.y}}px; width: {{e.w}}px; height: 0; border-top: 1px {{e.dash}} {{e.c}}; transform-origin: 0 0; transform: rotate({{e.a}}rad); opacity: {{e.op}}; transition: opacity 200ms"></div>
+</sc-for>
+<sc-for list="{{nodes}}" as="n" hint-placeholder-count="0">
+<div aria-hidden="true" style="position: absolute; left: {{n.l}}px; top: {{n.t}}px; width: {{n.s}}px; height: {{n.s}}px; border-radius: 50%; background: {{n.bg}}; box-shadow: {{n.sh}}; opacity: {{n.op}}; transition: opacity 200ms"></div>
+</sc-for>
+<sc-for list="{{pills}}" as="p" hint-placeholder-count="0">
+<div style="position: absolute; left: {{p.x}}px; top: {{p.y}}px; transform: translate({{p.tx}}, {{p.ty}}); display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 999px; background: #1C1C21; border: 1px solid {{p.border}}; white-space: nowrap; font-size: 13px; font-weight: 500; box-shadow: 0 6px 20px rgba(0,0,0,0.35)">
+<span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: {{p.color}}"></span>
+<span>{{p.text}}</span>
+<span style="font-size: 11px; font-weight: 500; color: #A8A49C; background: #26262C; border-radius: 999px; padding: 2px 8px">{{p.kind}}</span>
+</div>
+</sc-for>
+</div>
+
+<aside style="position: absolute; left: 0; top: 0; width: 300px; height: 900px; box-sizing: border-box; background: #16161A; border-right: 1px solid #232328; padding: 28px 20px; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: center; gap: 10px">
+<svg width="40" height="20" viewBox="10 24 172 72" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M18 72 C 14 34, 66 28, 60 60 C 54 92, 16 84, 32 56 C 48 28, 92 38, 82 70 C 74 96, 46 72, 74 54 C 94 42, 108 60, 122 60" stroke="#F4F1EA" stroke-width="10"></path>
+<path d="M122 60 L 176 60 M 158 42 L 176 60 L 158 78" stroke="#FF7A2E" stroke-width="12"></path>
+</svg>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.5px">wtf-<span style="color: #FF7A2E">now</span></span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #8A877F">PROJECT</span>
+<span style="font-size: 18px; font-weight: 600">Van build</span>
+<span style="font-size: 13px; color: #8A877F">{{total}} tasks · {{doneTotal}} done</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 40px; font-weight: 700; letter-spacing: -1px; line-height: 1">{{pct}}%</span>
+<div style="height: 4px; border-radius: 2px; background: #26262C; overflow: hidden"><div style="height: 4px; width: {{pct}}%; background: #ECEAE4"></div></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #8A877F; padding: 0 12px 6px">CATEGORIES</span>
+<sc-for list="{{cats}}" as="c" hint-placeholder-count="6">
+<button type="button" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}" style="display: flex; flex-direction: column; gap: 8px; width: 100%; min-height: 44px; padding: 10px 12px; border: none; border-radius: 8px; background: {{c.rowBg}}; color: #ECEAE4; font: inherit; cursor: pointer; text-align: left">
+<span style="display: flex; align-items: center; gap: 10px; width: 100%; font-size: 14px">
+<span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: {{c.color}}"></span>
+<span style="flex: 1">{{c.name}}</span>
+<span style="font-size: 12px; color: #8A877F">{{c.doneN}}/{{c.n}}</span>
+</span>
+<span style="display: block; width: 100%; height: 3px; border-radius: 2px; background: #26262C; overflow: hidden"><span style="display: block; height: 3px; width: {{c.pct}}%; background: {{c.color}}"></span></span>
+</button>
+</sc-for>
+</div>
+</aside>
+
+<div style="position: absolute; top: 24px; right: 24px; display: flex; align-items: center; gap: 12px">
+<button type="button" aria-pressed="{{hidePressed}}" onClick="{{toggleDone}}" style="min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #2C2C33; background: {{hideBg}}; color: #ECEAE4; font: inherit; font-size: 13px; cursor: pointer">Hide done</button>
+<div style="display: flex; padding: 3px; border-radius: 999px; background: #1C1C21; border: 1px solid #2C2C33">
+<button type="button" aria-pressed="true" style="min-height: 30px; padding: 0 14px; border-radius: 999px; border: none; background: #2C2C33; color: #ECEAE4; font: inherit; font-size: 13px">Graph</button>
+<a href="WhatNow.dc.html" style="display: flex; align-items: center; min-height: 30px; padding: 0 14px; border-radius: 999px; color: #A8A49C; font-size: 13px; text-decoration: none">What now</a>
+</div>
+</div>
+
+<div style="position: absolute; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 18px; font-size: 12px; color: #A8A49C">
+<span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: #4A4A52"></span>Done</span>
+<span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #ECEAE4; box-shadow: 0 0 0 3px #ECEAE433"></span>Next up</span>
+<span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 4px; height: 4px; border-radius: 50%; background: #55555E"></span>Wiki page</span>
+<span style="display: flex; align-items: center; gap: 6px"><span aria-hidden="true" style="width: 16px; height: 0; border-top: 1px dashed #8A877F"></span>Cross-dependency</span>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"int","default":7,"min":1,"max":999},"showWiki":{"editor":"boolean","default":true},"showPills":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":900}}'>
+var CATS = [
+  { id: 'electrics', name: 'Electrics', color: '#FFC21A', n: 22, done: 0.45, next: 'Wire board to battery', kind: 'Build' },
+  { id: 'insulation', name: 'Insulation', color: '#5B9BFF', n: 16, done: 0.7, next: 'Order PIR for rear doors', kind: 'Buy' },
+  { id: 'carpentry', name: 'Carpentry', color: '#FF7A2E', n: 26, done: 0.15, next: 'Decide bed height', kind: 'Decide' },
+  { id: 'plumbing', name: 'Plumbing', color: '#3FD0C8', n: 12, done: 0.1, next: 'Research tank options', kind: 'Research' },
+  { id: 'ventilation', name: 'Ventilation', color: '#B48CFF', n: 9, done: 0.3, next: 'Cut roof fan hole', kind: 'Build' },
+  { id: 'exterior', name: 'Roof & exterior', color: '#FF6B9A', n: 14, done: 0.55, next: 'Seal solar brackets', kind: 'Build' }
+];
+
+function rng(seed) {
+  return function () {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function E(x1, y1, x2, y2, c, cat, done, wiki, dash) {
+  var dx = x2 - x1, dy = y2 - y1;
+  return { x: x1.toFixed(1), y: y1.toFixed(1), w: Math.hypot(dx, dy).toFixed(1), a: Math.atan2(dy, dx).toFixed(4), c: c, cat: cat, done: done, wiki: wiki, dash: dash ? 'dashed' : 'solid' };
+}
+
+function N(x, y, s, bg, cat, done, wiki, sh) {
+  return { l: (x - s / 2).toFixed(1), t: (y - s / 2).toFixed(1), s: s, bg: bg, cat: cat, done: done, wiki: wiki, sh: sh || 'none' };
+}
+
+function build(seed) {
+  var r = rng(seed);
+  var cx = 870, cy = 455;
+  var nodes = [], edges = [], pills = [], hubs = {}, top = [];
+  var angles = [-90, -30, 30, 90, 150, 210];
+  CATS.forEach(function (c, i) {
+    var a = angles[i] * Math.PI / 180;
+    var ca = Math.cos(a), sa = Math.sin(a);
+    var hx = cx + ca * 235, hy = cy + sa * 215;
+    hubs[c.id] = { x: hx, y: hy };
+    edges.push(E(cx, cy, hx, hy, '#ECEAE42E', c.id, false, false));
+    var nDone = Math.round(c.n * c.done);
+    var pts = [];
+    for (var j = 0; j < c.n; j++) {
+      var x, y;
+      var done = j < nDone, next = j === nDone;
+      if (next) { x = hx + ca * 62; y = hy + sa * 58; }
+      else {
+        var ang = r() * Math.PI * 2, rad = 22 + Math.sqrt(r()) * 78;
+        x = hx + Math.cos(ang) * rad; y = hy + Math.sin(ang) * rad * 0.85;
+      }
+      var parent = (j > 2 && r() < 0.45) ? pts[Math.floor(r() * pts.length)] : { x: hx, y: hy };
+      edges.push(E(parent.x, parent.y, x, y, done ? '#ECEAE414' : c.color + '40', c.id, done, false));
+      pts.push({ x: x, y: y });
+      if (next) {
+        top.push(N(x, y, 11, c.color, c.id, false, false, '0 0 0 4px ' + c.color + '33, 0 0 16px ' + c.color + '99'));
+        var horiz = Math.abs(ca) > 0.5;
+        pills.push({
+          cat: c.id, color: c.color, border: c.color + '66', text: c.next, kind: c.kind,
+          x: (x + (horiz ? (ca < 0 ? -16 : 16) : 0)).toFixed(1),
+          y: (y + (horiz ? 0 : (sa < 0 ? -16 : 16))).toFixed(1),
+          tx: horiz ? (ca < 0 ? '-100%' : '0%') : '-50%',
+          ty: horiz ? '-50%' : (sa < 0 ? '-100%' : '0%')
+        });
+      } else {
+        nodes.push(N(x, y, done ? 5 : 6 + Math.floor(r() * 3), done ? '#4A4A52' : c.color, c.id, done, false));
+      }
+    }
+    var nw = Math.round(c.n * 0.9);
+    for (var k = 0; k < nw; k++) {
+      var p = pts[Math.floor(r() * pts.length)];
+      var wa = r() * Math.PI * 2, wr = 12 + r() * 34;
+      var wx = p.x + Math.cos(wa) * wr, wy = p.y + Math.sin(wa) * wr;
+      edges.push(E(p.x, p.y, wx, wy, '#ECEAE410', c.id, false, true));
+      nodes.push(N(wx, wy, 3, '#3A3A42', c.id, false, true));
+    }
+    top.unshift(N(hx, hy, 13, c.color, c.id, false, false, '0 0 0 3px #121214, 0 0 0 4px ' + c.color + '88'));
+  });
+  [['insulation', 'carpentry'], ['electrics', 'carpentry'], ['insulation', 'electrics'], ['plumbing', 'carpentry'], ['ventilation', 'insulation'], ['exterior', 'electrics']].forEach(function (pr) {
+    var p = hubs[pr[0]], q = hubs[pr[1]];
+    edges.push(E(p.x, p.y, q.x, q.y, '#ECEAE438', null, false, false, true));
+  });
+  nodes = nodes.concat(top);
+  nodes.push(N(cx, cy, 14, '#ECEAE4', null, false, false, '0 0 0 4px #121214, 0 0 0 5px #ECEAE466'));
+  return { nodes: nodes, edges: edges, pills: pills };
+}
+
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var s = this.state || {};
+    var seed = this.props.seed ?? 7;
+    var showWiki = this.props.showWiki ?? true;
+    var showPills = this.props.showPills ?? true;
+    if (!this._g || this._seed !== seed) { this._g = build(seed); this._seed = seed; }
+    var g = this._g;
+    var focus = s.focus || null;
+    var hide = !!s.hideDone;
+    function vis(item) {
+      if (item.wiki && !showWiki) return 0;
+      if (hide && item.done) return 0;
+      if (focus && item.cat !== focus) return 0.08;
+      return 1;
+    }
+    var nodes = g.nodes.map(function (n) { return Object.assign({}, n, { op: vis(n) }); });
+    var edges = g.edges.map(function (e) { return Object.assign({}, e, { op: vis(e) }); });
+    var pills = showPills ? g.pills.filter(function (p) { return !focus || p.cat === focus; }) : [];
+    var total = 0, doneTotal = 0;
+    var cats = CATS.map(function (c) {
+      var d = Math.round(c.n * c.done);
+      total += c.n; doneTotal += d;
+      var on = focus === c.id;
+      return {
+        name: c.name, color: c.color, n: c.n, doneN: d, pct: Math.round(100 * d / c.n),
+        rowBg: on ? '#24242A' : 'transparent', pressed: on ? 'true' : 'false',
+        pick: function () { self.setState({ focus: on ? null : c.id }); }
+      };
+    });
+    return {
+      nodes: nodes, edges: edges, pills: pills, cats: cats,
+      total: total, doneTotal: doneTotal, pct: Math.round(100 * doneTotal / total),
+      hidePressed: hide ? 'true' : 'false', hideBg: hide ? '#2C2C33' : 'transparent',
+      toggleDone: function () { self.setState({ hideDone: !hide }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

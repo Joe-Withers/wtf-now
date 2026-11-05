@@ -1,0 +1,2 @@
+# The runtime that renders the mockups in a browser isn't part of the design.
+vendor/
