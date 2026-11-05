@@ -105,3 +105,39 @@ export async function streamMessage(sessionId: string, text: string, onEvent: (e
     }
   }
 }
+
+export type TreeNode = {
+  slug: string;
+  title: string;
+  kind: Kind;
+  state: State;
+  progress: number;
+  remaining_hours: number;
+  blocked: boolean;
+  children: TreeNode[];
+};
+
+export type TaskRef = { slug: string; title: string; state: State };
+
+export type TaskDetail = {
+  slug: string;
+  title: string;
+  description: string;
+  kind: Kind;
+  state: State;
+  progress: number;
+  progress_reason: string;
+  remaining_hours: number;
+  is_leaf: boolean;
+  zone: string | null;
+  needs_helper: boolean;
+  cost: number | null;
+  current_state: string;
+  notes: string;
+  breadcrumbs: TaskRef[];
+  children: TaskRef[];
+  depends_on: { slug: string; title: string; strength: "hard" | "soft"; done: boolean; inherited_from: string | null }[];
+  dependents: TaskRef[];
+  blocked_by: TaskRef[];
+  easier_after: TaskRef[];
+};

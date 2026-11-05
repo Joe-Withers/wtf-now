@@ -5,6 +5,8 @@ import { Layout } from "./components/Layout";
 import { Chat } from "./screens/Chat";
 import { Home } from "./screens/Home";
 import { Placeholder } from "./screens/Placeholder";
+import { TaskScreen } from "./screens/TaskScreen";
+import { Tasks } from "./screens/Tasks";
 import { WhatNowScreen } from "./screens/WhatNowScreen";
 
 const client = new QueryClient({
@@ -20,7 +22,8 @@ export function App() {
             <Route index element={<Home />} />
             <Route path="what-now" element={<WhatNowScreen />} />
             <Route path="chat" element={<Chat />} />
-            <Route path="tasks" element={<Placeholder title="Tasks" />} />
+            <Route path="tasks" element={<Tasks />} />
+            <Route path="tasks/:slug" element={<TaskScreen />} />
             <Route path="more" element={<Placeholder title="More" />} />
           </Route>
         </Routes>

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from wtf_now.bundle import get_section, set_section
+from wtf_now.bundle import get_section, set_section, without_section
 from wtf_now.graph import is_blocked
 from wtf_now.store import ChangeRejected, Op, Store, UndoConflict, slugify
 
@@ -345,3 +345,9 @@ def test_set_section_adds_then_replaces_only_that_section() -> None:
 
     assert get_section(updated, "Current state") == "Two"
     assert get_section(updated, "Notes") == "Keep me."
+
+
+def test_without_section_keeps_everything_else() -> None:
+    body = "## Current state\n\nHere.\n\n## Notes\n\nKeep me.\n"
+
+    assert without_section(body, "Current state") == "## Notes\n\nKeep me."

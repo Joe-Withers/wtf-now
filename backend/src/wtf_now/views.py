@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from .bundle import Concept, get_section
+from .bundle import Concept, get_section, without_section
 from .graph import blockers, derived_state, is_done, progress, remaining_hours, soft_warnings
 from .project import Dependency, Project
 from .store import CURRENT_STATE
@@ -64,6 +64,7 @@ class TaskDetail:
     cost: float | None
     current_state: str
     body: str
+    notes: str
     breadcrumbs: list[TaskRef]
     children: list[TaskRef]
     depends_on: list[DependencyView]
@@ -164,6 +165,7 @@ def task_detail(project: Project, slug: str) -> TaskDetail:
         cost=task.cost,
         current_state=get_section(task.body, CURRENT_STATE),
         body=task.body,
+        notes=without_section(task.body, CURRENT_STATE),
         breadcrumbs=[_ref(project, ancestor) for ancestor in reversed(list(project.ancestors(slug)))],
         children=[_ref(project, child) for child in project.children[slug]],
         depends_on=_dependency_views(project, slug),

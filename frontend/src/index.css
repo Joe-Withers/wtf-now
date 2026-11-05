@@ -107,3 +107,23 @@ button { cursor: pointer; }
 .proposal ul { margin: 8px 0 12px; padding-left: 18px; }
 .composer { display: flex; gap: 8px; align-items: flex-end; padding: 8px 12px; border-top: 1px solid var(--line); }
 .composer textarea { flex: 1; resize: none; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px 12px; min-height: 44px; max-height: 140px; }
+
+.tree { display: flex; flex-direction: column; gap: 2px; }
+.tree-row { display: grid; grid-template-columns: 40px 1fr; align-items: center; min-height: 52px; border-bottom: 1px solid var(--line); }
+.tree-row .toggle { background: none; border: 0; color: var(--muted); width: 40px; height: 44px; font-size: 1rem; }
+.tree-row .spacer { width: 40px; }
+.tree-link { display: flex; flex-direction: column; gap: 5px; padding: 8px 4px 9px 0; min-width: 0; }
+.tree-title { display: flex; justify-content: space-between; gap: 10px; }
+.tree-title span:last-child { flex: none; }
+.tree-row.is-done .tree-link > .tree-title > span:first-child { color: var(--done); }
+.badge { font-size: 0.75rem; color: var(--warn); }
+.badge.done { color: var(--done); }
+.crumbs { color: var(--muted); font-size: 0.85rem; display: flex; gap: 6px; flex-wrap: wrap; }
+.ref { display: flex; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.prose { overflow-wrap: anywhere; }
+.prose h2, .prose h3 { margin: 14px 0 6px; }
+.prose ul, .prose ol { padding-left: 20px; margin: 6px 0; }
+.prose p + p { margin-top: 8px; }
+.prose a { color: var(--now); text-decoration: underline; }
+.field { width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px 12px; }
+input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }

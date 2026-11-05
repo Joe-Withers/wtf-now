@@ -178,6 +178,16 @@ def get_section(body: str, heading: str) -> str:
     return "\n".join(lines[start:end]).strip()
 
 
+def without_section(body: str, heading: str) -> str:
+    lines = body.splitlines()
+    marker = f"## {heading}"
+    if marker in lines:
+        start = lines.index(marker)
+        end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+        del lines[start:end]
+    return "\n".join(lines).strip()
+
+
 def set_section(body: str, heading: str, text: str) -> str:
     """Replaces a section, or adds it at the top of the body."""
     marker = f"## {heading}"
