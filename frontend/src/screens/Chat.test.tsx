@@ -28,6 +28,7 @@ function server(events: object[], routes: Record<string, unknown> = {}, splitAt?
       if (key) return { ok: true, json: async () => routes[key] };
       if (url === "/api/sessions" && init?.method === "POST") return { ok: true, json: async () => ({ id: "s1" }) };
       if (url === "/api/sessions") return { ok: true, json: async () => [] };
+      if (url === "/api/features") return { ok: true, json: async () => ({ chat: true, voice: false }) };
       return { ok: false, status: 404, json: async () => ({ detail: "Not found" }) };
     }),
   );
@@ -160,4 +161,46 @@ test("a photo is uploaded and sent with the message", async () => {
 
   await waitFor(() => expect(bodies).toEqual([JSON.stringify({ text: "", photos: ["abc.jpg"] })]));
   expect(await screen.findByRole("img", { name: "Attached" })).toHaveAttribute("src", "/api/photos/abc.jpg");
+});
+
+test("the mic stays hidden until voice is configured", async () => {
+  server([]);
+  renderApp(<Chat />);
+
+  await screen.findByText("What's happened?");
+  expect(screen.queryByRole("button", { name: "Record a voice note" })).not.toBeInTheDocument();
+});
+
+test("a voice note lands in the message box to check before sending", async () => {
+  const stop = vi.fn();
+  class FakeRecorder {
+    mimeType = "audio/webm";
+    ondataavailable: ((event: { data: Blob }) => void) | null = null;
+    onstop: (() => void) | null = null;
+    start() {}
+    stop() {
+      this.ondataavailable?.({ data: new Blob(["x"]) });
+      this.onstop?.();
+    }
+  }
+  vi.stubGlobal("MediaRecorder", FakeRecorder);
+  Object.defineProperty(navigator, "mediaDevices", {
+    configurable: true,
+    value: { getUserMedia: async () => ({ getTracks: () => [{ stop }] }) },
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      if (url === "/api/features") return { ok: true, json: async () => ({ chat: true, voice: true }) };
+      if (url === "/api/transcribe") return { ok: true, json: async () => ({ text: "Finished the ceiling panels" }) };
+      return { ok: true, json: async () => [] };
+    }),
+  );
+  renderApp(<Chat />);
+
+  await userEvent.click(await screen.findByRole("button", { name: "Record a voice note" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Stop recording" }));
+
+  await waitFor(() => expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue("Finished the ceiling panels"));
+  expect(stop).toHaveBeenCalled();
 });

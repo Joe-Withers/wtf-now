@@ -155,3 +155,5 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .pending-photo { display: flex; align-items: center; gap: 8px; padding: 6px 12px 0; }
 .pending-photo img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
 .pending-photo button { background: none; border: 0; color: var(--now); font-weight: 700; padding: 8px; }
+
+.icon-button.recording { background: var(--danger); border-color: var(--danger); color: var(--on-now); }

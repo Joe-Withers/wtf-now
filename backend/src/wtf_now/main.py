@@ -6,6 +6,7 @@ from .config import app_data_path, bundle_path, bundle_remote, photo_store, web_
 from .llm import LLM, LLMConfigError, load_config
 from .proposals import ProposalStore
 from .store import Store
+from .transcribe import load_transcriber
 
 
 def _chat(store: Store) -> Chat | None:
@@ -20,4 +21,4 @@ def _chat(store: Store) -> Chat | None:
 
 store = Store(bundle_path(), remote=bundle_remote())
 store.initialise()
-app = create_app(store, chat=_chat(store), static_root=web_root(), photos=photo_store())
+app = create_app(store, chat=_chat(store), static_root=web_root(), photos=photo_store(), transcriber=load_transcriber())

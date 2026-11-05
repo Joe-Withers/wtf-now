@@ -14,6 +14,7 @@ from . import views
 from .chat import Chat
 from .photos import InvalidPhoto, PhotoStore, media_type_of, store_photo
 from .store import ChangeRejected, Op, Store, UndoConflict
+from .transcribe import Transcriber, TranscriptionError
 from .what_now import home, log_lines, what_now
 
 Kind = Literal["build", "purchase", "research", "decision"]
@@ -98,6 +99,7 @@ def create_app(
     chat: Chat | None = None,
     static_root: Path | None = None,
     photos: PhotoStore | None = None,
+    transcriber: Transcriber | None = None,
 ) -> FastAPI:
     app = FastAPI(title="wtf-now")
     app.state.store = store
@@ -113,6 +115,10 @@ def create_app(
     @app.exception_handler(InvalidPhoto)
     def invalid_photo(_: Request, error: InvalidPhoto) -> JSONResponse:
         return JSONResponse({"detail": str(error)}, status_code=422)
+
+    @app.exception_handler(TranscriptionError)
+    def transcription_failed(_: Request, error: TranscriptionError) -> JSONResponse:
+        return JSONResponse({"detail": str(error)}, status_code=502)
 
     @app.exception_handler(views.NotFound)
     def not_found(_: Request, error: views.NotFound) -> JSONResponse:
@@ -254,6 +260,16 @@ def create_app(
         require_task(slug)
         key = store_photo(require_photos(), file.content_type or "", file.file.read())
         return change(Op("attach_photo", {"slug": slug, "key": key, "caption": caption}))
+
+    @app.get("/api/features")
+    def features() -> dict[str, bool]:
+        return {"chat": chat is not None, "voice": transcriber is not None}
+
+    @app.post("/api/transcribe")
+    def transcribe(file: UploadFile = File(...)) -> dict[str, str]:
+        if transcriber is None:
+            raise HTTPException(503, "Voice isn't configured.")
+        return {"text": transcriber.transcribe(file.content_type or "", file.file.read())}
 
     def require_chat() -> Chat:
         if chat is None:

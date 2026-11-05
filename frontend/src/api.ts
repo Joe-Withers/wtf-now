@@ -207,3 +207,16 @@ async function sendPhoto<T>(path: string, file: File, caption?: string): Promise
 
 export const uploadPhoto = (file: File) => sendPhoto<{ key: string }>("/photos", file);
 export const addTaskPhoto = (slug: string, file: File) => sendPhoto<ChangeResult>(`/tasks/${slug}/photos`, file);
+
+export type Features = { chat: boolean; voice: boolean };
+
+export async function transcribe(audio: Blob): Promise<string> {
+  const form = new FormData();
+  form.append("file", audio, "note");
+  const response = await fetch("/api/transcribe", { method: "POST", body: form });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new ApiError(body?.detail ?? `Transcription failed (${response.status})`);
+  }
+  return (await response.json()).text;
+}

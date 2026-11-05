@@ -224,11 +224,11 @@ The one exception is onboarding. While the bundle is empty, the first interview 
 | Frontend | React, Vite, TypeScript, TanStack Query, PWA plugin |
 | Deployment | **Default:** small VPS with Docker Compose, behind Tailscale. Private access means no login to build. |
 | Photos | S3-compatible object storage. **Default:** Cloudflare R2 or Backblaze B2. |
-| Voice | **Open:** record in the browser, transcribe on the server. Provider to be chosen. |
+| Voice | Record in the browser, transcribe on the server through an OpenAI-style endpoint. **Open:** which provider. |
 
 ---
 
 ## 8. Open questions
 
-- Transcription provider for voice notes.
+- Transcription provider for voice notes. Voice stays hidden until one is configured.
 - Whether the owner keeps the Default deployment. The files for it exist but haven't been run; see `docs/deployment.md`.

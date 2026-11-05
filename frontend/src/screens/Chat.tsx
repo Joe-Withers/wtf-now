@@ -7,9 +7,11 @@ import {
   getJson,
   postJson,
   streamMessage,
+  transcribe,
   uploadPhoto,
   type ChatEvent,
   type ChatItem,
+  type Features,
   type Proposal,
   type Session,
   type SessionSummary,
@@ -117,6 +119,51 @@ function Item({ item }: { item: ChatItem }) {
   }
 }
 
+function VoiceButton({ onText }: { onText: (text: string) => void }) {
+  const snack = useSnack();
+  const [state, setState] = useState<"idle" | "recording" | "working">("idle");
+  const recorder = useRef<MediaRecorder | null>(null);
+
+  const start = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const chunks: Blob[] = [];
+      const media = new MediaRecorder(stream);
+      media.ondataavailable = (event) => chunks.push(event.data);
+      media.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        setState("working");
+        try {
+          onText(await transcribe(new Blob(chunks, { type: media.mimeType })));
+        } catch (error) {
+          snack({ message: (error as Error).message });
+        } finally {
+          setState("idle");
+        }
+      };
+      recorder.current = media;
+      media.start();
+      setState("recording");
+    } catch {
+      snack({ message: "Couldn't use the microphone" });
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className={`button icon-button${state === "recording" ? " recording" : ""}`}
+      aria-label={state === "recording" ? "Stop recording" : "Record a voice note"}
+      disabled={state === "working"}
+      onClick={() => (state === "recording" ? recorder.current?.stop() : void start())}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3" />
+      </svg>
+    </button>
+  );
+}
+
 function Recent() {
   const query = useQuery({ queryKey: ["sessions"], queryFn: () => getJson<SessionSummary[]>("/sessions") });
   const started = query.data?.filter((session) => session.title) ?? [];
@@ -147,6 +194,7 @@ export function Chat() {
   const navigate = useNavigate();
   const client = useQueryClient();
   const sessionId = parameters.get("session");
+  const features = useQuery({ queryKey: ["features"], queryFn: () => getJson<Features>("/features") });
   const focus = parameters.get("focus");
 
   const [items, setItems] = useState<ChatItem[]>([]);
@@ -267,6 +315,9 @@ export function Chat() {
             }}
           />
         </label>
+        {features.data?.voice && (
+          <VoiceButton onText={(text) => setDraft((current) => [current, text].filter(Boolean).join(" "))} />
+        )}
         <textarea
           aria-label="Message"
           placeholder="Tell me what happened…"
