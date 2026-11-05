@@ -35,6 +35,13 @@ test("the navigation is a rail, and the chat is not in it", () => {
   expect(within(rail).queryByRole("link", { name: /Chat/ })).not.toBeInTheDocument();
 });
 
+test("the rail carries the wordmark, for when it is a sidebar", () => {
+  renderShell();
+
+  const rail = screen.getByRole("navigation", { name: "Main" });
+  expect(within(rail).getByText("wtf-")).toBeInTheDocument();
+});
+
 test("one button pulls the chat out of the right-hand side", async () => {
   mockApi({ "/api/sessions": [], "/api/features": { chat: true, voice: false } });
   renderShell();

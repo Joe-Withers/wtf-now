@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 
 import { ChatDrawer, ChatFab, ChatProvider } from "./ChatShell";
-import { SnackHost } from "./ui";
+import { SnackHost, Wordmark } from "./ui";
 
 const icon = (path: string) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -24,6 +24,9 @@ export function Layout() {
       <ChatProvider>
         <div className="app">
           <nav className="rail" aria-label="Main">
+            <span className="rail-mark">
+              <Wordmark />
+            </span>
             {LINKS.map((link) => (
               <NavLink key={link.to} to={link.to} end={link.to === "/"}>
                 {icon(link.icon)}

@@ -59,6 +59,7 @@ Every screen keeps a way into the chat, and the task screen opens it with that t
 The app is one system, not a set of screens that happen to sit together.
 
 - **A rail, not a bar.** The navigation runs down the left-hand side, so the bottom of the screen belongs to whatever you were reading.
+- **A layout that fits the screen.** The app fills the window rather than floating in it. On a phone the rail is an icon strip and everything is one column; on a laptop the rail becomes a sidebar with the wordmark, reading screens keep a comfortable measure, and card lists go two abreast. The screens that draw something use the whole width.
 - **One header.** Every screen opens with a sticky header saying where you are. Nothing else.
 - **One type scale.** Screen titles, section eyebrows, card titles and metadata each have a fixed size, so a card looks like a card wherever it appears.
 - **One way of showing state.** A task's state is a pill — Not started, Underway, Done — and a purchase says To order, On order, Arrived. The same pill everywhere, never a stray word.
