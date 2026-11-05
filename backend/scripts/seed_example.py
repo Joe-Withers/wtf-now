@@ -28,7 +28,25 @@ def easier_after(slug: str) -> dict[str, str]:
     return {"task": slug, "strength": "soft"}
 
 
+LAYOUT = Op(
+    "write_layout",
+    {
+        "title": "Van plan",
+        "slug": "van-plan",
+        "zones": [
+            {"id": "ceiling", "title": "Ceiling", "x": 10, "y": 10, "width": 580, "height": 40},
+            {"id": "left-wall", "title": "Left wall", "x": 10, "y": 60, "width": 580, "height": 30},
+            {"id": "rear-cabinet", "title": "Rear cabinet", "x": 10, "y": 100, "width": 120, "height": 100},
+            {"id": "bed", "title": "Bed", "x": 140, "y": 100, "width": 200, "height": 100},
+            {"id": "kitchen", "title": "Kitchen", "x": 350, "y": 100, "width": 140, "height": 100},
+            {"id": "floor", "title": "Floor", "x": 500, "y": 100, "width": 90, "height": 100},
+            {"id": "right-wall", "title": "Right wall", "x": 10, "y": 210, "width": 580, "height": 30},
+        ],
+    },
+)
+
 PLAN = [
+    LAYOUT,
     task("Floor", "floor", description="Everything from the bare metal to the finished floor."),
     task("Clean and treat rust", "floor-rust", "floor", effort_hours=3, zone="floor"),
     task("Lay battens and insulation", "floor-insulation", "floor", effort_hours=5, zone="floor", depends_on=needs("floor-rust")),

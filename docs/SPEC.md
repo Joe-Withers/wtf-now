@@ -56,7 +56,7 @@ Project data is an Open Knowledge Format (OKF) v0.2 bundle: a directory of markd
   tasks/<slug>.md      one per task, flat
   notes/<slug>.md      research, decisions, parts, measurements, inventory
   layouts/<slug>.md    type: Layout, references the SVG alongside it
-  layouts/<slug>.svg
+  layouts/<slug>.svg   hand-drawn, or generated from zone rectangles by the AI
 ```
 
 Photos don't go in the bundle or in git. They're stored in S3-compatible object storage, and notes and tasks reference them by key.
@@ -168,7 +168,7 @@ Home shows three suggestions from **Can do now**, chosen by a fixed ranking: fit
 
 ### 5.4 Preflight
 
-Before a task with `closes_zone` is started, the app lists every unfinished task in that zone and warns about them. The AI then asks what else still needs to go behind it. This protects against the graph being incomplete, which it always will be.
+Before a task with `closes_zone` is started, the app lists every unfinished task in that zone, except work that depends on the closing task, and warns about them. The AI's change is held until the owner has been asked what else still needs to go behind it. This protects against the graph being incomplete, which it always will be.
 
 ---
 

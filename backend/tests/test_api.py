@@ -299,3 +299,92 @@ def test_api_routes_are_not_shadowed(served: TestClient) -> None:
 def test_files_outside_the_frontend_are_not_served(served: TestClient) -> None:
     assert "private" not in served.get("/..%2fsecret.txt").text
     assert "private" not in served.get("/assets/..%2f..%2fsecret.txt").text
+
+
+def plan(client: TestClient) -> Store:
+    store: Store = client.app.state.store
+    store.apply(
+        [
+            Op(
+                "write_layout",
+                {
+                    "title": "Plan",
+                    "slug": "plan",
+                    "zones": [
+                        {"id": "rear", "title": "Rear", "x": 0, "y": 0, "width": 100, "height": 50},
+                        {"id": "empty", "title": "Empty", "x": 0, "y": 60, "width": 100, "height": 20},
+                    ],
+                },
+            )
+        ]
+    )
+    return store
+
+
+def test_preflight_lists_unfinished_work_in_the_zone(client: TestClient) -> None:
+    plan(client)
+    wiring = new_task(client, "Run the wiring", zone="rear")
+    finished = new_task(client, "Already done", zone="rear")
+    client.post(f"/api/tasks/{finished}/state", json={"state": "done"})
+    elsewhere = new_task(client, "Elsewhere", zone="empty")
+    closing = new_task(client, "Fit the panel", zone="rear", closes_zone="rear")
+    later = new_task(client, "Paint the panel", zone="rear", depends_on=[{"task": closing}])
+
+    task = client.get(f"/api/tasks/{closing}").json()
+
+    assert [ref["slug"] for ref in task["preflight"]] == [wiring]
+    assert task["closes_zone_title"] == "Rear"
+    assert elsewhere and later
+
+
+def test_preflight_is_empty_when_a_task_closes_nothing(client: TestClient) -> None:
+    slug = new_task(client, "Ordinary")
+
+    assert client.get(f"/api/tasks/{slug}").json()["preflight"] == []
+
+
+def test_zone_is_inherited_from_a_parent(client: TestClient) -> None:
+    plan(client)
+    parent = new_task(client, "Group", zone="rear")
+    child = new_task(client, "Child", parent=parent)
+    closing = new_task(client, "Close it", closes_zone="rear")
+
+    assert [ref["slug"] for ref in client.get(f"/api/tasks/{closing}").json()["preflight"]] == [child]
+
+
+def test_layouts_join_geometry_and_progress(client: TestClient) -> None:
+    plan(client)
+    done = new_task(client, "Big", zone="rear", effort_hours=3)
+    new_task(client, "Small", zone="rear", effort_hours=1)
+    client.post(f"/api/tasks/{done}/state", json={"state": "done"})
+
+    [layout] = client.get("/api/layouts").json()
+    zones = {zone["id"]: zone for zone in layout["zones"]}
+
+    assert layout["view_box"] == "0 0 100 80"
+    assert zones["rear"]["progress"] == 75
+    assert zones["rear"]["shape"]["tag"] == "rect"
+    assert len(zones["rear"]["tasks"]) == 2
+    assert zones["empty"]["progress"] is None
+
+
+def test_svg_scripts_and_events_are_never_passed_on(client: TestClient) -> None:
+    store = plan(client)
+    (store.root / "layouts" / "plan.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9"><script>alert(1)</script>'
+        '<rect id="rear" width="5" height="5" onclick="alert(1)" style="x"/></svg>'
+    )
+
+    [layout] = client.get("/api/layouts").json()
+    shape = next(zone for zone in layout["zones"] if zone["id"] == "rear")["shape"]
+
+    assert shape == {"tag": "rect", "attributes": {"width": "5", "height": "5"}}
+
+
+def test_broken_svg_still_lists_zones(client: TestClient) -> None:
+    store = plan(client)
+    (store.root / "layouts" / "plan.svg").write_text("not xml")
+
+    [layout] = client.get("/api/layouts").json()
+
+    assert [zone["shape"] for zone in layout["zones"]] == [None, None]

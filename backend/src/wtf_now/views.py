@@ -1,11 +1,21 @@
 """Read models shared by the REST API and the AI's tools."""
 
+import xml.etree.ElementTree as ElementTree
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from .bundle import Concept, get_section, without_section
-from .graph import blockers, derived_state, is_done, progress, remaining_hours, soft_warnings
+from .graph import (
+    blockers,
+    derived_state,
+    is_done,
+    progress,
+    remaining_hours,
+    soft_warnings,
+    transitive_dependents,
+)
 from .project import Dependency, Project
 from .store import CURRENT_STATE
 
@@ -71,6 +81,8 @@ class TaskDetail:
     dependents: list[TaskRef]
     blocked_by: list[TaskRef]
     easier_after: list[TaskRef]
+    closes_zone_title: str | None
+    preflight: list[TaskRef]
 
 
 @dataclass
@@ -140,6 +152,26 @@ def _dependency_view(project: Project, dependency: Dependency, inherited_from: s
     return DependencyView(target.slug, target.title, dependency.strength, is_done(project, target.slug), inherited_from)
 
 
+def preflight(project: Project, slug: str) -> list[TaskRef]:
+    """Unfinished work in the zone a task will close off.
+
+    Work that depends on the closing task is left out, because it comes afterwards.
+    """
+    task = project.tasks[slug]
+    if task.closes_zone is None or is_done(project, slug):
+        return []
+    later = transitive_dependents(project, slug)
+    own = set(project.leaves(slug))
+    return [
+        _ref(project, leaf)
+        for leaf in project.all_leaves()
+        if project.zone_of(leaf) == task.closes_zone
+        and project.tasks[leaf].state != "done"
+        and leaf not in later
+        and leaf not in own
+    ]
+
+
 def task_detail(project: Project, slug: str) -> TaskDetail:
     task = project.tasks.get(slug)
     if task is None:
@@ -172,6 +204,8 @@ def task_detail(project: Project, slug: str) -> TaskDetail:
         dependents=[_ref(project, dependent) for dependent in dependents],
         blocked_by=[_ref(project, target) for target in blocking],
         easier_after=[_ref(project, target) for target in warnings],
+        closes_zone_title=project.zones().get(task.closes_zone or "", task.closes_zone),
+        preflight=preflight(project, slug),
     )
 
 
@@ -302,3 +336,70 @@ def shopping(project: Project) -> Shopping:
         spent=sum(item.cost or 0 for item in groups["done"]),
         unpriced=sum(1 for item in unfinished if item.cost is None),
     )
+
+
+SHAPES = {"rect", "path", "polygon", "circle", "ellipse"}
+SHAPE_ATTRIBUTES = {"x", "y", "width", "height", "rx", "ry", "cx", "cy", "r", "d", "points", "transform"}
+
+
+@dataclass
+class ZoneView:
+    id: str
+    title: str
+    progress: float | None
+    tasks: list[TaskRef]
+    shape: dict[str, Any] | None
+
+
+@dataclass
+class LayoutView:
+    slug: str
+    title: str
+    view_box: str
+    zones: list[ZoneView]
+
+
+def _svg_shapes(path: Path) -> tuple[str, dict[str, dict[str, Any]]]:
+    """Reads only geometry from an SVG, so a file can't put scripts in the page."""
+    try:
+        root = ElementTree.fromstring(path.read_text(encoding="utf-8"))
+    except (OSError, ElementTree.ParseError):
+        return "", {}
+    shapes = {}
+    for element in root.iter():
+        tag = element.tag.rsplit("}", 1)[-1]
+        if tag in SHAPES and element.get("id"):
+            attributes = {key: value for key, value in element.attrib.items() if key in SHAPE_ATTRIBUTES}
+            shapes[element.attrib["id"]] = {"tag": tag, "attributes": attributes}
+    return root.get("viewBox", ""), shapes
+
+
+def _zone_progress(project: Project, leaves: list[str]) -> float | None:
+    total = sum(project.tasks[leaf].effort_hours for leaf in leaves)
+    if not leaves or total == 0:
+        return None
+    return sum(project.tasks[leaf].effort_hours * project.tasks[leaf].progress for leaf in leaves) / total
+
+
+def layouts(project: Project, root: Path) -> list[LayoutView]:
+    views = []
+    for slug, concept in sorted(project.layouts.items()):
+        image = str(concept.frontmatter.get("image", f"{slug}.svg"))
+        view_box, shapes = _svg_shapes(root / "layouts" / Path(image).name)
+        zones = []
+        for entry in concept.frontmatter.get("zones") or []:
+            if not isinstance(entry, dict) or not entry.get("id"):
+                continue
+            zone_id = str(entry["id"])
+            leaves = [leaf for leaf in project.all_leaves() if project.zone_of(leaf) == zone_id]
+            zones.append(
+                ZoneView(
+                    id=zone_id,
+                    title=str(entry.get("title", zone_id)),
+                    progress=_zone_progress(project, leaves),
+                    tasks=[_ref(project, leaf) for leaf in leaves],
+                    shape=shapes.get(zone_id),
+                )
+            )
+        views.append(LayoutView(slug, str(concept.frontmatter.get("title", slug)), view_box, zones))
+    return views

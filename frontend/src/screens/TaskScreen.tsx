@@ -164,6 +164,21 @@ export function TaskScreen() {
 
             {task.blocked_by.length > 0 && <Refs title="Blocked by" items={task.blocked_by} />}
 
+            {task.preflight.length > 0 && (
+              <section className="card warning" role="alert">
+                <p className="card-title">This closes off {task.closes_zone_title}</p>
+                <p className="meta">Still unfinished in there:</p>
+                <ul>
+                  {task.preflight.map((item) => (
+                    <li key={item.slug}>
+                      <Link to={`/tasks/${item.slug}`}>{item.title}</Link>
+                    </li>
+                  ))}
+                </ul>
+                <p className="meta">What else needs to go in there before it's closed up?</p>
+              </section>
+            )}
+
             {task.is_leaf && (
               <div className="button-row">
                 {actions(task).map((action) => (

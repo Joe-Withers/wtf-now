@@ -24,7 +24,7 @@ const detail = {
   current_state: "Cables in the blue box.", notes: "See [the torque note](/notes/torque.md).",
   breadcrumbs: [{ slug: "electrics", title: "Electrics", state: "doing" }], children: [], depends_on: [],
   dependents: [{ slug: "fit", title: "Fit battery", state: "todo" }],
-  blocked_by: [], easier_after: [],
+  blocked_by: [], easier_after: [], closes_zone_title: null, preflight: [],
 };
 
 const renderTask = (overrides = {}) => {
@@ -98,4 +98,21 @@ test("changing progress asks what changed", async () => {
   expect(calls.find((call) => call.url === "/api/tasks/wire/progress")?.init?.body).toBe(
     JSON.stringify({ progress: 45, reason: "More wired" }),
   );
+});
+
+test("a task that closes a zone warns about what's still in there", async () => {
+  renderTask({
+    closes_zone_title: "Rear cabinet",
+    preflight: [{ slug: "board-solar", title: "Connect the solar", state: "todo" }],
+  });
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("This closes off Rear cabinet");
+  expect(screen.getByRole("link", { name: "Connect the solar" })).toHaveAttribute("href", "/tasks/board-solar");
+});
+
+test("no warning when nothing is left in the zone", async () => {
+  renderTask();
+
+  await screen.findByText("Cables in the blue box.");
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });

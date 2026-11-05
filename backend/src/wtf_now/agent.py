@@ -14,7 +14,15 @@ from .what_now import log_lines, what_now
 
 MAX_STEPS = 16
 LOG_LINES = 30
-PROPOSABLE = ("create_task", "update_task", "move_task", "delete_task", "add_dependency", "remove_dependency")
+PROPOSABLE = (
+    "create_task",
+    "update_task",
+    "move_task",
+    "delete_task",
+    "add_dependency",
+    "remove_dependency",
+    "write_layout",
+)
 
 
 class Model(Protocol):
@@ -52,6 +60,24 @@ CHANGE_ARGS = {
         "description": "A slug for add_dependency and remove_dependency, or a list of {task, strength} for create_task"
     },
     "strength": {"enum": ["hard", "soft"]},
+    "zones": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "id": TEXT,
+                "title": TEXT,
+                "x": NUMBER,
+                "y": NUMBER,
+                "width": NUMBER,
+                "height": NUMBER,
+            },
+        },
+    },
+}
+CONFIRMED = {
+    "type": "boolean",
+    "description": "Only set after the owner has confirmed nothing else needs to go in the zone first",
 }
 
 TOOLS = [
@@ -72,13 +98,13 @@ TOOLS = [
     _tool(
         "set_progress",
         "Record an estimate of how far through a leaf task is. Only call this when something has actually happened.",
-        {"slug": SLUG, "progress": {"type": "number", "minimum": 0, "maximum": 100}, "reason": TEXT},
+        {"slug": SLUG, "progress": {"type": "number", "minimum": 0, "maximum": 100}, "reason": TEXT, "confirmed": CONFIRMED},
         ("slug", "progress", "reason"),
     ),
     _tool(
         "set_state",
         "Set a leaf task to todo, doing or done. For purchases: todo is to order, doing is on order, done is arrived.",
-        {"slug": SLUG, "state": {"enum": ["todo", "doing", "done"]}, "reason": TEXT},
+        {"slug": SLUG, "state": {"enum": ["todo", "doing", "done"]}, "reason": TEXT, "confirmed": CONFIRMED},
         ("slug", "state"),
     ),
     _tool(
@@ -109,7 +135,9 @@ TOOLS = [
         "create_task(title, slug, parent, kind, description, effort_hours, zone, closes_zone, needs_helper, cost, "
         "depends_on: [{task, strength}]); update_task(slug, reason, title, description, kind, zone, closes_zone, "
         "effort_hours, needs_helper, cost); move_task(slug, parent); delete_task(slug); "
-        "add_dependency(task, depends_on, strength); remove_dependency(task, depends_on). "
+        "add_dependency(task, depends_on, strength); remove_dependency(task, depends_on); "
+        "write_layout(title, slug, zones: [{id, title, x, y, width, height}]), a simple plan of rectangles with "
+        "zones for tasks to refer to; closes_zone marks a task that makes a zone inaccessible. "
         "Strength is hard if the order is physically forced, soft if one order is just easier. "
         "Kind is build, purchase, research or decision.",
         {
@@ -164,6 +192,8 @@ def describe(project_titles: dict[str, str], operation: str, args: dict[str, Any
             return f"{title(args.get('task'))} needs {title(args.get('depends_on'))} first ({args.get('strength', 'hard')})"
         case "remove_dependency":
             return f"{title(args.get('task'))} no longer needs {title(args.get('depends_on'))}"
+        case "write_layout":
+            return f"Create the plan “{args.get('title')}” with {len(args.get('zones') or [])} zones"
     return operation
 
 
@@ -174,6 +204,26 @@ class Tools:
     session_id: str
     actor: str
     clock: Callable[[], datetime] = lambda: datetime.now(UTC)
+
+    def _preflight_hold(self, args: dict[str, Any]) -> str | None:
+        """Stops work starting on a task that closes off a zone, until the owner has been asked."""
+        confirmed = args.pop("confirmed", False)
+        project = self.store.project
+        slug = str(args.get("slug"))
+        if confirmed is True or slug not in project.tasks or project.tasks[slug].state != "todo":
+            return None
+        unfinished = views.preflight(project, slug)
+        if not unfinished or args.get("state") == "todo":
+            return None
+        return _json(
+            {
+                "applied": False,
+                "closes_zone": project.tasks[slug].closes_zone,
+                "unfinished_in_zone": unfinished,
+                "next_step": "This task closes off that zone. Tell the owner what's unfinished in there and ask what "
+                "else still needs to go in. Call this again with confirmed true only after they say to go ahead.",
+            }
+        )
 
     def _direct(self, op: Op) -> tuple[str, list[dict]]:
         change, results = self.store.apply([op], actor=self.actor)
@@ -217,7 +267,11 @@ class Tools:
                 return _json(views.notes(project, self.clock())), []
             case "read_log":
                 return _json(log_lines(self.store.log())[:LOG_LINES]), []
-            case "set_progress" | "set_state" | "update_current_state" | "write_note":
+            case "set_progress" | "set_state":
+                if hold := self._preflight_hold(args):
+                    return hold, []
+                return self._direct(Op(name, args))
+            case "update_current_state" | "write_note":
                 return self._direct(Op(name, args))
             case "propose_changes":
                 return self._propose(args["summary"], args["changes"])

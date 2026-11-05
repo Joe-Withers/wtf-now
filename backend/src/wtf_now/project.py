@@ -87,6 +87,22 @@ class Project:
     layouts: dict[str, Concept] = field(default_factory=dict)
     problems: list[Problem] = field(default_factory=list)
 
+    def zones(self) -> dict[str, str]:
+        """Zone titles by id, across all layouts."""
+        found: dict[str, str] = {}
+        for layout in self.layouts.values():
+            for zone in layout.frontmatter.get("zones") or []:
+                if isinstance(zone, dict) and zone.get("id"):
+                    found[str(zone["id"])] = str(zone.get("title", zone["id"]))
+        return found
+
+    def zone_of(self, slug: str) -> str | None:
+        """A task's zone, or the nearest one set on its ancestors."""
+        for owner in (slug, *self.ancestors(slug)):
+            if zone := self.tasks[owner].zone:
+                return zone
+        return None
+
     def is_leaf(self, slug: str) -> bool:
         return not self.children.get(slug)
 
@@ -224,6 +240,16 @@ def _check_dependencies(project: Project) -> None:
         task.depends_on = known
 
 
+def _check_zones(project: Project) -> None:
+    known = project.zones()
+    if not known:
+        return
+    for task in project.tasks.values():
+        for key, zone in (("zone", task.zone), ("closes_zone", task.closes_zone)):
+            if zone is not None and zone not in known:
+                project.problems.append(Problem("unknown-zone", task.path, f"{key} {zone!r} isn't in any layout"))
+
+
 def effective_dependencies(project: Project, leaf: str) -> list[Dependency]:
     """A leaf's dependencies: its own plus those inherited from its ancestors."""
     owners = [leaf, *project.ancestors(leaf)]
@@ -272,6 +298,7 @@ def build_project(concepts: Iterable[Concept], errors: Iterable[ConceptError] = 
     _link_tree(project)
     _check_parents(project)
     _check_dependencies(project)
+    _check_zones(project)
     for cycle in dependency_cycles(project):
         project.problems.append(
             Problem("dependency-cycle", f"{TASK_DIR}{cycle[0]}.md", " -> ".join(cycle))

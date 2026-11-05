@@ -16,6 +16,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from xml.sax.saxutils import escape, quoteattr
+
 from ruamel.yaml.comments import CommentedMap
 
 from .bundle import (
@@ -33,6 +35,7 @@ from .bundle import (
 )
 from .project import (
     KINDS,
+    LAYOUT_DIR,
     LEAF_ONLY_FIELDS,
     NOTE_DIR,
     STATES,
@@ -112,6 +115,7 @@ class Transaction:
         "update_current_state",
         "write_note",
         "verify_note",
+        "write_layout",
     )
 
     def __init__(self, concepts: dict[str, Concept], now: datetime, actor: str) -> None:
@@ -119,6 +123,7 @@ class Transaction:
         self.now = now
         self.actor = actor
         self.log: list[tuple[str, str]] = []
+        self.files: dict[str, str] = {}  # non-concept files, by path
 
     def run(self, op: Op) -> Any:
         if op.name not in self.OPERATIONS:
@@ -357,6 +362,34 @@ class Transaction:
         if parsed.tzinfo is None:
             raise ChangeRejected(f"{value!r} needs a UTC offset")
 
+    def write_layout(self, title: str, zones: list[dict[str, Any]], slug: str | None = None) -> str:
+        """Creates a schematic plan from rectangles. Each zone needs id, title, x, y, width and height."""
+        if not zones:
+            raise ChangeRejected("A layout needs at least one zone")
+        cleaned = []
+        for zone in zones:
+            if not is_valid_slug(str(zone.get("id", ""))):
+                raise ChangeRejected(f"Bad zone id: {zone.get('id')!r}")
+            geometry = {key: _as_number(key, zone.get(key)) for key in ("x", "y", "width", "height")}
+            if any(value is None for value in geometry.values()):
+                raise ChangeRejected(f"Zone {zone['id']!r} needs x, y, width and height")
+            cleaned.append({"id": zone["id"], "title": str(zone.get("title", zone["id"])), **geometry})
+        if len({zone["id"] for zone in cleaned}) != len(cleaned):
+            raise ChangeRejected("Zone ids must be unique")
+
+        slug = slug or slugify(title)
+        if not is_valid_slug(slug):
+            raise ChangeRejected(f"{slug!r} isn't a valid slug")
+        data = CommentedMap(type="Layout", title=title, image=f"{slug}.svg")
+        data["zones"] = [CommentedMap(id=zone["id"], title=zone["title"]) for zone in cleaned]
+        concept = Concept(f"{LAYOUT_DIR}{slug}.md", data, "")
+        self.concepts[concept.path] = concept
+        width = max(zone["x"] + zone["width"] for zone in cleaned)
+        height = max(zone["y"] + zone["height"] for zone in cleaned)
+        self.files[f"{LAYOUT_DIR}{slug}.svg"] = render_layout_svg(title, width, height, cleaned)
+        self._record("Layout", self._link(concept))
+        return slug
+
     def verify_note(self, slug: str) -> None:
         concept = self.concepts.get(f"{NOTE_DIR}{slug}.md")
         if concept is None:
@@ -364,6 +397,16 @@ class Transaction:
         entries = concept.frontmatter.setdefault("verified", [])
         entries.append(CommentedMap(by=OWNER, at=self.now.isoformat()))
         self._record("Verified", self._link(concept))
+
+
+def render_layout_svg(title: str, width: float, height: float, zones: list[dict[str, Any]]) -> str:
+    lines = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:g} {height:g}">', f"  <title>{escape(title)}</title>"]
+    for zone in zones:
+        lines.append(
+            f'  <rect id={quoteattr(zone["id"])} x="{zone["x"]:g}" y="{zone["y"]:g}" '
+            f'width="{zone["width"]:g}" height="{zone["height"]:g}"/>'
+        )
+    return "\n".join([*lines, "</svg>"]) + "\n"
 
 
 class Store:
@@ -472,6 +515,9 @@ class Store:
                 original = before.get(path)
                 if original is None or render_concept(original) != render_concept(concept):
                     write_text_atomic(self.root / path, render_concept(concept))
+
+            for path, content in transaction.files.items():
+                write_text_atomic(self.root / path, content)
 
             text = self._read(LOG_FILE)
             for label, entry in transaction.log:

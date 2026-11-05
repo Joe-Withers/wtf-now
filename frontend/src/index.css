@@ -139,3 +139,7 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .total { font-family: var(--heading); font-size: 1.4rem; font-weight: 700; }
 .shop-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .shop-item > a { min-width: 0; flex: 1; }
+
+.card.warning { border-color: var(--warn); }
+.card.warning ul { margin: 6px 0; padding-left: 18px; }
+.card.warning a { text-decoration: underline; }

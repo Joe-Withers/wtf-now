@@ -59,20 +59,30 @@ def _hard_dependents(project: Project) -> dict[str, set[str]]:
     return dependents
 
 
+def _closure(dependents: dict[str, set[str]], leaf: str) -> set[str]:
+    seen: set[str] = set()
+    pending = list(dependents.get(leaf, ()))
+    while pending:
+        current = pending.pop()
+        if current not in seen and current != leaf:
+            seen.add(current)
+            pending.extend(dependents.get(current, ()))
+    return seen
+
+
+def transitive_dependents(project: Project, slug: str) -> set[str]:
+    """Every leaf that can't finish until this task's leaves do."""
+    dependents = _hard_dependents(project)
+    return {found for leaf in project.leaves(slug) for found in _closure(dependents, leaf)}
+
+
 def downstream_hours(project: Project) -> dict[str, float]:
     """For each leaf, the remaining effort that transitively depends on finishing it."""
     dependents = _hard_dependents(project)
-    totals: dict[str, float] = {}
-    for leaf in project.all_leaves():
-        seen: set[str] = set()
-        pending = list(dependents.get(leaf, ()))
-        while pending:
-            current = pending.pop()
-            if current not in seen and current != leaf:
-                seen.add(current)
-                pending.extend(dependents.get(current, ()))
-        totals[leaf] = sum(project.tasks[slug].remaining_hours for slug in seen)
-    return totals
+    return {
+        leaf: sum(project.tasks[slug].remaining_hours for slug in _closure(dependents, leaf))
+        for leaf in project.all_leaves()
+    }
 
 
 def overall_progress(project: Project) -> float:

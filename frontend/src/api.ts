@@ -140,6 +140,8 @@ export type TaskDetail = {
   dependents: TaskRef[];
   blocked_by: TaskRef[];
   easier_after: TaskRef[];
+  closes_zone_title: string | null;
+  preflight: TaskRef[];
 };
 
 export type NoteSummary = {

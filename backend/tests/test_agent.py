@@ -252,3 +252,63 @@ def test_describe_uses_titles() -> None:
 
     assert describe(titles, "move_task", {"slug": "a"}) == "Move Alpha under the top level"
     assert describe(titles, "update_task", {"slug": "a", "reason": "x", "zone": "rear"}) == "Change zone on Alpha"
+
+
+@pytest.fixture
+def zoned(store: Store) -> Store:
+    store.apply(
+        [
+            Op("write_layout", {"title": "Plan", "zones": [{"id": "rear", "title": "Rear", "x": 0, "y": 0, "width": 9, "height": 9}]}),
+            Op("update_task", {"slug": "wire-board", "zone": "rear"}),
+            Op("update_task", {"slug": "fit-battery", "closes_zone": "rear"}),
+        ]
+    )
+    return store
+
+
+def test_closing_a_zone_is_held_until_the_owner_confirms(zoned: Store, proposals: ProposalStore) -> None:
+    model = ScriptedModel(
+        [call("set_state", slug="fit-battery", state="doing")],
+        [text("Wire board is still unfinished in there. Anything else to go in first?")],
+    )
+
+    events, messages = converse(zoned, proposals, model)
+
+    assert zoned.project.tasks["fit-battery"].state == "todo"
+    assert of_type(events, "change") == []
+    output = messages[2]["content"][0]["content"]
+    assert "Wire board" in output and "confirmed" in output
+
+
+def test_confirmed_closure_goes_ahead(zoned: Store, proposals: ProposalStore) -> None:
+    model = ScriptedModel([call("set_state", slug="fit-battery", state="doing", confirmed=True)], [text("Started.")])
+
+    converse(zoned, proposals, model)
+
+    assert zoned.project.tasks["fit-battery"].state == "doing"
+
+
+def test_progress_on_a_closing_task_is_held_too(zoned: Store, proposals: ProposalStore) -> None:
+    model = ScriptedModel(
+        [call("set_progress", slug="fit-battery", progress=20, reason="Started")], [text("Asking first.")]
+    )
+
+    converse(zoned, proposals, model)
+
+    assert zoned.project.tasks["fit-battery"].state == "todo"
+
+
+def test_ai_can_propose_a_plan_of_zones(store: Store, proposals: ProposalStore) -> None:
+    zones = [{"id": "rear", "title": "Rear", "x": 0, "y": 0, "width": 9, "height": 9}]
+    model = ScriptedModel(
+        [call("propose_changes", summary="Add a plan", changes=[{"operation": "write_layout", "args": {"title": "Plan", "zones": zones}}])],
+        [text("Have a look.")],
+    )
+
+    events, _ = converse(store, proposals, model)
+    [proposal] = of_type(events, "proposal")
+    assert proposal["descriptions"] == ["Create the plan “Plan” with 1 zones"]
+
+    proposals.approve(proposal["id"])
+
+    assert store.project.zones() == {"rear": "Rear"}

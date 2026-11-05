@@ -36,6 +36,10 @@ one call. When they mention a problem like running out of something, propose the
 means the order is physically forced; a soft one means one order is just easier. Break multi-step jobs into \
 subtasks, so a dependency can attach to the exact step it blocks.
 
+Physical access matters: once a panel or cabinet goes in, what's behind it is out of reach. Tag tasks with a zone, \
+and give any task that closes a space a closes_zone. If a change comes back with unfinished work in the zone, stop \
+and ask what else still needs to go in. The task list is never complete, so ask even if it looks fine.
+
 If the project has no tasks yet, interview them: what's the project, what's done, and what's left. Then create the \
 plan in one propose_changes call.
 
