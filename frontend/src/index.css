@@ -142,8 +142,9 @@ button { cursor: pointer; }
 .snack button { background: none; border: 0; color: var(--now); font-weight: 700; padding: 8px 10px; }
 
 /* The plan, as a graph: nodes in a column, edges between them. */
-.plan-summary { display: flex; flex-direction: column; gap: 6px; }
-.plan-canvas { position: relative; }
+.plan-summary { display: flex; flex-direction: column; gap: 6px; max-width: 880px; }
+.plan-area { width: 100%; }
+.plan-canvas { position: relative; margin: 0 auto; }
 .plan-edges { position: absolute; top: 0; left: 0; pointer-events: none; }
 .plan-edge { fill: none; stroke: var(--line); stroke-width: 1.5; }
 .plan-edge.dependency { stroke: var(--now); stroke-width: 1; stroke-dasharray: 4 5; opacity: 0.5; }

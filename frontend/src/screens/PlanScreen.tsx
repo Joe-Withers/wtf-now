@@ -4,8 +4,9 @@ import { Link } from "react-router-dom";
 
 import { getJson, type Home as HomeData, type TaskDetail, type TreeNode } from "../api";
 import { useChat } from "../chat-state";
-import { Loading, Pill, ProgressBar, ScreenHead, Wordmark } from "../components/ui";
-import { NODE_WIDTH, dependencyEdge, layoutPlan, treeEdge, type Positioned } from "../plan/layout";
+import { Loading, Pill, ProgressBar, ScreenHead } from "../components/ui";
+import { dependencyEdge, layoutPlan, treeEdge, type Positioned } from "../plan/layout";
+import { useSize } from "../useSize";
 
 /** Which nodes are open, so the plan is where you left it. */
 const opened = new Set<string>();
@@ -83,6 +84,7 @@ export function PlanScreen() {
   const { setFocus } = useChat();
   const [open, setOpen] = useState<Set<string>>(() => new Set(opened));
   const [selected, setSelected] = useState<string | null>(null);
+  const { ref, size } = useSize();
 
   // The first time, the areas are open, so you can see the shape of the project.
   useEffect(() => {
@@ -97,7 +99,10 @@ export function PlanScreen() {
     return () => setFocus(null);
   }, [selected, setFocus]);
 
-  const layout = useMemo(() => layoutPlan(tree.data ?? [], open, selected), [tree.data, open, selected]);
+  const layout = useMemo(
+    () => layoutPlan(tree.data ?? [], open, selected, size.width),
+    [tree.data, open, selected, size.width],
+  );
   const positions = new Map(layout.nodes.map((item) => [item.node.slug, item]));
 
   const detail = useQuery({
@@ -129,17 +134,17 @@ export function PlanScreen() {
   if (here && detail.data) {
     for (const ref of detail.data.blocked_by) {
       const to = positions.get(ref.slug);
-      if (to) links.push({ key: `needs-${ref.slug}`, d: dependencyEdge(to, here) });
+      if (to) links.push({ key: `needs-${ref.slug}`, d: dependencyEdge(to, here, layout.nodeWidth) });
     }
     for (const ref of detail.data.dependents) {
       const to = positions.get(ref.slug);
-      if (to) links.push({ key: `unlocks-${ref.slug}`, d: dependencyEdge(here, to) });
+      if (to) links.push({ key: `unlocks-${ref.slug}`, d: dependencyEdge(here, to, layout.nodeWidth) });
     }
   }
 
   return (
-    <main className="screen">
-      <ScreenHead title={<Wordmark />} />
+    <main className="screen wide">
+      <ScreenHead title="Plan" />
       {home.data && (
         <section className="plan-summary">
           <ProgressBar value={home.data.overall_progress} label="Overall progress" />
@@ -152,30 +157,36 @@ export function PlanScreen() {
       )}
       <Loading query={tree}>
         {() => (
-          <div className="plan-canvas" style={{ width: layout.width, height: layout.height }}>
-            <svg className="plan-edges" width={layout.width} height={layout.height} aria-hidden="true">
-              {branches.map((edge) => (
-                <path key={edge.key} className="plan-edge" d={edge.d} />
-              ))}
-              {links.map((edge) => (
-                <path key={edge.key} className="plan-edge dependency" d={edge.d} />
-              ))}
-            </svg>
-            {layout.nodes.map((item) => {
-              const slug = item.node.slug;
-              return (
-                <div key={slug} className="plan-node" style={{ left: item.x, top: item.y, width: NODE_WIDTH }}>
-                  <Card
-                    item={item}
-                    open={open.has(slug)}
-                    selected={selected === slug}
-                    onSelect={() => setSelected(selected === slug ? null : slug)}
-                    onToggle={() => toggle(slug)}
-                  />
-                  {selected === slug && <Detail slug={slug} detail={detail.data} />}
-                </div>
-              );
-            })}
+          <div className="plan-area" ref={ref}>
+            <div className="plan-canvas" style={{ width: layout.width, height: layout.height }}>
+              <svg className="plan-edges" width={layout.width} height={layout.height} aria-hidden="true">
+                {branches.map((edge) => (
+                  <path key={edge.key} className="plan-edge" d={edge.d} />
+                ))}
+                {links.map((edge) => (
+                  <path key={edge.key} className="plan-edge dependency" d={edge.d} />
+                ))}
+              </svg>
+              {layout.nodes.map((item) => {
+                const slug = item.node.slug;
+                return (
+                  <div
+                    key={slug}
+                    className="plan-node"
+                    style={{ left: item.x, top: item.y, width: layout.nodeWidth }}
+                  >
+                    <Card
+                      item={item}
+                      open={open.has(slug)}
+                      selected={selected === slug}
+                      onSelect={() => setSelected(selected === slug ? null : slug)}
+                      onToggle={() => toggle(slug)}
+                    />
+                    {selected === slug && <Detail slug={slug} detail={detail.data} />}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </Loading>
