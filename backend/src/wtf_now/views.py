@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .bundle import Concept, get_section, without_section
+from .bundle import Concept, LogDay, get_section, without_section
 from .graph import (
     blockers,
     derived_state,
@@ -21,6 +21,7 @@ from .graph import (
 )
 from .project import DRAWINGS_DIR, Dependency, Project, effective_dependencies
 from .store import CURRENT_STATE
+from .what_now import recent_steps
 
 UNVERIFIED_BY_DEFAULT = "Measurement"
 SEARCH_LIMIT = 20
@@ -381,6 +382,18 @@ class MapNote:
 
 
 @dataclass
+class MapStep:
+    """Something the log says you finished, and the day it happened."""
+
+    slug: str
+    title: str
+    kind: str
+    category: str
+    label: str
+    day: str
+
+
+@dataclass
 class ProjectMap:
     """The whole project, as the map and What now draw it."""
 
@@ -390,6 +403,7 @@ class ProjectMap:
     categories: list[MapCategory]
     tasks: list[MapTask]
     notes: list[MapNote]
+    recent: list[MapStep] = field(default_factory=list)
 
 
 def _categories(project: Project) -> list[MapCategory]:
@@ -451,7 +465,7 @@ def _notes(project: Project) -> list[MapNote]:
     return notes
 
 
-def project_map(project: Project) -> ProjectMap:
+def project_map(project: Project, log: list[LogDay] | None = None) -> ProjectMap:
     """Everything the map and What now need, in one read."""
     leaves = project.all_leaves()
     return ProjectMap(
@@ -461,7 +475,23 @@ def project_map(project: Project) -> ProjectMap:
         categories=_categories(project),
         tasks=_tasks(project),
         notes=_notes(project),
+        recent=_recent(project, log or []),
     )
+
+
+def _recent(project: Project, log: list[LogDay]) -> list[MapStep]:
+    """The last few things the log says you finished, newest first."""
+    return [
+        MapStep(
+            slug=step.slug,
+            title=step.title,
+            kind=step.kind,
+            category=_category_of(project, step.slug),
+            label=step.label,
+            day=step.day.isoformat(),
+        )
+        for step in recent_steps(project, log, only_done=True)
+    ]
 
 
 @dataclass

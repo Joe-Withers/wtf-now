@@ -1,136 +1,223 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 
-import { getJson, type RecentStep, type WhatNow, type WorkItem } from "../api";
-import { Loading, Pill, ScreenHead } from "../components/ui";
-import { WorkCard } from "../components/WorkCard";
+import { getJson, type MapTask, type ProjectMap } from "../api";
+import { ProjectPanel } from "../components/ProjectPanel";
+import { TaskPanel } from "../components/TaskPanel";
+import { Loading } from "../components/ui";
+import { EMPTY_MAP } from "../graph/layout";
+import { FILTERS, day, layoutJobs, readyCounts, type FilterKey, type JobCard } from "../jobs/layout";
+import { useSize } from "../useSize";
 
-const TIMES: { label: string; hours: number | null }[] = [
-  { label: "Any time", hours: null },
-  { label: "1 hour", hours: 1 },
-  { label: "2 hours", hours: 2 },
-  { label: "Half a day", hours: 4 },
-  { label: "All day", hours: 8 },
-];
+const KIND_LABELS: Record<MapTask["kind"], string> = {
+  build: "Build",
+  purchase: "Buy",
+  research: "Research",
+  decision: "Decide",
+};
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-function day(iso: string): string {
-  const [year, month, date] = iso.split("-").map(Number);
-  if (!year || !month || !date) return iso;
-  return `${date} ${MONTHS[month - 1]}`;
-}
-
-/** A step of work the log says already happened. */
-function Done({ step }: { step: RecentStep }) {
+/** How far round the job is: done, started, ready to start, or waiting. */
+function StatusRing({ card }: { card: JobCard }) {
+  if (card.state === "done") {
+    return (
+      <svg viewBox="0 0 16 16" className="mark done" role="img" aria-label="Done">
+        <circle cx="8" cy="8" r="8" fill="var(--done)" />
+        <path d="M4.5 8.2l2.2 2.2 4.6-4.8" fill="none" stroke="var(--bg)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  if (card.state === "doing") {
+    const arc = 37.7 * (card.progress / 100);
+    return (
+      <svg viewBox="0 0 16 16" className="mark progress" role="img" aria-label="In progress">
+        <circle cx="8" cy="8" r="6" fill="none" stroke="var(--line)" strokeWidth="2" />
+        <circle
+          cx="8"
+          cy="8"
+          r="6"
+          fill="none"
+          stroke="var(--now)"
+          strokeWidth="2"
+          strokeDasharray={`${arc.toFixed(1)} 100`}
+          transform="rotate(-90 8 8)"
+        />
+      </svg>
+    );
+  }
+  if (card.column === "ready") {
+    return (
+      <svg viewBox="0 0 16 16" className="mark ready" role="img" aria-label="Ready">
+        <circle cx="8" cy="8" r="6" fill="none" stroke="var(--now)" strokeWidth="2" />
+      </svg>
+    );
+  }
   return (
-    <li className="flow-step done">
-      <span className="flow-mark" aria-hidden="true">
-        ✓
-      </span>
-      <div className="flow-body">
-        <Link className="flow-card" to={`/tasks/${step.slug}`}>
-          <div className="card-head">
-            <div className="card-title">{step.title}</div>
-            {step.state !== "todo" && <Pill state={step.state} kind={step.kind} />}
-          </div>
-          <div className="meta">
-            {step.label} · {day(step.day)}
-          </div>
-        </Link>
-      </div>
-    </li>
+    <svg viewBox="0 0 16 16" className="mark waiting" role="img" aria-label="Waiting">
+      <circle cx="8" cy="8" r="6" fill="none" stroke="var(--muted)" strokeWidth="1.6" strokeDasharray="2.5 2.5" />
+    </svg>
   );
 }
 
-/** A step of work still to do. The first one is the one to start on. */
-function Next({ item, lead }: { item: WorkItem; lead: boolean }) {
+/** What a card says, in full, for anyone who can't see the whole of it. */
+function describe(card: JobCard): string {
+  if (card.column === "done") {
+    return [card.title, card.label, card.day ? day(card.day) : null].filter(Boolean).join(", ");
+  }
+  return [card.title, KIND_LABELS[card.kind]].join(", ");
+}
+
+/** The shape of each kind of job, so a card says what it is at a glance. */
+function KindIcon({ kind }: { kind: MapTask["kind"] }) {
+  const path = {
+    build: "M2.5 13.5l6.5-6.5M8 3.5l2-1.5 4 4-1.5 2z",
+    purchase: "M1.5 2h2l1.6 8h7.2l1.4-5.5H4.3M6.2 13.2h.01M11.8 13.2h.01",
+    decision: "M8 14V8.5M8 8.5L3.5 4M8 8.5L12.5 4M3.5 7V4h3M12.5 7V4h-3",
+    research: "M7 2.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM10.5 10.5L14 14",
+  }[kind];
   return (
-    <li className={`flow-step ${lead ? "next" : "later"}`}>
-      <span className="flow-mark" aria-hidden="true" />
-      <div className="flow-body">
-        {lead && <div className="flow-badge">Recommended</div>}
-        <WorkCard item={item} lead={lead} />
-      </div>
-    </li>
+    <svg viewBox="0 0 16 16" className="kind-icon" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d={path} />
+    </svg>
   );
 }
 
-function Group({ title, items }: { title: string; items: WorkItem[] }) {
-  if (items.length === 0) return null;
-  return (
-    <section className="section">
-      <h2>{title}</h2>
-      <div className="card-stack">
-        {items.map((item) => (
-          <WorkCard key={item.slug} item={item} />
-        ))}
-      </div>
-    </section>
-  );
+/** The sentence under the title: what you could be doing right now. */
+function summary(map: ProjectMap): string {
+  const { total, byKind } = readyCounts(map);
+  if (total === 0) return "Nothing is ready right now. The log will say when it is.";
+  const parts = [
+    { kind: "build", name: "build" },
+    { kind: "purchase", name: "to buy" },
+    { kind: "decision", name: "to decide" },
+    { kind: "research", name: "to research" },
+  ]
+    .filter((one) => byKind[one.kind])
+    .map((one) => `${byKind[one.kind]} ${one.name}`);
+  const things = `${total} ${total === 1 ? "thing" : "things"} you can do right now`;
+  return `${things}${parts.length > 0 ? `: ${parts.join(", ")}` : ""}.`;
 }
 
 export function WhatNowScreen() {
-  const [time, setTime] = useState<number | null>(null);
-  const [solo, setSolo] = useState(false);
+  const project = useQuery({ queryKey: ["map"], queryFn: () => getJson<ProjectMap>("/map") });
+  const [focus, setFocus] = useState<string | null>(null);
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const { ref, size } = useSize();
 
-  const parameters = new URLSearchParams();
-  if (time !== null) parameters.set("hours", String(time));
-  if (solo) parameters.set("helper", "false");
-  const query = useQuery({
-    queryKey: ["what-now", time, solo],
-    queryFn: () => getJson<WhatNow>(`/what-now?${parameters}`),
-  });
+  // The job you're looking at is in the address, so a link can point at it.
+  const [params, setParams] = useSearchParams();
+  const selected = params.get("task");
+  const setSelected = useCallback(
+    (slug: string | null) => {
+      setParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          if (slug) next.set("task", slug);
+          else next.delete("task");
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setParams],
+  );
+
+  const map = project.data ?? EMPTY_MAP;
+  const layout = useMemo(
+    () => layoutJobs(map, size.width, selected, filter, focus),
+    [map, size.width, selected, filter, focus],
+  );
+  const colours = new Map(map.categories.map((category) => [category.slug, category.colour]));
+  const task = map.tasks.find((one) => one.slug === selected);
 
   return (
-    <main className="screen">
-      <ScreenHead title="What now?" />
-      <div className="content">
-        <section className="section" aria-label="Filters">
-          <div className="scroll-row">
-            {TIMES.map((option) => (
-              <button key={option.label} className="chip" aria-pressed={time === option.hours} onClick={() => setTime(option.hours)}>
-                {option.label}
-              </button>
-            ))}
-            <button className="chip" aria-pressed={solo} onClick={() => setSolo(!solo)}>
-              On my own
-            </button>
-          </div>
-        </section>
-        <Loading query={query}>
-          {(result) => (
-            <>
-              {result.recent.length > 0 && (
-                <section className="section">
-                  <h2>Just done</h2>
-                  <ol className="flow">
-                    {result.recent.map((step) => (
-                      <Done key={step.slug} step={step} />
-                    ))}
-                  </ol>
-                </section>
+    <main className="screen wide jobs-screen">
+      <Loading query={project}>
+        {() => (
+          <>
+            <ProjectPanel map={map} focus={focus} onFocus={setFocus} />
+            <div className="jobs-main">
+              <div className="jobs-head">
+                <div>
+                  <h1>What now?</h1>
+                  <p className="meta">{summary(map)}</p>
+                </div>
+                <nav className="segmented" aria-label="View">
+                  <Link to="/">Graph</Link>
+                  <Link className="active" to="/what-now">
+                    What now
+                  </Link>
+                </nav>
+              </div>
+
+              <div className="jobs-filters">
+                {FILTERS.map((option) => (
+                  <button
+                    key={option.key}
+                    className="chip"
+                    aria-pressed={filter === option.key}
+                    onClick={() => setFilter(option.key)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="jobs-canvas" ref={ref} style={{ height: layout.height }}>
+                <svg className="jobs-edges" width={layout.width} height={layout.height} aria-hidden="true">
+                  {layout.edges.map((edge) => {
+                    const middle = Math.round((edge.x1 + edge.x2) / 2);
+                    return (
+                      <path
+                        key={edge.id}
+                        className={`job-edge${edge.hot ? " hot" : ""}`}
+                        d={`M ${edge.x1} ${edge.y1} H ${middle} V ${edge.y2} H ${edge.x2}`}
+                      />
+                    );
+                  })}
+                </svg>
+
+                {layout.columns.map((column) => (
+                  <div key={column.key} className="jobs-column" style={{ left: column.x, width: layout.cardWidth }}>
+                    <h2 className={`jobs-column-head ${column.key}`}>
+                      {column.label}
+                      <span className="meta">{column.count}</span>
+                    </h2>
+                  </div>
+                ))}
+
+                {layout.cards.map((card) => (
+                  <button
+                    key={`${card.column}-${card.slug}`}
+                    className={`job-card${card.selected ? " selected" : ""}${card.dimmed ? " faded" : ""}`}
+                    style={{ left: card.x, top: card.y, width: card.width, height: card.height }}
+                    onClick={() => setSelected(card.slug === selected ? null : card.slug)}
+                    aria-pressed={card.selected}
+                    aria-label={describe(card)}
+                    title={describe(card)}
+                  >
+                    <StatusRing card={card} />
+                    <span className="job-title">{card.title}</span>
+                    {card.column === "done" ? (
+                      <span className="job-kind">{card.day ? day(card.day) : ""}</span>
+                    ) : (
+                      <span className="job-kind">
+                        <KindIcon kind={card.kind} />
+                        {card.state === "doing" && card.kind !== "purchase" ? `${Math.round(card.progress)}%` : ""}
+                      </span>
+                    )}
+                    <span className={`dot cat-${colours.get(card.category) ?? 0}`} aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+
+              {task && (
+                <TaskPanel task={task} map={map} onSelect={setSelected} onClose={() => setSelected(null)} />
               )}
-              <section className="section">
-                <h2 className="now">Next</h2>
-                {result.can_do.length === 0 ? (
-                  <p className="empty">Nothing hands-on fits that right now.</p>
-                ) : (
-                  <ol className="flow">
-                    {result.can_do.map((item, index) => (
-                      <Next key={item.slug} item={item} lead={index === 0} />
-                    ))}
-                  </ol>
-                )}
-              </section>
-              <Group title="Order first" items={result.order_first} />
-              <Group title="On its way" items={result.on_its_way} />
-              <Group title="Decide or research first" items={result.decide_first} />
-            </>
-          )}
-        </Loading>
-      </div>
+            </div>
+          </>
+        )}
+      </Loading>
     </main>
   );
 }

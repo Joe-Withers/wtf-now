@@ -151,7 +151,7 @@ def create_app(
 
     @app.get("/api/map")
     def get_map() -> Any:
-        return views.project_map(store.project)
+        return views.project_map(store.project, store.log())
 
     @app.get("/api/shopping")
     def get_shopping() -> Any:

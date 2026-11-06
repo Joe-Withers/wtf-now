@@ -52,24 +52,6 @@ export type Home = {
   suggestions: WorkItem[];
 };
 
-/** Something the log says happened, and the task it was about. */
-export type RecentStep = {
-  slug: string;
-  title: string;
-  kind: Kind;
-  state: State;
-  label: string;
-  day: string;
-};
-
-export type WhatNow = {
-  can_do: WorkItem[];
-  order_first: WorkItem[];
-  on_its_way: WorkItem[];
-  decide_first: WorkItem[];
-  recent: RecentStep[];
-};
-
 export type Proposal = {
   id: string;
   summary: string;
@@ -275,6 +257,16 @@ export type MapCategory = {
 
 export type MapNote = { slug: string; title: string; task: string | null };
 
+/** Something the log says you finished, and the day it happened. */
+export type MapStep = {
+  slug: string;
+  title: string;
+  kind: Kind;
+  category: string;
+  label: string;
+  day: string;
+};
+
 export type ProjectMap = {
   total: number;
   done: number;
@@ -282,4 +274,5 @@ export type ProjectMap = {
   categories: MapCategory[];
   tasks: MapTask[];
   notes: MapNote[];
+  recent: MapStep[];
 };

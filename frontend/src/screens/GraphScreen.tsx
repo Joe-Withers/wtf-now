@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { getJson, type MapTask, type ProjectMap } from "../api";
@@ -7,6 +7,7 @@ import { ProjectPanel } from "../components/ProjectPanel";
 import { TaskPanel } from "../components/TaskPanel";
 import { Loading } from "../components/ui";
 import { EMPTY_MAP, layoutMap } from "../graph/layout";
+import { useSize } from "../useSize";
 
 const KIND_LABELS: Record<MapTask["kind"], string> = {
   build: "Build",
@@ -14,30 +15,6 @@ const KIND_LABELS: Record<MapTask["kind"], string> = {
   research: "Research",
   decision: "Decide",
 };
-
-/** Watches the space the map has, so it can be drawn to fit it. */
-function useSize() {
-  const [size, setSize] = useState({ width: 900, height: 600 });
-  const observer = useRef<ResizeObserver | null>(null);
-
-  // The canvas only appears once the project has loaded, so the watch is set up
-  // when it arrives, not when the screen does.
-  const ref = useCallback((element: HTMLDivElement | null) => {
-    observer.current?.disconnect();
-    if (!element || typeof ResizeObserver === "undefined") return;
-    const measure = () => {
-      const { width, height } = element.getBoundingClientRect();
-      if (width > 0 && height > 0) setSize({ width, height });
-    };
-    measure();
-    observer.current = new ResizeObserver(measure);
-    observer.current.observe(element);
-  }, []);
-
-  useEffect(() => () => observer.current?.disconnect(), []);
-
-  return { ref, size };
-}
 
 export function GraphScreen() {
   const project = useQuery({ queryKey: ["map"], queryFn: () => getJson<ProjectMap>("/map") });

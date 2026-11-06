@@ -31,6 +31,7 @@ const map: ProjectMap = {
     task({ slug: "wool", title: "Lay the wool", category: "insulation", parent: "insulation" }),
   ],
   notes: [{ slug: "blue-box", title: "The blue box", task: "wire" }],
+  recent: [],
 };
 
 const size = { width: 900, height: 600 };

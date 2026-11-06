@@ -2,7 +2,7 @@
 
 Work through these in number order; each one lists what it depends on. Tickets 001 to 017 get the app into use at the van, and the rest build on that.
 
-Tickets 001 to 023 are built and merged, and so are 028, which takes the buttons out of the app and leaves the chat to do the writing, 029, which gives the screens a proper look, 030, which moves the navigation to a rail and the chat into a drawer, 031, which draws the project as a graph, 032, which draws What now as a flow, 033, which makes the drawings and the notes one thing: the docs, 034, which makes the layout fill the screen, and 035, which draws the project as a map. Tickets 024 to 027 need something from the owner: a server, their own project, a transcription provider, and an Anthropic key.
+Tickets 001 to 023 are built and merged, and so are 028, which takes the buttons out of the app and leaves the chat to do the writing, 029, which gives the screens a proper look, 030, which moves the navigation to a rail and the chat into a drawer, 031, which draws the project as a graph, 032, which draws What now as a flow, 033, which makes the drawings and the notes one thing: the docs, 034, which makes the layout fill the screen, 035, which draws the project as a map, and 036, which draws What now as a run of jobs. Tickets 024 to 027 need something from the owner: a server, their own project, a transcription provider, and an Anthropic key.
 
 | Ticket | Title |
 |---|---|
@@ -41,3 +41,4 @@ Tickets 001 to 023 are built and merged, and so are 028, which takes the buttons
 | [033](033-the-docs-concept.md) | The docs concept |
 | [034](034-the-layout-fits-the-screen.md) | A layout that fits the screen |
 | [035](035-the-project-map.md) | The project as a map |
+| [036](036-what-now-as-jobs.md) | What now as a run of jobs |

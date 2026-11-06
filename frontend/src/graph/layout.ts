@@ -61,7 +61,7 @@ export type MapLayout = {
   notes: NoteDot[];
 };
 
-const EMPTY: ProjectMap = { total: 0, done: 0, progress: 0, categories: [], tasks: [], notes: [] };
+const EMPTY: ProjectMap = { total: 0, done: 0, progress: 0, categories: [], tasks: [], notes: [], recent: [] };
 
 /** How big a dot is, by how far along the task is. */
 function radius(task: MapTask): number {

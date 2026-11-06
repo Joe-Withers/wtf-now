@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from .bundle import LogDay, get_section
-from .graph import blockers, downstream_hours, overall_progress, soft_warnings
+from .graph import blockers, downstream_hours, is_done, overall_progress, soft_warnings
 from .project import Project, Task
 from .store import CURRENT_STATE
 
@@ -138,13 +138,20 @@ def what_now(
     return result
 
 
-def recent_steps(project: Project, log: list[LogDay], count: int = RECENT_STEP_COUNT) -> list[RecentStep]:
+def recent_steps(
+    project: Project,
+    log: list[LogDay],
+    count: int = RECENT_STEP_COUNT,
+    only_done: bool = False,
+) -> list[RecentStep]:
     """The last few tasks the log mentions, newest first, one step per task."""
     steps: list[RecentStep] = []
     seen: set[str] = set()
     for line in log_lines(log):
         slug = line.task
         if not slug or slug in seen or slug not in project.tasks or line.label in SETUP_LABELS:
+            continue
+        if only_done and not is_done(project, slug):
             continue
         seen.add(slug)
         task = project.tasks[slug]

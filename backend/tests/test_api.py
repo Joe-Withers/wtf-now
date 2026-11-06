@@ -199,6 +199,18 @@ def test_the_map_groups_the_tasks_into_categories(client: TestClient) -> None:
     assert next(task for task in project_map["tasks"] if task["slug"] == child)["category"] == parent
 
 
+def test_the_map_carries_the_last_finished_steps(client: TestClient) -> None:
+    slug = new_task(client, "Wire the board")
+    client.post(f"/api/tasks/{slug}/state", json={"state": "done"})
+    new_task(client, "Lay the wool")
+
+    recent = client.get("/api/map").json()["recent"]
+
+    assert [step["slug"] for step in recent] == [slug]
+    assert recent[0]["title"] == "Wire the board"
+    assert recent[0]["label"] == "Finished"
+
+
 def test_a_note_can_document_a_task(client: TestClient) -> None:
     slug = new_task(client, "Wire the board")
 

@@ -32,7 +32,7 @@ A mobile-first web app, installable as a PWA, with an AI chat built in. You talk
 |---|---|
 | **Graph** | The home screen. The project as a map: its groups in a ring around the centre, the work in each as a cluster of dots, the next task of each group glowing and labelled. Pick a group to focus it, pick a task to see its steps, what it needs and what it unblocks. |
 | **Plan** | The project as a tree of cards, for reading it rather than seeing it. |
-| **What now?** | The work as a flow: the last few steps you ran, then the tasks you could start now, with the one to start on picked out. Filtered by time available and whether you have a helper. |
+| **What now?** | The work as a run of jobs: what you finished, what you could start now, what comes next, and what is further off. A line runs from each job to the job it holds up. |
 | **Chat** | Conversation with the AI, with approve/reject cards for structural changes. It comes out of the side (§3.3). |
 | **Task detail** | Current state, notes, dependencies, photos, and a way into the chat with that task in focus. |
 | **Shopping** | Purchases to order, on order and arrived, with running cost. |
@@ -197,7 +197,14 @@ Unblocked, unfinished leaves are grouped as:
 
 Home shows three suggestions from **Can do now**, chosen by a fixed ranking: fits the time available, then already in progress, then unlocks the most downstream effort. Identical inputs give identical suggestions.
 
-What now draws the same groups as a flow. The last few steps the log records about a task come first, newest first, one step per task; then the tasks you could start now, with the top of **Can do now** picked out as the one to start on.
+What now draws the same groups as a run of jobs, in four columns:
+
+- **Done**: the last few things the log says you finished, newest first.
+- **Ready now**: the work you could start now, whether it is a build, a purchase, a decision or a piece of research.
+- **Up next**: the work one step away — waiting on one job, and that job is itself ready.
+- **Later**: everything else that is still to do.
+
+A line runs from a job to the job it holds up. The chips along the top filter the run by kind, and the jobs of other kinds fade rather than vanish, so the shape of the run stays.
 
 ### 5.4 Preflight
 

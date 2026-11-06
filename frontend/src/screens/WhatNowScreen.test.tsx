@@ -1,80 +1,149 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { mockApi, renderApp, workItem } from "../test-helpers";
+import { mockApi, renderApp } from "../test-helpers";
 import { WhatNowScreen } from "./WhatNowScreen";
 
-const result = {
-  can_do: [
-    workItem(),
-    workItem({ slug: "cables", title: "Run the cables", state: "todo", progress: 0 }),
+const map = {
+  total: 4,
+  done: 1,
+  progress: 25,
+  categories: [
+    { slug: "electrics", title: "Electrics", colour: 1, total: 2, done: 0, progress: 0, next: "wire" },
+    { slug: "insulation", title: "Insulation", colour: 2, total: 2, done: 1, progress: 50, next: "wool" },
   ],
-  order_first: [workItem({ slug: "buy-panels", title: "Order panels", kind: "purchase", current_state: "" })],
-  on_its_way: [workItem({ slug: "buy-pir", title: "PIR board", kind: "purchase", current_state: "" })],
-  decide_first: [workItem({ slug: "choose", title: "Lithium or AGM", kind: "decision", current_state: "" })],
-  recent: [
+  tasks: [
     {
-      slug: "board-wire",
-      title: "Wire the board internally",
+      slug: "wire",
+      title: "Run the cables",
       kind: "build",
       state: "doing",
-      label: "Progress",
-      day: "2026-08-10",
+      progress: 40,
+      category: "electrics",
+      parent: "electrics",
+      is_leaf: true,
+      needs: [],
+      blocks: ["fridge"],
+      children: [],
+      note: "Cables are cut.",
     },
+    {
+      slug: "fridge",
+      title: "Fit the fridge",
+      kind: "build",
+      state: "todo",
+      progress: 0,
+      category: "electrics",
+      parent: "electrics",
+      is_leaf: true,
+      needs: ["wire"],
+      blocks: [],
+      children: [],
+      note: "",
+    },
+    {
+      slug: "wool",
+      title: "Order the wool",
+      kind: "purchase",
+      state: "todo",
+      progress: 0,
+      category: "insulation",
+      parent: "insulation",
+      is_leaf: true,
+      needs: [],
+      blocks: [],
+      children: [],
+      note: "",
+    },
+    {
+      slug: "felt",
+      title: "Trim the felt",
+      kind: "build",
+      state: "done",
+      progress: 100,
+      category: "insulation",
+      parent: "insulation",
+      is_leaf: true,
+      needs: [],
+      blocks: [],
+      children: [],
+      note: "",
+    },
+  ],
+  notes: [],
+  recent: [
+    { slug: "felt", title: "Trim the felt", kind: "build", category: "insulation", label: "Finished", day: "2026-08-10" },
   ],
 };
 
-test("shows each group of work", async () => {
-  mockApi({ "/api/what-now": result });
+test("the work is a run of jobs, in four columns", async () => {
+  mockApi({ "/api/map": map });
 
   renderApp(<WhatNowScreen />);
 
-  expect(await screen.findByText("Just done")).toBeInTheDocument();
-  expect(screen.getByText("Next")).toBeInTheDocument();
-  expect(screen.getByText("Order first")).toBeInTheDocument();
-  expect(screen.getByText("On its way")).toBeInTheDocument();
-  expect(screen.getByText("Decide or research first")).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: /^Done/ })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /^Ready now/ })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /^Up next/ })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /^Later/ })).toBeInTheDocument();
 });
 
-test("the flow starts with the last few things you did", async () => {
-  mockApi({ "/api/what-now": result });
+test("it says what you could do right now", async () => {
+  mockApi({ "/api/map": map });
 
   renderApp(<WhatNowScreen />);
 
-  expect(await screen.findByText("Wire the board internally")).toBeInTheDocument();
-  expect(screen.getByText("Progress · 10 Aug")).toBeInTheDocument();
+  expect(await screen.findByText("2 things you can do right now: 1 build, 1 to buy.")).toBeInTheDocument();
 });
 
-test("the recommended task is the one the flow points at", async () => {
-  mockApi({ "/api/what-now": result });
+test("the last thing you finished is in the done column", async () => {
+  mockApi({ "/api/map": map });
 
   renderApp(<WhatNowScreen />);
 
-  const badge = await screen.findByText("Recommended");
-  const step = badge.closest("li") as HTMLElement;
-
-  expect(within(step).getByText("Wire the board")).toBeInTheDocument();
-  expect(within(screen.getByText("Run the cables").closest("li") as HTMLElement).queryByText("Recommended")).toBeNull();
+  expect(await screen.findByRole("button", { name: "Trim the felt, Finished, 10 Aug" })).toBeInTheDocument();
 });
 
-test("filters send the time and helper to the API", async () => {
-  const calls = mockApi({ "/api/what-now": result });
+test("picking a job says what it needs and what it unblocks", async () => {
+  mockApi({ "/api/map": map });
+
   renderApp(<WhatNowScreen />);
-  await screen.findByText("Next");
 
-  await userEvent.click(screen.getByRole("button", { name: "2 hours" }));
-  await userEvent.click(screen.getByRole("button", { name: "On my own" }));
+  await userEvent.click(await screen.findByRole("button", { name: /Fit the fridge/ }));
 
-  await waitFor(() => expect(calls.at(-1)?.url).toBe("/api/what-now?hours=2&helper=false"));
-  expect(screen.getByRole("button", { name: "2 hours" })).toHaveAttribute("aria-pressed", "true");
+  const panel = await screen.findByRole("region", { name: "Selected task" });
+  expect(within(panel).getByText("Fit the fridge")).toBeInTheDocument();
+  expect(within(panel).getByRole("button", { name: "Run the cables" })).toBeInTheDocument();
+  expect(within(panel).getByText("Waiting on 1 task")).toBeInTheDocument();
 });
 
-test("nothing on What now changes a task — the chat does that", async () => {
-  const calls = mockApi({ "/api/what-now": result });
+test("a link can point straight at a job", async () => {
+  mockApi({ "/api/map": map });
+
+  renderApp(<WhatNowScreen />, "/what-now?task=fridge");
+
+  const panel = await screen.findByRole("region", { name: "Selected task" });
+  expect(within(panel).getByText("Fit the fridge")).toBeInTheDocument();
+});
+
+test("the chips filter the run by kind", async () => {
+  mockApi({ "/api/map": map });
+
   renderApp(<WhatNowScreen />);
 
-  await screen.findByText("Next");
-  expect(screen.queryByRole("button", { name: "It's arrived" })).not.toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Ordered" })).not.toBeInTheDocument();
+  await screen.findByRole("button", { name: /Order the wool/ });
+
+  await userEvent.click(screen.getByRole("button", { name: "Buy" }));
+
+  expect(screen.getByRole("button", { name: "Buy" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: /Order the wool/ }).className).not.toContain("faded");
+  expect(screen.getByRole("button", { name: /Run the cables/ }).className).toContain("faded");
+});
+
+test("nothing on What now changes a job — the chat does that", async () => {
+  const calls = mockApi({ "/api/map": map });
+
+  renderApp(<WhatNowScreen />);
+
+  await screen.findByRole("button", { name: /Run the cables/ });
   expect(calls.every((call) => call.init?.method !== "POST")).toBe(true);
 });
