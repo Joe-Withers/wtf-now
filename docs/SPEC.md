@@ -30,7 +30,7 @@ A mobile-first web app, installable as a PWA, with an AI chat built in. You talk
 
 | Screen | Purpose |
 |---|---|
-| **Graph** | The home screen. The project as a map: its groups in a ring around the centre, the work in each as a cluster of dots, the next task of each group glowing and labelled. Pick a group to focus it, pick a task to see its steps, what it needs and what it unblocks. |
+| **Graph** | The home screen. The project as a tree drawn round: the groups in a ring, each given a slice of the circle in proportion to the work in it; all the jobs on the outer ring, in the order the tree puts them; the groups inside, a ring further in for each level of nesting. The next task of each group glows and is labelled. A dependency inside a group is a short curve; one that crosses between groups is drawn round the outside of the map. Pick a group to focus it, pick a task to see its steps, what it needs and what it unblocks. |
 | **Plan** | The project as a tree of cards, for reading it rather than seeing it. The groups are spread across as many columns as the screen has room for, and the drawing is centred. |
 | **What now?** | The work as a run of jobs: what you finished, what you could start now, what comes next, and what is further off. A line runs from each job to the job it holds up. |
 | **Chat** | Conversation with the AI, with approve/reject cards for structural changes. It comes out of the side (§3.3). |

@@ -46,6 +46,52 @@ test("the groups sit in a ring around the centre", () => {
   }
 });
 
+test("the jobs all sit on the outer ring", () => {
+  const layout = layoutMap(map, size);
+
+  for (const dot of layout.dots) {
+    const on = Math.hypot((dot.x - layout.centre.x) / layout.rx, (dot.y - layout.centre.y) / layout.ry);
+    expect(on).toBeCloseTo(1, 5);
+  }
+});
+
+test("a group under a group sits inside the ring", () => {
+  const nested: ProjectMap = {
+    ...map,
+    categories: [{ slug: "electrics", title: "Electrics", colour: 1, total: 3, done: 0, progress: 0, next: "wire" }],
+    tasks: [
+      task({ slug: "electrics-board", title: "The board", parent: "electrics", is_leaf: false, children: ["wire"] }),
+      task({ slug: "wire", parent: "electrics-board" }),
+    ],
+  };
+
+  const layout = layoutMap(nested, size);
+
+  const group = layout.dots.find((dot) => dot.task.slug === "electrics-board");
+  const job = layout.dots.find((dot) => dot.task.slug === "wire");
+  expect(group?.group).toBe(true);
+  expect(Math.hypot(group!.x - layout.centre.x, group!.y - layout.centre.y)).toBeLessThan(
+    Math.hypot(job!.x - layout.centre.x, job!.y - layout.centre.y),
+  );
+});
+
+test("hiding the done work leaves everything where it was", () => {
+  const withDone: ProjectMap = {
+    ...map,
+    tasks: [...map.tasks, task({ slug: "old", title: "Old work", state: "done" })],
+  };
+
+  const before = layoutMap(withDone, size);
+  const after = layoutMap(withDone, size, null, true);
+
+  const place = (layout: ReturnType<typeof layoutMap>) =>
+    layout.dots.map((dot) => `${dot.task.slug}:${dot.x.toFixed(2)},${dot.y.toFixed(2)}`);
+  expect(place(after)).toEqual(place(before));
+
+  const old = after.dots.find((dot) => dot.task.slug === "old");
+  expect(old?.hidden).toBe(true);
+});
+
 test("the next task of a group is called out with a label", () => {
   const layout = layoutMap(map, size);
 

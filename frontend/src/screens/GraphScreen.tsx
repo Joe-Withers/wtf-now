@@ -41,11 +41,8 @@ export function GraphScreen() {
   );
 
   const map = project.data ?? EMPTY_MAP;
-  const shown = useMemo(
-    () => (hideDone ? { ...map, tasks: map.tasks.filter((task) => !task.is_leaf || task.state !== "done") } : map),
-    [map, hideDone],
-  );
-  const layout = useMemo(() => layoutMap(shown, size, focus), [shown, size, focus]);
+  // Hiding the done work leaves the rest of the map where it is.
+  const layout = useMemo(() => layoutMap(map, size, focus, hideDone), [map, size, focus, hideDone]);
   const colours = new Map(map.categories.map((category) => [category.slug, category.colour]));
   const task = map.tasks.find((one) => one.slug === selected);
 
@@ -70,13 +67,10 @@ export function GraphScreen() {
               <div className="graph-canvas" ref={ref} style={{ "--pill-max": `${layout.label}px` } as React.CSSProperties}>
                 <svg className="graph-lines" width={layout.width} height={layout.height} aria-hidden="true">
                   {layout.lines.map((line) => (
-                    <line
+                    <path
                       key={line.id}
-                      className={`graph-line ${line.kind}${line.dimmed ? " dim" : ""}`}
-                      x1={line.x1}
-                      y1={line.y1}
-                      x2={line.x2}
-                      y2={line.y2}
+                      className={`graph-line ${line.kind}${line.dimmed ? " dim" : ""}${line.hidden ? " hidden" : ""}`}
+                      d={line.d}
                     />
                   ))}
                 </svg>
@@ -96,11 +90,12 @@ export function GraphScreen() {
                 {layout.dots.map((dot) => (
                   <button
                     key={dot.task.slug}
-                    className={`graph-dot cat-${colours.get(dot.task.category) ?? 0}${dot.next ? " next" : ""}${dot.done ? " done" : ""}${dot.dimmed ? " dim" : ""}`}
+                    className={`graph-dot cat-${colours.get(dot.task.category) ?? 0}${dot.next ? " next" : ""}${dot.done ? " done" : ""}${dot.group ? " group" : ""}${dot.dimmed ? " dim" : ""}${dot.hidden ? " hidden" : ""}`}
                     style={{ left: dot.x, top: dot.y, width: dot.r * 2, height: dot.r * 2 }}
                     onClick={() => setSelected(dot.task.slug)}
                     aria-label={dot.task.title}
                     title={dot.task.title}
+                    hidden={dot.hidden}
                   />
                 ))}
                 {layout.notes.map((note) => (
