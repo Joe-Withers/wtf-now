@@ -24,10 +24,11 @@ test("reading screens keep a comfortable measure", () => {
   expect(rule(".screen")).toContain("--gutter: max(16px, calc((100% - 880px) / 2))");
 });
 
-test("the rail becomes a sidebar on a laptop", () => {
-  const laptop = media(860);
-  expect(laptop).toContain(".rail { width: 224px;");
-  expect(laptop).toContain(".rail a { flex-direction: row;");
+test("the rail stays a compact strip of icons", () => {
+  expect(rule(".rail")).toContain("width: 68px");
+  expect(css).not.toContain(".rail { width: 224px");
+  // The name of each screen is still there, for screen readers and the tooltip.
+  expect(rule(".rail-label")).toContain("clip-path");
 });
 
 test("cards go two abreast when there's room", () => {

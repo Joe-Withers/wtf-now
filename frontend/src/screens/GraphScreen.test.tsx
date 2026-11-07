@@ -87,19 +87,6 @@ const map = {
   notes: [{ slug: "blue-box", title: "The blue box", task: "wire" }],
 };
 
-test("the three ways of looking at the project are one switch", async () => {
-  mockApi({ "/api/map": map });
-
-  renderApp(<GraphScreen />);
-
-  await screen.findByRole("button", { name: /Electrics/ });
-
-  const view = screen.getByRole("navigation", { name: "View" });
-  expect(within(view).getByRole("link", { name: "Graph" })).toHaveAttribute("href", "/");
-  expect(within(view).getByRole("link", { name: "Plan" })).toHaveAttribute("href", "/plan");
-  expect(within(view).getByRole("link", { name: "What now" })).toHaveAttribute("href", "/what-now");
-});
-
 test("shows the project whole, and the groups it's made of", async () => {
   mockApi({ "/api/map": map });
 

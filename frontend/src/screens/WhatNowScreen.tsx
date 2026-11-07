@@ -6,7 +6,6 @@ import { getJson, type MapTask, type ProjectMap } from "../api";
 import { ProjectPanel } from "../components/ProjectPanel";
 import { TaskPanel } from "../components/TaskPanel";
 import { Loading } from "../components/ui";
-import { ViewSwitch } from "../components/ViewSwitch";
 import { EMPTY_MAP } from "../graph/layout";
 import { FILTERS, day, layoutJobs, readyCounts, type FilterKey, type JobCard } from "../jobs/layout";
 import { useSize } from "../useSize";
@@ -143,7 +142,6 @@ export function WhatNowScreen() {
                   <h1>What now?</h1>
                   <p className="meta">{summary(map)}</p>
                 </div>
-                <ViewSwitch current="what-now" />
               </div>
 
               <div className="jobs-filters">
