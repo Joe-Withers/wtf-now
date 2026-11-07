@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import { getJson, type MapTask, type ProjectMap } from "../api";
 import { ProjectPanel } from "../components/ProjectPanel";
 import { TaskPanel } from "../components/TaskPanel";
 import { Loading } from "../components/ui";
+import { ViewSwitch } from "../components/ViewSwitch";
 import { EMPTY_MAP } from "../graph/layout";
 import { FILTERS, day, layoutJobs, readyCounts, type FilterKey, type JobCard } from "../jobs/layout";
 import { useSize } from "../useSize";
@@ -142,12 +143,7 @@ export function WhatNowScreen() {
                   <h1>What now?</h1>
                   <p className="meta">{summary(map)}</p>
                 </div>
-                <nav className="segmented" aria-label="View">
-                  <Link to="/">Graph</Link>
-                  <Link className="active" to="/what-now">
-                    What now
-                  </Link>
-                </nav>
+                <ViewSwitch current="what-now" />
               </div>
 
               <div className="jobs-filters">

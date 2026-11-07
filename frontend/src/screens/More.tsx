@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { getJson, type Problem } from "../api";
 import { ScreenHead } from "../components/ui";
 
-const LINKS = [{ to: "/plan", label: "The plan as a list" }];
+const LINKS = [{ to: "/plan", label: "The plan as a tree" }];
 
 export function More() {
   const problems = useQuery({ queryKey: ["problems"], queryFn: () => getJson<Problem[]>("/problems") });

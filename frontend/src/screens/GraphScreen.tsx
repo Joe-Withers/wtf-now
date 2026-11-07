@@ -6,6 +6,7 @@ import { getJson, type MapTask, type ProjectMap } from "../api";
 import { ProjectPanel } from "../components/ProjectPanel";
 import { TaskPanel } from "../components/TaskPanel";
 import { Loading } from "../components/ui";
+import { ViewSwitch } from "../components/ViewSwitch";
 import { EMPTY_MAP, layoutMap } from "../graph/layout";
 import { useSize } from "../useSize";
 
@@ -65,12 +66,7 @@ export function GraphScreen() {
                     Show everything
                   </button>
                 )}
-                <nav className="segmented" aria-label="View">
-                  <Link className="active" to="/">
-                    Graph
-                  </Link>
-                  <Link to="/what-now">What now</Link>
-                </nav>
+                <ViewSwitch current="graph" />
               </div>
 
               <div className="graph-canvas" ref={ref} style={{ "--pill-max": `${layout.label}px` } as React.CSSProperties}>

@@ -31,7 +31,7 @@ A mobile-first web app, installable as a PWA, with an AI chat built in. You talk
 | Screen | Purpose |
 |---|---|
 | **Graph** | The home screen. The project as a map: its groups in a ring around the centre, the work in each as a cluster of dots, the next task of each group glowing and labelled. Pick a group to focus it, pick a task to see its steps, what it needs and what it unblocks. |
-| **Plan** | The project as a tree of cards, for reading it rather than seeing it. The groups are spread across as many columns as the screen has room for, and the drawing is centred. |
+| **Plan** | The project as a tree of cards, for reading it rather than seeing it. The groups are spread across as many columns as the screen has room for, and the drawing is centred. It is a view of the project, not a place of its own: the switch at the top of each view moves between the map, the plan and the run of jobs. |
 | **What now?** | The work as a run of jobs: what you finished, what you could start now, what comes next, and what is further off. A line runs from each job to the job it holds up. |
 | **Chat** | Conversation with the AI, with approve/reject cards for structural changes. It comes out of the side (§3.3). |
 | **Task detail** | Current state, notes, dependencies, photos, and a way into the chat with that task in focus. |
@@ -58,7 +58,7 @@ Every screen keeps a way into the chat, and the task screen opens it with that t
 
 The app is one system, not a set of screens that happen to sit together.
 
-- **A rail, not a bar.** The navigation runs down the left-hand side, so the bottom of the screen belongs to whatever you were reading.
+- **A rail, not a bar.** The navigation runs down the left-hand side, so the bottom of the screen belongs to whatever you were reading. The rail holds the places you go; the ways of looking at the project are a switch at the top of the screen.
 - **A layout that fits the screen.** The app fills the window rather than floating in it. On a phone the rail is an icon strip and everything is one column; on a laptop the rail becomes a sidebar with the wordmark, reading screens keep a comfortable measure, and card lists go two abreast. The screens that draw something use the whole width: the plan spreads its groups across as many columns as there is room for, and centres the drawing.
 - **One header.** Every screen opens with a sticky header saying where you are. Nothing else.
 - **One type scale.** Screen titles, section eyebrows, card titles and metadata each have a fixed size, so a card looks like a card wherever it appears.

@@ -329,7 +329,7 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 
 .graph-screen { padding: 0; gap: 0; overflow: hidden; }
 .graph-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.graph-toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; flex: none; }
+.graph-toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; flex: none; flex-wrap: wrap; }
 .segmented { display: flex; gap: 2px; margin-left: auto; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-raised); }
 .segmented a { padding: 6px 15px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
 .segmented a.active { background: var(--surface); color: var(--text); }

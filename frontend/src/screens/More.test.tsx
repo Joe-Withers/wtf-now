@@ -16,6 +16,6 @@ test("the floor plan is not a screen of its own any more", async () => {
 
   renderApp(<More />);
 
-  expect(await screen.findByText("The plan as a list")).toBeInTheDocument();
+  expect(await screen.findByText("The plan as a tree")).toBeInTheDocument();
   expect(screen.queryByText("Floor plan")).not.toBeInTheDocument();
 });

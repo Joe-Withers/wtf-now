@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { getJson, type Home as HomeData, type TaskDetail, type TreeNode } from "../api";
 import { useChat } from "../chat-state";
 import { Loading, Pill, ProgressBar, ScreenHead } from "../components/ui";
+import { ViewSwitch } from "../components/ViewSwitch";
 import { dependencyEdge, layoutPlan, treeEdge, type Positioned } from "../plan/layout";
 import { useSize } from "../useSize";
 
@@ -144,7 +145,7 @@ export function PlanScreen() {
 
   return (
     <main className="screen wide">
-      <ScreenHead title="Plan" />
+      <ScreenHead title="Plan" action={<ViewSwitch current="plan" />} />
       {home.data && (
         <section className="plan-summary">
           <ProgressBar value={home.data.overall_progress} label="Overall progress" />
