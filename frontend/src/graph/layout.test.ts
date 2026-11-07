@@ -36,6 +36,20 @@ const map: ProjectMap = {
 
 const size = { width: 900, height: 600 };
 
+/** How far a dot is from the middle of the map, as a part of the outer ring. */
+const out = (layout: ReturnType<typeof layoutMap>, dot: { x: number; y: number }) =>
+  Math.hypot((dot.x - layout.centre.x) / layout.rx, (dot.y - layout.centre.y) / layout.ry);
+
+/** Where a dot sits around the circle. */
+const around = (layout: ReturnType<typeof layoutMap>, dot: { x: number; y: number }) =>
+  Math.atan2((dot.y - layout.centre.y) / layout.ry, (dot.x - layout.centre.x) / layout.rx);
+
+/** The angle from one to another, the short way round. */
+const apart = (one: number, two: number) => {
+  const span = Math.abs(one - two) % (Math.PI * 2);
+  return span > Math.PI ? Math.PI * 2 - span : span;
+};
+
 test("the groups sit in a ring around the centre", () => {
   const layout = layoutMap(map, size);
 
@@ -46,13 +60,15 @@ test("the groups sit in a ring around the centre", () => {
   }
 });
 
-test("the jobs all sit on the outer ring", () => {
+test("the work sits inside to out: a job that waits on another is further out", () => {
   const layout = layoutMap(map, size);
 
-  for (const dot of layout.dots) {
-    const on = Math.hypot((dot.x - layout.centre.x) / layout.rx, (dot.y - layout.centre.y) / layout.ry);
-    expect(on).toBeCloseTo(1, 5);
-  }
+  const wire = layout.dots.find((dot) => dot.task.slug === "wire");
+  const fridge = layout.dots.find((dot) => dot.task.slug === "fridge");
+
+  expect(wire?.level).toBe(0);
+  expect(fridge?.level).toBe(1);
+  expect(out(layout, fridge!)).toBeGreaterThan(out(layout, wire!));
 });
 
 test("a group under a group sits inside the ring", () => {
@@ -70,9 +86,7 @@ test("a group under a group sits inside the ring", () => {
   const group = layout.dots.find((dot) => dot.task.slug === "electrics-board");
   const job = layout.dots.find((dot) => dot.task.slug === "wire");
   expect(group?.group).toBe(true);
-  expect(Math.hypot(group!.x - layout.centre.x, group!.y - layout.centre.y)).toBeLessThan(
-    Math.hypot(job!.x - layout.centre.x, job!.y - layout.centre.y),
-  );
+  expect(out(layout, group!)).toBeLessThan(out(layout, job!));
 });
 
 test("hiding the done work leaves everything where it was", () => {
@@ -102,6 +116,16 @@ test("the next task of a group is called out with a label", () => {
   expect(pill).toBeDefined();
 });
 
+test("a label does not land on top of the work", () => {
+  const layout = layoutMap(map, size);
+
+  const pill = layout.pills.find((one) => one.task.slug === "wire")!;
+  for (const dot of layout.dots) {
+    const clear = Math.hypot(dot.x - pill.x, dot.y - pill.y) > 30;
+    expect(clear || dot.task.slug === "wire").toBe(true);
+  }
+});
+
 test("a dependency inside a group is a plain line", () => {
   const layout = layoutMap(map, size);
 
@@ -114,7 +138,7 @@ test("a dependency across groups is a dashed line", () => {
     ...map,
     tasks: [
       task({ slug: "wire", needs: ["wool"] }),
-      task({ slug: "fridge", needs: ["wire"] }),
+      task({ slug: "fridge", title: "Fit the fridge", needs: ["wire"] }),
       task({ slug: "wool", title: "Lay the wool", category: "insulation", parent: "insulation" }),
     ],
   };
@@ -123,6 +147,44 @@ test("a dependency across groups is a dashed line", () => {
 
   const line = layout.lines.find((one) => one.id === "needs-wool-wire");
   expect(line?.kind).toBe("cross");
+});
+
+test("a dependency runs from the colour of the group it comes from", () => {
+  const layout = layoutMap(map, size);
+
+  const line = layout.lines.find((one) => one.id === "needs-wire-fridge");
+  const wire = layout.dots.find((dot) => dot.task.slug === "wire")!;
+  const fridge = layout.dots.find((dot) => dot.task.slug === "fridge")!;
+
+  // The line starts at the work it comes from, in that group's colour, and
+  // ends at the job that waits on it, where it fades to orange.
+  expect(line?.flow?.colour).toBe(1);
+  expect(line?.flow?.x1).toBeCloseTo(wire.x, 1);
+  expect(line?.flow?.y1).toBeCloseTo(wire.y, 1);
+  expect(line?.flow?.x2).toBeCloseTo(fridge.x, 1);
+  expect(line?.flow?.y2).toBeCloseTo(fridge.y, 1);
+});
+
+test("a job sits on the side of its group that the work it waits on is on", () => {
+  const crossing: ProjectMap = {
+    ...map,
+    tasks: [
+      task({ slug: "wire", needs: [] }),
+      task({ slug: "board", title: "Fit the board", needs: ["wool"] }),
+      task({ slug: "wool", title: "Lay the wool", category: "insulation", parent: "insulation" }),
+    ],
+  };
+
+  const layout = layoutMap(crossing, size);
+
+  const wire = layout.dots.find((dot) => dot.task.slug === "wire")!;
+  const board = layout.dots.find((dot) => dot.task.slug === "board")!;
+  const wool = layout.dots.find((dot) => dot.task.slug === "wool")!;
+
+  // The board waits on the wool, so it sits nearer to it than the wire, which
+  // waits on nothing, does.
+  const toWool = (dot: typeof wire) => apart(around(layout, dot), around(layout, wool));
+  expect(toWool(board)).toBeLessThan(toWool(wire));
 });
 
 test("a note about a task sits beside it", () => {

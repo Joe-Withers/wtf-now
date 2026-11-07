@@ -6,11 +6,29 @@ const TAU = Math.PI * 2;
 /** How far the label of the next task sits from its dot. */
 const LABEL_GAP = 16;
 
-/** The innermost ring, as a part of the outermost one. */
-const INNER = 0.36;
+/** Where the groups sit, as a part of the outermost ring. */
+const HUB_RING = 0.34;
+
+/** Where a group inside a group sits. */
+const NESTED_RING = 0.42;
+
+/** Where the work that waits on nothing sits. */
+const FIRST_RING = 0.5;
 
 /** The room outside the outer ring for the labels. */
 const LABEL_ROOM = 46;
+
+/** How far a job moves from its place in the tree towards the work it waits on. */
+const PULL = 0.75;
+
+/** How much a dependency on another group counts, against one inside the group. */
+const OUTSIDE_WEIGHT = 3;
+
+/** The room a job keeps from the edge of its group's slice, in degrees. */
+const EDGE = 3;
+
+/** The room two jobs on the same ring keep between them, in pixels. */
+const DOT_GAP = 20;
 
 export type Side = "left" | "right" | "above" | "below";
 
@@ -26,6 +44,19 @@ export type Dot = {
   group: boolean;
   dimmed: boolean;
   hidden: boolean;
+  /** How many steps of work this job is waiting behind. */
+  level: number;
+};
+
+/** A line, and the flow it shows when it carries one. */
+export type Flow = {
+  id: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  /** The colour of the group the work comes from. */
+  colour: number;
 };
 
 export type Line = {
@@ -34,6 +65,9 @@ export type Line = {
   kind: "hub" | "branch" | "dependency" | "cross" | "note";
   dimmed: boolean;
   hidden: boolean;
+  /** Set when the line shows a dependency: it fades from the colour it comes
+   * from to a tint of orange where it lands. */
+  flow?: Flow;
 };
 
 export type Pill = {
@@ -75,7 +109,10 @@ type Tree = {
   task: MapTask | null;
   category: MapCategory;
   depth: number;
+  /** The place the tree gives the node, and the slice it sits in. */
   angle: number;
+  start: number;
+  span: number;
   children: Tree[];
   leaves: number;
 };
@@ -92,6 +129,17 @@ function angleOf(slug: string): number {
   let total = 0;
   for (const letter of slug) total += letter.charCodeAt(0);
   return (total % 12) * (Math.PI / 6);
+}
+
+/** The angle from one to another, the short way round. */
+function gap(a: number, b: number): number {
+  const span = Math.abs(a - b) % TAU;
+  return span > Math.PI ? TAU - span : span;
+}
+
+/** The end of a slice that an angle is nearest to. */
+function nearestEnd(angle: number, start: number, end: number): number {
+  return gap(angle, start) <= gap(angle, end) ? start : end;
 }
 
 /** Roughly how big the label of a task will be once it's drawn. */
@@ -116,7 +164,8 @@ function fits(at: { x: number; y: number }, side: Side, size: { width: number; h
   return at.y + size.height <= height - pad;
 }
 
-/** The label's place, kept on the canvas whichever way it ended up. */
+/** The label's place, kept on the canvas whichever way it ended up, and off the
+ * work it is labelling. */
 function place(
   x: number,
   y: number,
@@ -124,11 +173,30 @@ function place(
   size: { width: number; height: number },
   width: number,
   height: number,
+  avoid: { x: number; y: number }[] = [],
 ): { x: number; y: number; side: Side } {
   const pad = 10;
   const options: Side[] =
     side === "right" ? ["right", "left", "above", "below"] : side === "left" ? ["left", "right", "above", "below"] : side === "above" ? ["above", "below", "right", "left"] : ["below", "above", "right", "left"];
 
+  /** The space the label would take up that way. */
+  const box = (at: { x: number; y: number }, way: Side) => {
+    if (way === "right") return { left: at.x, right: at.x + size.width, top: at.y - size.height / 2, bottom: at.y + size.height / 2 };
+    if (way === "left") return { left: at.x - size.width, right: at.x, top: at.y - size.height / 2, bottom: at.y + size.height / 2 };
+    if (way === "above") return { left: at.x - size.width / 2, right: at.x + size.width / 2, top: at.y - size.height, bottom: at.y };
+    return { left: at.x - size.width / 2, right: at.x + size.width / 2, top: at.y, bottom: at.y + size.height };
+  };
+
+  /** Whether the label would land on top of any of the work. */
+  const clear = (way: Side) => {
+    const area = box(anchor(x, y, way, LABEL_GAP), way);
+    return !avoid.some((dot) => dot.x > area.left - 12 && dot.x < area.right + 12 && dot.y > area.top - 12 && dot.y < area.bottom + 12);
+  };
+
+  for (const option of options) {
+    const at = anchor(x, y, option, LABEL_GAP);
+    if (fits(at, option, size, width, height) && clear(option)) return { ...at, side: option };
+  }
   for (const option of options) {
     const at = anchor(x, y, option, LABEL_GAP);
     if (fits(at, option, size, width, height)) return { ...at, side: option };
@@ -168,7 +236,7 @@ function buildTree(map: ProjectMap): Tree[] {
     const kids = (childrenOf.get(slug) ?? []).filter((child) => !path.has(child));
     const children = kids.map((child) => make(child, category, depth + 1, new Set([...path, child])));
     const leaves = children.length ? children.reduce((sum, child) => sum + child.leaves, 0) : 1;
-    return { slug, task: bySlug.get(slug) ?? null, category, depth, angle: 0, children, leaves };
+    return { slug, task: bySlug.get(slug) ?? null, category, depth, angle: 0, start: 0, span: 0, children, leaves };
   };
 
   const roots: Tree[] = [];
@@ -202,6 +270,8 @@ function allocate(nodes: Tree[], start: number, span: number) {
   let cursor = start;
   for (const node of nodes) {
     const part = (node.leaves / total) * span;
+    node.start = cursor;
+    node.span = part;
     node.angle = cursor + part / 2;
     allocateChildren(node, cursor, part);
     cursor += part;
@@ -213,66 +283,123 @@ function allocateChildren(node: Tree, start: number, span: number) {
   let cursor = start;
   for (const child of node.children) {
     const part = (child.leaves / total) * span;
+    child.start = cursor;
+    child.span = part;
     child.angle = cursor + part / 2;
     allocateChildren(child, cursor, part);
     cursor += part;
   }
 }
 
+/** The leaves of a group, in the order the tree puts them. */
+function leavesUnder(node: Tree): Tree[] {
+  if (!node.children.length) return node.task ? [node] : [];
+  return node.children.flatMap(leavesUnder);
+}
+
 /**
- * Where a node sits. The jobs all sit on the outer ring, in the order the tree
- * puts them; the groups that hold them sit inside it, a ring further in for
- * each level of nesting.
+ * How many steps of work a job is waiting behind: none if it waits on nothing
+ * that is unfinished, and one more than the deepest job it waits on otherwise.
  */
-function ring(node: Tree, centre: { x: number; y: number }, rx: number, ry: number) {
-  const leaf = node.task ? node.task.is_leaf : node.children.length === 0;
-  const scale = leaf ? 1 : Math.min(0.86, INNER + 0.18 * (node.depth - 1));
-  return {
-    x: centre.x + rx * scale * Math.cos(node.angle),
-    y: centre.y + ry * scale * Math.sin(node.angle),
-  };
-}
+function levels(map: ProjectMap): Map<string, number> {
+  const bySlug = new Map(map.tasks.map((task) => [task.slug, task]));
+  const known = new Map<string, number>();
+  const walking = new Set<string>();
 
-/** A path that goes out from one node, round the outside of the map, and in to another. */
-function aroundArc(
-  from: { x: number; y: number; angle: number },
-  to: { x: number; y: number; angle: number },
-  centre: { x: number; y: number },
-  rx: number,
-  ry: number,
-  gap: number,
-): string {
-  let span = to.angle - from.angle;
-  while (span > Math.PI) span -= TAU;
-  while (span < -Math.PI) span += TAU;
-  const sweep = span > 0 ? 1 : 0;
-  const start = { x: centre.x + (rx + gap) * Math.cos(from.angle), y: centre.y + (ry + gap) * Math.sin(from.angle) };
-  const end = { x: centre.x + (rx + gap) * Math.cos(to.angle), y: centre.y + (ry + gap) * Math.sin(to.angle) };
-  return `M ${from.x.toFixed(1)} ${from.y.toFixed(1)} L ${start.x.toFixed(1)} ${start.y.toFixed(1)} A ${(rx + gap).toFixed(1)} ${(ry + gap).toFixed(1)} 0 0 ${sweep} ${end.x.toFixed(1)} ${end.y.toFixed(1)} L ${to.x.toFixed(1)} ${to.y.toFixed(1)}`;
-}
-
-/** The pairs of groups that lean on each other, so their arcs can be given a band each. */
-function crossPairs(map: ProjectMap): string[] {
-  const categoryOf = new Map(map.tasks.map((task) => [task.slug, task.category]));
-  const pairs = new Set<string>();
-  for (const task of map.tasks) {
-    if (!task.is_leaf) continue;
+  const level = (slug: string): number => {
+    const found = known.get(slug);
+    if (found !== undefined) return found;
+    const task = bySlug.get(slug);
+    // A loop of dependencies: start again rather than never finish.
+    if (!task || walking.has(slug)) return 0;
+    walking.add(slug);
+    let depth = 0;
     for (const need of task.needs) {
-      const other = categoryOf.get(need);
-      if (!other || other === task.category) continue;
-      pairs.add([task.category, other].sort().join("|"));
+      const other = bySlug.get(need);
+      if (!other?.is_leaf) continue;
+      depth = Math.max(depth, level(need) + 1);
+    }
+    walking.delete(slug);
+    known.set(slug, depth);
+    return depth;
+  };
+
+  for (const task of map.tasks) level(task.slug);
+  return known;
+}
+
+/**
+ * Where a job is pulled to: the side of its group that the work it waits on is
+ * on. A dependency on another group pulls harder than one inside the group,
+ * because that is the line that would otherwise cross the whole map.
+ */
+function pullOf(
+  job: MapTask,
+  start: number,
+  end: number,
+  angles: Map<string, number>,
+  groupOf: Map<string, string>,
+): number | null {
+  const needs = job.needs
+    .map((slug) => {
+      const angle = angles.get(slug);
+      if (angle === undefined) return null;
+      return { angle, outside: groupOf.get(slug) !== job.category };
+    })
+    .filter((need): need is { angle: number; outside: boolean } => need !== null);
+  if (!needs.length) return null;
+
+  const candidates = [start, end, ...needs.map((need) => nearestEnd(need.angle, start, end))];
+  let best = start;
+  let bestCost = Infinity;
+  for (const candidate of candidates) {
+    let cost = 0;
+    for (const need of needs) cost += (need.outside ? OUTSIDE_WEIGHT : 1) * gap(candidate, need.angle);
+    if (cost < bestCost) {
+      bestCost = cost;
+      best = candidate;
     }
   }
-  return [...pairs].sort();
+  return best;
 }
 
 /**
- * Lays the project out as a map: the groups sit in a ring, each one given a
- * slice of the circle in proportion to how much work is in it, the jobs sit on
- * the outer ring in the order the tree puts them, and the groups themselves
- * sit inside, a ring further in for each level of nesting. A dependency that
- * crosses between two groups is drawn round the outside, where it can't cross
- * anything else.
+ * A line that bows a little to the side, so the flow of it is clear. A line
+ * that crosses between groups bows away from the middle of the map, so it
+ * goes round the work rather than through it.
+ */
+function curve(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  centre: { x: number; y: number },
+  round = false,
+): string {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy) || 1;
+  const bow = length * 0.1;
+  const middle = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+  let control = { x: middle.x - (dy / length) * bow, y: middle.y + (dx / length) * bow };
+  if (round) {
+    const out = Math.hypot(middle.x - centre.x, middle.y - centre.y) || 1;
+    const push = out * 0.45;
+    control = {
+      x: control.x + ((middle.x - centre.x) / out) * push,
+      y: control.y + ((middle.y - centre.y) / out) * push,
+    };
+  }
+  return `M ${from.x.toFixed(1)} ${from.y.toFixed(1)} Q ${control.x.toFixed(1)} ${control.y.toFixed(1)} ${to.x.toFixed(1)} ${to.y.toFixed(1)}`;
+}
+
+/**
+ * Lays the project out as a flow: the groups sit in a ring, each one given a
+ * slice of the circle in proportion to how much work is in it, and the work
+ * itself sits inside to out — the job that waits on nothing is in the middle
+ * and the job that waits on the most is on the outer ring. Within a group's
+ * slice a job sits on the side of the group that the work it waits on is on,
+ * so a dependency is a short line rather than one across the map. Every
+ * dependency is drawn in the colour of the group it comes from, fading to a
+ * tint of orange where it lands on the job that waits on it.
  */
 export function layoutMap(
   map: ProjectMap,
@@ -286,80 +413,155 @@ export function layoutMap(
   const label = Math.max(120, Math.min(190, width * 0.4));
 
   const roots = buildTree(map);
-
   allocate(roots, -Math.PI / 2, TAU);
 
   // The map is an ellipse, so it fills the space it is given. Round the outside
-  // of it is the halo of dependencies that cross between groups.
+  // of it is the room for the labels of the next jobs.
   const narrow = width < 700;
   const labelRoom = narrow ? 18 : LABEL_ROOM;
-  const halo = 0.13;
-  const rx = Math.max(80, (width / 2 - labelRoom - 12) / (1 + halo));
-  const ry = Math.max(80, (height / 2 - labelRoom - 12) / (1 + halo));
-  const haloSpace = halo * Math.min(rx, ry);
+  const rx = Math.max(80, width / 2 - labelRoom - 12);
+  const ry = Math.max(80, height / 2 - labelRoom - 12);
 
   const hubs: Hub[] = [];
   const dots: Dot[] = [];
   const lines: Line[] = [];
   const pills: Pill[] = [];
   const notes: NoteDot[] = [];
+
+  const groupOf = new Map(map.tasks.map((task) => [task.slug, task.category]));
+  const colourOf = new Map(map.categories.map((category) => [category.slug, category.colour]));
+  const levelOf = levels(map);
+  const maxLevel = map.tasks.reduce((max, task) => Math.max(max, levelOf.get(task.slug) ?? 0), 0);
+  /** The ring a level of work sits on. */
+  const ringOf = (level: number) => (maxLevel === 0 ? 1 : FIRST_RING + (level * (1 - FIRST_RING)) / maxLevel);
+
+  /** Where every node sits, and whether it is showing. */
   const placed = new Map<string, { x: number; y: number; angle: number; dimmed: boolean; hidden: boolean }>();
+  /** The angle of every job placed so far, so the next one can be pulled to it. */
+  const angles = new Map<string, number>();
 
   // The done work comes out of the drawing, but not out of the layout.
-  const isHidden = (node: Tree) => {
-    const done = node.task?.state === "done";
-    const next = node.slug === node.category.next;
-    return Boolean(hideDone && done && node.task?.is_leaf && !next);
-  };
+  const isHidden = (task: MapTask | null, next: string | null) =>
+    Boolean(hideDone && task?.state === "done" && task.is_leaf && task.slug !== next);
 
-  // Where every node sits, and whether it is showing.
-  const walk = (node: Tree) => {
-    const at = ring(node, centre, rx, ry);
-    const dimmed = focus !== null && focus !== node.category.slug;
-    const next = node.slug === node.category.next;
-    const done = node.task?.state === "done";
-    const hidden = isHidden(node);
-    placed.set(node.slug, { x: at.x, y: at.y, angle: node.angle, dimmed, hidden });
+  // The groups, in a ring inside the work.
+  for (const root of roots) {
+    const dimmed = focus !== null && focus !== root.category.slug;
+    const x = centre.x + rx * HUB_RING * Math.cos(root.angle);
+    const y = centre.y + ry * HUB_RING * Math.sin(root.angle);
+    hubs.push({ category: root.category, x, y, dimmed });
+    placed.set(root.slug, { x, y, angle: root.angle, dimmed, hidden: false });
+    lines.push({
+      id: `hub-${root.slug}`,
+      d: `M ${centre.x.toFixed(1)} ${centre.y.toFixed(1)} L ${x.toFixed(1)} ${y.toFixed(1)}`,
+      kind: "hub",
+      dimmed,
+      hidden: false,
+    });
+  }
 
-    if (node.depth === 1) {
-      hubs.push({ category: node.category, x: at.x, y: at.y, dimmed });
-      lines.push({
-        id: `hub-${node.slug}`,
-        d: `M ${centre.x.toFixed(1)} ${centre.y.toFixed(1)} L ${at.x.toFixed(1)} ${at.y.toFixed(1)}`,
-        kind: "hub",
-        dimmed,
-        hidden: false,
+  // The work, inside to out: the job that waits on nothing is in the middle of
+  // the map, and the job that waits on the most is on the outer ring.
+  for (let level = 0; level <= maxLevel; level++) {
+    for (const root of roots) {
+      const jobs = leavesUnder(root).filter((node) => (levelOf.get(node.slug) ?? 0) === level);
+      if (!jobs.length) continue;
+
+      const start = root.start + (EDGE * Math.PI) / 180;
+      const end = root.start + root.span - (EDGE * Math.PI) / 180;
+
+      // Where each job is pulled to: the work it waits on.
+      const wanted = jobs.map((node) => {
+        const pull = pullOf(node.task!, start, end, angles, groupOf);
+        const base = node.angle;
+        return { node, angle: pull === null ? base : base + PULL * (pull - base) };
       });
-    } else if (node.task) {
-      dots.push({
-        task: node.task,
-        x: at.x,
-        y: at.y,
-        r: next ? 11 : node.task.is_leaf ? radius(node.task) : 8,
-        next,
-        done: Boolean(done),
-        group: !node.task.is_leaf,
-        dimmed,
-        hidden,
-      });
+      wanted.sort((one, two) => one.angle - two.angle);
+
+      // Keep them from sitting on top of each other.
+      const speed = (ringOf(level) * (rx + ry)) / 2;
+      const room = DOT_GAP / speed;
+      let previous = -Infinity;
+      for (const item of wanted) {
+        item.angle = Math.max(item.angle, previous + room);
+        previous = item.angle;
+      }
+      const overflow = wanted[wanted.length - 1].angle - end;
+      if (overflow > 0) {
+        for (const item of wanted) item.angle -= overflow;
+        for (let index = 1; index < wanted.length; index++) {
+          const before = wanted[index - 1].angle + room;
+          if (wanted[index].angle < before) wanted[index].angle = before;
+        }
+      }
+      for (const item of wanted) item.angle = Math.max(start, Math.min(end, item.angle));
+
+      for (const item of wanted) {
+        const task = item.node.task!;
+        const scale = ringOf(level);
+        const x = centre.x + rx * scale * Math.cos(item.angle);
+        const y = centre.y + ry * scale * Math.sin(item.angle);
+        const dimmed = focus !== null && focus !== task.category;
+        const next = task.category === root.category.slug ? root.category.next === task.slug : false;
+        const hidden = isHidden(task, root.category.next);
+
+        angles.set(task.slug, item.angle);
+        placed.set(task.slug, { x, y, angle: item.angle, dimmed, hidden });
+        dots.push({
+          task,
+          x,
+          y,
+          r: next ? 11 : radius(task),
+          next,
+          done: task.state === "done",
+          group: false,
+          dimmed,
+          hidden,
+          level,
+        });
+      }
     }
+  }
 
+  // A group inside a group, and the tree that holds the work together.
+  const walk = (node: Tree) => {
     for (const child of node.children) {
-      const childAt = ring(child, centre, rx, ry);
-      lines.push({
-        id: `branch-${child.slug}`,
-        d: `M ${at.x.toFixed(1)} ${at.y.toFixed(1)} L ${childAt.x.toFixed(1)} ${childAt.y.toFixed(1)}`,
-        kind: "branch",
-        dimmed: focus !== null && focus !== child.category.slug,
-        hidden: isHidden(child),
-      });
+      if (child.depth > 1 && child.task && !child.task.is_leaf) {
+        const dimmed = focus !== null && focus !== child.category.slug;
+        const x = centre.x + rx * NESTED_RING * Math.cos(child.angle);
+        const y = centre.y + ry * NESTED_RING * Math.sin(child.angle);
+        placed.set(child.slug, { x, y, angle: child.angle, dimmed, hidden: false });
+        dots.push({
+          task: child.task,
+          x,
+          y,
+          r: 8,
+          next: false,
+          done: false,
+          group: true,
+          dimmed,
+          hidden: false,
+          level: 0,
+        });
+      }
+      const from = placed.get(node.slug);
+      const to = placed.get(child.slug);
+      if (from && to) {
+        lines.push({
+          id: `branch-${child.slug}`,
+          d: `M ${from.x.toFixed(1)} ${from.y.toFixed(1)} L ${to.x.toFixed(1)} ${to.y.toFixed(1)}`,
+          kind: "branch",
+          dimmed: from.dimmed || to.dimmed,
+          hidden: to.hidden,
+        });
+      }
       walk(child);
     }
   };
   roots.forEach(walk);
 
-  // A dependency inside a group: a short curve, within the group's own slice.
-  const categoryOf = new Map(map.tasks.map((task) => [task.slug, task.category]));
+  // A dependency: a line in the colour of the group it comes from, fading to a
+  // tint of orange where it lands on the job that waits on it.
   for (const task of map.tasks) {
     if (!task.is_leaf) continue;
     const to = placed.get(task.slug);
@@ -367,51 +569,25 @@ export function layoutMap(
     for (const need of task.needs) {
       const from = placed.get(need);
       if (!from) continue;
-      if (categoryOf.get(need) !== task.category) continue;
-      const middle = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
-      const dx = to.x - from.x;
-      const dy = to.y - from.y;
-      const bow = 0.16;
-      const control = { x: middle.x - dy * bow, y: middle.y + dx * bow };
+      const outside = groupOf.get(need) !== task.category;
+      const colour = colourOf.get(groupOf.get(need) ?? "") ?? 0;
       lines.push({
         id: `needs-${need}-${task.slug}`,
-        d: `M ${from.x.toFixed(1)} ${from.y.toFixed(1)} Q ${control.x.toFixed(1)} ${control.y.toFixed(1)} ${to.x.toFixed(1)} ${to.y.toFixed(1)}`,
-        kind: "dependency",
+        d: curve(from, to, centre, outside),
+        kind: outside ? "cross" : "dependency",
         dimmed: from.dimmed || to.dimmed,
         hidden: from.hidden || to.hidden,
+        flow: {
+          id: `flow-${need}-${task.slug}`,
+          x1: from.x,
+          y1: from.y,
+          x2: to.x,
+          y2: to.y,
+          colour,
+        },
       });
     }
   }
-
-  // A dependency that crosses between groups: round the outside, so it crosses nothing.
-  const crossing: { a: string; b: string; pair: string }[] = [];
-  for (const task of map.tasks) {
-    if (!task.is_leaf) continue;
-    for (const need of task.needs) {
-      const other = categoryOf.get(need);
-      if (!other || other === task.category) continue;
-      const pair = [task.category, other].sort().join("|");
-      if (!crossing.some((one) => one.a === need && one.b === task.slug)) crossing.push({ a: need, b: task.slug, pair });
-    }
-  }
-  // The arcs of one pair of groups sit together, so the halo reads as a few
-  // connections rather than a crowd of lines.
-  const order = new Map(crossPairs(map).map((pair, index) => [pair, index]));
-  crossing.sort((one, two) => (order.get(one.pair) ?? 0) - (order.get(two.pair) ?? 0));
-  const step = haloSpace / Math.max(1, crossing.length);
-  crossing.forEach((edge, index) => {
-    const from = placed.get(edge.a);
-    const to = placed.get(edge.b);
-    if (!from || !to) return;
-    const gap = 10 + (index + 0.5) * step;
-    lines.push({
-      id: `needs-${edge.a}-${edge.b}`,
-      d: aroundArc(from, to, centre, rx, ry, gap),
-      kind: "cross",
-      dimmed: from.dimmed || to.dimmed,
-      hidden: from.hidden || to.hidden,
-    });
-  });
 
   // The next task of each group is called out, out towards the edge of the map.
   // On a narrow screen there is only room for the group being looked at.
@@ -424,7 +600,7 @@ export function layoutMap(
     if (!at) continue;
     const outward = Math.abs(Math.cos(at.angle)) > 0.5 ? (Math.cos(at.angle) < 0 ? "left" : "right") : Math.sin(at.angle) < 0 ? "above" : "below";
     const size = labelSize(map.tasks.find((task) => task.slug === next)?.title ?? "", label);
-    const spot = place(at.x, at.y, outward, size, width, height);
+    const spot = place(at.x, at.y, outward, size, width, height, dots.map((dot) => ({ x: dot.x, y: dot.y })));
     pills.push({ task: map.tasks.find((task) => task.slug === next)!, x: spot.x, y: spot.y, side: spot.side, colour: category.colour });
   }
 

@@ -14,6 +14,12 @@
   --warn: #e6b450;
   --warn-soft: rgba(230, 180, 80, 0.13);
   --danger: #ef7d6d;
+  --cat-0: #e6b450;
+  --cat-1: #5b9bff;
+  --cat-2: #ff7a2e;
+  --cat-3: #4fd1a5;
+  --cat-4: #b48cff;
+  --cat-5: #ff6f91;
   --radius: 16px;
   --radius-sm: 11px;
   --heading: "Space Grotesk Variable", system-ui, sans-serif;
@@ -37,6 +43,12 @@
     --warn: #8a6100;
     --warn-soft: rgba(138, 97, 0, 0.12);
     --danger: #b63a2b;
+    --cat-0: #a97a12;
+    --cat-1: #2f6fd0;
+    --cat-2: #d9570f;
+    --cat-3: #1f8f6c;
+    --cat-4: #7c4fd8;
+    --cat-5: #d14268;
   }
 }
 
@@ -305,21 +317,12 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .link-card .why.blocking { color: var(--warn); font-weight: 600; }
 
 /* The map: the project drawn as the groups it's made of, and the work in each. */
-.cat-0 { --cat: #e6b450; }
-.cat-1 { --cat: #5b9bff; }
-.cat-2 { --cat: #ff7a2e; }
-.cat-3 { --cat: #4fd1a5; }
-.cat-4 { --cat: #b48cff; }
-.cat-5 { --cat: #ff6f91; }
-
-@media (prefers-color-scheme: light) {
-  .cat-0 { --cat: #a97a12; }
-  .cat-1 { --cat: #2f6fd0; }
-  .cat-2 { --cat: #d9570f; }
-  .cat-3 { --cat: #1f8f6c; }
-  .cat-4 { --cat: #7c4fd8; }
-  .cat-5 { --cat: #d14268; }
-}
+.cat-0 { --cat: var(--cat-0); }
+.cat-1 { --cat: var(--cat-1); }
+.cat-2 { --cat: var(--cat-2); }
+.cat-3 { --cat: var(--cat-3); }
+.cat-4 { --cat: var(--cat-4); }
+.cat-5 { --cat: var(--cat-5); }
 
 .graph-screen { padding: 0; gap: 0; overflow: hidden; }
 .graph-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -330,11 +333,13 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .graph-canvas { flex: 1; min-height: 0; position: relative; overflow: hidden; }
 .graph-lines { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
 .graph-line { fill: none; stroke: var(--line); stroke-width: 1; opacity: 0.55; }
-.graph-line.branch { stroke: var(--muted); opacity: 0.28; }
+.graph-line.branch { stroke: var(--muted); opacity: 0.22; }
 .graph-line.hub { stroke: var(--muted); opacity: 0.2; }
-.graph-line.note { stroke: var(--muted); opacity: 0.22; }
-.graph-line.dependency { stroke: var(--muted); opacity: 0.45; }
-.graph-line.cross { stroke: var(--muted); stroke-dasharray: 4 5; opacity: 0.45; }
+.graph-line.note { stroke: var(--muted); opacity: 0.25; }
+/* A dependency shows the flow: the colour of the group it comes from, fading
+   to a tint of orange where it lands on the job that waits on it. */
+.graph-line.dependency, .graph-line.cross { stroke-width: 1.8; stroke-linecap: round; opacity: 0.95; }
+.graph-line.cross { stroke-dasharray: 5 5; }
 .graph-line.hidden { display: none; }
 .graph-centre { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--text); box-shadow: 0 0 0 4px color-mix(in srgb, var(--text) 16%, transparent); }
 .graph-hub { position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--cat); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px color-mix(in srgb, var(--cat) 45%, transparent); }
@@ -359,6 +364,7 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .swatch.next { background: var(--now); opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--now) 25%, transparent); }
 .swatch.note { width: 6px; height: 6px; }
 .swatch.cross { width: 16px; height: 0; border-radius: 0; border-top: 1px dashed var(--muted); opacity: 1; background: none; }
+.swatch.flow { width: 18px; height: 0; border-radius: 0; border-top: 2px solid transparent; opacity: 1; background: linear-gradient(90deg, var(--cat-1), var(--now)); }
 
 /* What now: the work as a run of jobs. */
 .jobs-screen { padding: 0; gap: 0; overflow: hidden; }

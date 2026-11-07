@@ -13,9 +13,9 @@ wtf-now: an AI-centred planner for long-running physical builds (first user: a v
 
 ## Current phase
 
-Tickets 001 to 023 are built and merged, and so are 028 to 040. The app runs end to end: tasks, dependencies, progress, the docs, chat with the AI, photos, voice, the drawings and the project map. The screens read the plan; the chat records the work.
+Tickets 001 to 023 are built and merged, and so are 028 to 041. The app runs end to end: tasks, dependencies, progress, the docs, chat with the AI, photos, voice, the drawings and the project map. The screens read the plan; the chat records the work.
 
-The last few tickets were a redesign of the interface: the navigation is a rail down the left, the chat comes out of the side, the project is a map, What now is a run of jobs, the drawings and notes are one thing called the docs, the layout fills the screen instead of floating in it, the rail is a compact strip of icons at every screen size, and the map is a tree you can read.
+The last few tickets were a redesign of the interface: the navigation is a rail down the left, the chat comes out of the side, the project is a map, What now is a run of jobs, the drawings and notes are one thing called the docs, the layout fills the screen instead of floating in it, the rail is a compact strip of icons at every screen size, and the map is a tree you can read that shows the flow of the work.
 
 The rest of the work needs something from the owner, and is written up in `docs/tickets/024-*.md` onwards:
 
