@@ -12,7 +12,7 @@ test("moves between the main screens", async () => {
   render(<App />);
   const nav = screen.getByRole("navigation", { name: "Main" });
 
-  expect(within(nav).getAllByRole("link")).toHaveLength(7);
+  expect(within(nav).getAllByRole("link")).toHaveLength(6);
 
   await userEvent.click(within(nav).getByRole("link", { name: "What now" }));
 
@@ -27,10 +27,11 @@ test("the map is the home", async () => {
   expect(within(nav).getByRole("link", { name: "Graph" })).toHaveAttribute("href", "/");
 });
 
-test("the plan is one of the tabs", async () => {
+test("there is no plan tab: the map and what now cover it", async () => {
   vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => {})));
   render(<App />);
   const nav = screen.getByRole("navigation", { name: "Main" });
 
-  expect(within(nav).getByRole("link", { name: "Plan" })).toHaveAttribute("href", "/plan");
+  expect(within(nav).queryByRole("link", { name: "Plan" })).not.toBeInTheDocument();
+  expect(within(nav).getByRole("link", { name: "What now" })).toHaveAttribute("href", "/what-now");
 });

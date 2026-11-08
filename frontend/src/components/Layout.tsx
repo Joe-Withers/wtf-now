@@ -11,7 +11,6 @@ const icon = (path: string) => (
 
 const LINKS = [
   { to: "/", label: "Graph", icon: "M12 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4M5 15a2 2 0 1 0 0 4 2 2 0 0 0 0-4M19 15a2 2 0 1 0 0 4 2 2 0 0 0 0-4M10.5 9 6.5 15M13.5 9l4 6M7 17h10" },
-  { to: "/plan", label: "Plan", icon: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" },
   { to: "/what-now", label: "What now", icon: "M4 12h15M13 6l6 6-6 6" },
   { to: "/shopping", label: "Shopping", icon: "M3 4h2l2.5 11h10L20 7H6M9 20h.01M17 20h.01" },
   { to: "/docs", label: "Docs", icon: "M4 5h16v11H4zM4 16l4-4 4 4 3-3 5 5M9 9h.01" },

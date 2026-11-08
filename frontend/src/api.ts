@@ -104,17 +104,6 @@ export async function streamMessage(
   }
 }
 
-export type TreeNode = {
-  slug: string;
-  title: string;
-  kind: Kind;
-  state: State;
-  progress: number;
-  remaining_hours: number;
-  blocked: boolean;
-  children: TreeNode[];
-};
-
 export type TaskRef = { slug: string; title: string; state: State };
 
 export type TaskDetail = {

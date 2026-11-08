@@ -9,7 +9,6 @@ import { GraphScreen } from "./screens/GraphScreen";
 import { LogScreen } from "./screens/LogScreen";
 import { More } from "./screens/More";
 import { NoteScreen } from "./screens/NoteScreen";
-import { PlanScreen } from "./screens/PlanScreen";
 import { ShoppingScreen } from "./screens/ShoppingScreen";
 import { TaskScreen } from "./screens/TaskScreen";
 import { WhatNowScreen } from "./screens/WhatNowScreen";
@@ -25,7 +24,6 @@ export function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<GraphScreen />} />
-            <Route path="plan" element={<PlanScreen />} />
             <Route path="what-now" element={<WhatNowScreen />} />
             <Route path="chat" element={<ChatPage />} />
             <Route path="tasks/:slug" element={<TaskScreen />} />
