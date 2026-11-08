@@ -83,7 +83,7 @@ export function GraphScreen() {
                   <span
                     key={hub.category.slug}
                     className={`graph-hub cat-${hub.category.colour}${hub.dimmed ? " dim" : ""}`}
-                    style={{ left: hub.x, top: hub.y }}
+                    style={{ left: hub.x, top: hub.y, "--progress": hub.category.progress } as React.CSSProperties}
                     aria-hidden="true"
                   />
                 ))}

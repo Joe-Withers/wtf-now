@@ -185,3 +185,13 @@ test("done work, work that is waiting and work that is free look different", asy
   expect(screen.getByRole("button", { name: "Fit the fridge" })).toHaveClass("waiting");
   expect(screen.getByRole("button", { name: "Lay the wool" })).not.toHaveClass("waiting");
 });
+
+test("each group has a ring that fills by how much of it is done", async () => {
+  mockApi({ "/api/map": map });
+
+  const { container } = renderApp(<GraphScreen />);
+  await screen.findByRole("button", { name: "Fit the fridge" });
+
+  const rings = [...container.querySelectorAll<HTMLElement>(".graph-hub")].map((hub) => hub.style.getPropertyValue("--progress"));
+  expect(rings).toEqual(["33", "0"]);
+});
