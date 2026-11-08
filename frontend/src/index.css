@@ -338,13 +338,16 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .graph-line.note { stroke: var(--muted); opacity: 0.25; }
 /* A dependency shows the flow: the colour of the group it comes from, fading
    to a tint of orange where it lands on the job that waits on it. */
-.graph-line.dependency, .graph-line.cross { stroke-width: 1.8; stroke-linecap: round; opacity: 0.95; }
-.graph-line.cross { stroke-dasharray: 5 5; }
+.graph-line.dependency, .graph-line.cross { stroke-width: 2.2; stroke-linecap: round; opacity: 0.95; }
+.graph-line.needs { stroke: var(--danger); }
+.graph-line.unlocks { stroke: var(--done); }
 .graph-line.hidden { display: none; }
 .graph-centre { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--text); box-shadow: 0 0 0 4px color-mix(in srgb, var(--text) 16%, transparent); }
 .graph-hub { position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--cat); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px color-mix(in srgb, var(--cat) 45%, transparent); }
 .graph-dot { position: absolute; transform: translate(-50%, -50%); border: 0; padding: 0; border-radius: 50%; background: var(--cat); }
-.graph-dot.done { background: var(--muted); opacity: 0.5; }
+.graph-dot.done { background: color-mix(in srgb, white 82%, var(--cat)); box-shadow: 0 0 0 2px var(--done); }
+.graph-dot.waiting { background: color-mix(in srgb, black 45%, var(--cat)); }
+.graph-dot.selected { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--text); }
 .graph-dot.group { background: var(--bg); box-shadow: 0 0 0 2px var(--cat); }
 .graph-dot.next { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cat) 28%, transparent), 0 0 16px color-mix(in srgb, var(--cat) 70%, transparent); }
 .graph-dot.hidden { display: none; }
@@ -363,8 +366,10 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .swatch { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); opacity: 0.6; }
 .swatch.next { background: var(--now); opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--now) 25%, transparent); }
 .swatch.note { width: 6px; height: 6px; }
-.swatch.cross { width: 16px; height: 0; border-radius: 0; border-top: 1px dashed var(--muted); opacity: 1; background: none; }
-.swatch.flow { width: 18px; height: 0; border-radius: 0; border-top: 2px solid transparent; opacity: 1; background: linear-gradient(90deg, var(--cat-1), var(--now)); }
+.swatch.done { background: color-mix(in srgb, white 82%, var(--muted)); box-shadow: 0 0 0 2px var(--done); opacity: 1; }
+.swatch.waiting { background: color-mix(in srgb, black 45%, var(--muted)); opacity: 1; }
+.swatch.needs, .swatch.unlocks { width: 18px; height: 0; border-radius: 0; border-top: 2px solid var(--danger); opacity: 1; background: none; }
+.swatch.unlocks { border-top-color: var(--done); }
 
 /* What now: the work as a run of jobs. */
 .jobs-screen { padding: 0; gap: 0; overflow: hidden; }

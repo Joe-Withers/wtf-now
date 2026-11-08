@@ -41,22 +41,13 @@ export type Dot = {
   r: number;
   next: boolean;
   done: boolean;
+  /** Not done, and held up by work that isn't either. */
+  waiting: boolean;
   group: boolean;
   dimmed: boolean;
   hidden: boolean;
   /** How many steps of work this job is waiting behind. */
   level: number;
-};
-
-/** A line, and the flow it shows when it carries one. */
-export type Flow = {
-  id: string;
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  /** The colour of the group the work comes from. */
-  colour: number;
 };
 
 export type Line = {
@@ -65,9 +56,9 @@ export type Line = {
   kind: "hub" | "branch" | "dependency" | "cross" | "note";
   dimmed: boolean;
   hidden: boolean;
-  /** Set when the line shows a dependency: it fades from the colour it comes
-   * from to a tint of orange where it lands. */
-  flow?: Flow;
+  /** Set on a dependency: the job it comes from, and the job that waits on it. */
+  from?: string;
+  to?: string;
 };
 
 export type Pill = {
@@ -429,7 +420,6 @@ export function layoutMap(
   const notes: NoteDot[] = [];
 
   const groupOf = new Map(map.tasks.map((task) => [task.slug, task.category]));
-  const colourOf = new Map(map.categories.map((category) => [category.slug, category.colour]));
   const levelOf = levels(map);
   const maxLevel = map.tasks.reduce((max, task) => Math.max(max, levelOf.get(task.slug) ?? 0), 0);
   /** The ring a level of work sits on. */
@@ -514,6 +504,7 @@ export function layoutMap(
           r: next ? 11 : radius(task),
           next,
           done: task.state === "done",
+          waiting: task.state !== "done" && task.needs.length > 0,
           group: false,
           dimmed,
           hidden,
@@ -538,6 +529,7 @@ export function layoutMap(
           r: 8,
           next: false,
           done: false,
+          waiting: false,
           group: true,
           dimmed,
           hidden: false,
@@ -560,8 +552,7 @@ export function layoutMap(
   };
   roots.forEach(walk);
 
-  // A dependency: a line in the colour of the group it comes from, fading to a
-  // tint of orange where it lands on the job that waits on it.
+  // A dependency. These are only drawn for the job that is picked.
   for (const task of map.tasks) {
     if (!task.is_leaf) continue;
     const to = placed.get(task.slug);
@@ -570,21 +561,14 @@ export function layoutMap(
       const from = placed.get(need);
       if (!from) continue;
       const outside = groupOf.get(need) !== task.category;
-      const colour = colourOf.get(groupOf.get(need) ?? "") ?? 0;
       lines.push({
         id: `needs-${need}-${task.slug}`,
         d: curve(from, to, centre, outside),
         kind: outside ? "cross" : "dependency",
         dimmed: from.dimmed || to.dimmed,
         hidden: from.hidden || to.hidden,
-        flow: {
-          id: `flow-${need}-${task.slug}`,
-          x1: from.x,
-          y1: from.y,
-          x2: to.x,
-          y2: to.y,
-          colour,
-        },
+        from: need,
+        to: task.slug,
       });
     }
   }

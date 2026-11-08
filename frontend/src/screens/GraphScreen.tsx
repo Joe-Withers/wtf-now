@@ -66,32 +66,15 @@ export function GraphScreen() {
 
               <div className="graph-canvas" ref={ref} style={{ "--pill-max": `${layout.label}px` } as React.CSSProperties}>
                 <svg className="graph-lines" width={layout.width} height={layout.height} aria-hidden="true">
-                  <defs>
-                    {layout.lines
-                      .filter((line) => line.flow)
-                      .map((line) => (
-                        <linearGradient
-                          key={line.flow!.id}
-                          id={line.flow!.id}
-                          gradientUnits="userSpaceOnUse"
-                          x1={line.flow!.x1}
-                          y1={line.flow!.y1}
-                          x2={line.flow!.x2}
-                          y2={line.flow!.y2}
-                        >
-                          <stop offset="0" style={{ stopColor: `var(--cat-${line.flow!.colour})` }} />
-                          <stop offset="1" style={{ stopColor: `color-mix(in srgb, var(--now) 45%, var(--cat-${line.flow!.colour}))` }} />
-                        </linearGradient>
-                      ))}
-                  </defs>
-                  {layout.lines.map((line) => (
-                    <path
-                      key={line.id}
-                      className={`graph-line ${line.kind}${line.dimmed ? " dim" : ""}${line.hidden ? " hidden" : ""}`}
-                      d={line.d}
-                      style={line.flow ? { stroke: `url(#${line.flow.id})` } : undefined}
-                    />
-                  ))}
+                  {layout.lines
+                    .filter((line) => !line.from || line.from === selected || line.to === selected)
+                    .map((line) => (
+                      <path
+                        key={line.id}
+                        className={`graph-line ${line.kind}${line.to === selected ? " needs" : ""}${line.from === selected ? " unlocks" : ""}${line.dimmed ? " dim" : ""}${line.hidden ? " hidden" : ""}`}
+                        d={line.d}
+                      />
+                    ))}
                 </svg>
                 <span
                   className="graph-centre"
@@ -109,7 +92,7 @@ export function GraphScreen() {
                 {layout.dots.map((dot) => (
                   <button
                     key={dot.task.slug}
-                    className={`graph-dot cat-${colours.get(dot.task.category) ?? 0}${dot.next ? " next" : ""}${dot.done ? " done" : ""}${dot.group ? " group" : ""}${dot.dimmed ? " dim" : ""}${dot.hidden ? " hidden" : ""}`}
+                    className={`graph-dot cat-${colours.get(dot.task.category) ?? 0}${dot.next ? " next" : ""}${dot.done ? " done" : ""}${dot.waiting ? " waiting" : ""}${dot.task.slug === selected ? " selected" : ""}${dot.group ? " group" : ""}${dot.dimmed ? " dim" : ""}${dot.hidden ? " hidden" : ""}`}
                     style={{ left: dot.x, top: dot.y, width: dot.r * 2, height: dot.r * 2 }}
                     onClick={() => setSelected(dot.task.slug)}
                     aria-label={dot.task.title}
@@ -157,12 +140,16 @@ export function GraphScreen() {
                   Note
                 </span>
                 <span>
-                  <i className="swatch flow" aria-hidden="true" />
-                  Waits on
+                  <i className="swatch waiting" aria-hidden="true" />
+                  Waiting
                 </span>
                 <span>
-                  <i className="swatch cross" aria-hidden="true" />
-                  Cross-dependency
+                  <i className="swatch needs" aria-hidden="true" />
+                  Needs
+                </span>
+                <span>
+                  <i className="swatch unlocks" aria-hidden="true" />
+                  Unlocks
                 </span>
               </div>
 

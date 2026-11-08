@@ -150,3 +150,36 @@ test("a link can point straight at a task", async () => {
   expect(await screen.findByRole("region", { name: "Selected task" })).toBeInTheDocument();
   expect(screen.getByText("Fit the fridge")).toBeInTheDocument();
 });
+
+test("no dependency lines are drawn until a task is picked", async () => {
+  mockApi({ "/api/map": map });
+
+  const { container } = renderApp(<GraphScreen />);
+  await screen.findByRole("button", { name: "Fit the fridge" });
+
+  expect(container.querySelectorAll(".graph-line.dependency, .graph-line.cross")).toHaveLength(0);
+});
+
+test("picking a task draws what it needs in red and what it unlocks in green", async () => {
+  mockApi({ "/api/map": map });
+
+  const { container } = renderApp(<GraphScreen />);
+
+  await userEvent.click(await screen.findByRole("button", { name: "Fit the fridge" }));
+  expect(container.querySelectorAll(".graph-line.needs")).toHaveLength(1);
+  expect(container.querySelectorAll(".graph-line.unlocks")).toHaveLength(0);
+
+  await userEvent.click(container.querySelector<HTMLElement>('.graph-dot[aria-label="Run the cables"]')!);
+  expect(container.querySelectorAll(".graph-line.needs")).toHaveLength(0);
+  expect(container.querySelectorAll(".graph-line.unlocks")).toHaveLength(1);
+});
+
+test("done work, work that is waiting and work that is free look different", async () => {
+  mockApi({ "/api/map": map });
+
+  renderApp(<GraphScreen />);
+
+  expect(await screen.findByRole("button", { name: "Trim the felt" })).toHaveClass("done");
+  expect(screen.getByRole("button", { name: "Fit the fridge" })).toHaveClass("waiting");
+  expect(screen.getByRole("button", { name: "Lay the wool" })).not.toHaveClass("waiting");
+});

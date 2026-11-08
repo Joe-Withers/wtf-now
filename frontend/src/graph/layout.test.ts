@@ -149,20 +149,19 @@ test("a dependency across groups is a dashed line", () => {
   expect(line?.kind).toBe("cross");
 });
 
-test("a dependency runs from the colour of the group it comes from", () => {
+test("a dependency says which job it comes from and which waits on it", () => {
   const layout = layoutMap(map, size);
 
   const line = layout.lines.find((one) => one.id === "needs-wire-fridge");
-  const wire = layout.dots.find((dot) => dot.task.slug === "wire")!;
-  const fridge = layout.dots.find((dot) => dot.task.slug === "fridge")!;
+  expect(line?.from).toBe("wire");
+  expect(line?.to).toBe("fridge");
+});
 
-  // The line starts at the work it comes from, in that group's colour, and
-  // ends at the job that waits on it, where it fades to orange.
-  expect(line?.flow?.colour).toBe(1);
-  expect(line?.flow?.x1).toBeCloseTo(wire.x, 1);
-  expect(line?.flow?.y1).toBeCloseTo(wire.y, 1);
-  expect(line?.flow?.x2).toBeCloseTo(fridge.x, 1);
-  expect(line?.flow?.y2).toBeCloseTo(fridge.y, 1);
+test("a job held up by unfinished work is waiting; one that is free is not", () => {
+  const layout = layoutMap(map, size);
+
+  expect(layout.dots.find((dot) => dot.task.slug === "fridge")?.waiting).toBe(true);
+  expect(layout.dots.find((dot) => dot.task.slug === "wire")?.waiting).toBe(false);
 });
 
 test("a job sits on the side of its group that the work it waits on is on", () => {
