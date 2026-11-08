@@ -112,6 +112,8 @@ export function WhatNowScreen() {
     [map, size.width, selected, filter, focus],
   );
   const colours = new Map(map.categories.map((category) => [category.slug, category.colour]));
+  // The job each group would do next.
+  const recommended = new Set(map.categories.map((category) => category.next));
   const task = map.tasks.find((one) => one.slug === selected);
 
   return (
@@ -160,7 +162,7 @@ export function WhatNowScreen() {
                 {layout.cards.map((card) => (
                   <button
                     key={`${card.column}-${card.slug}`}
-                    className={`job-card${card.selected ? " selected" : ""}${card.dimmed ? " faded" : ""}`}
+                    className={`job-card${card.column === "ready" && recommended.has(card.slug) ? " recommended" : ""}${card.selected ? " selected" : ""}${card.dimmed ? " faded" : ""}`}
                     style={{ left: card.x, top: card.y, width: card.width, height: card.height }}
                     onClick={() => setSelected(card.slug === selected ? null : card.slug)}
                     aria-pressed={card.selected}

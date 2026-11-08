@@ -139,3 +139,13 @@ test("nothing on What now changes a job — the chat does that", async () => {
   await screen.findByRole("button", { name: /Run the cables/ });
   expect(calls.every((call) => call.init?.method !== "POST")).toBe(true);
 });
+
+test("the job each group would do next sparkles, and the others don't", async () => {
+  mockApi({ "/api/map": map });
+
+  renderApp(<WhatNowScreen />);
+
+  const wire = await screen.findByRole("button", { name: /Run the cables/ });
+  expect(wire).toHaveClass("recommended");
+  expect(screen.getByRole("button", { name: /Fit the fridge/ })).not.toHaveClass("recommended");
+});

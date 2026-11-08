@@ -268,6 +268,8 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 
 @media (prefers-reduced-motion: reduce) {
   .flow-step.next .card.hero::after { animation: none; }
+  .graph-dot.next, .graph-dot.next::before, .graph-dot.next::after, .job-card.recommended::before, .job-card.recommended::after { animation: none; }
+  .graph-dot.next::before, .graph-dot.next::after, .job-card.recommended::after { opacity: 1; }
 }
 
 .photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -350,6 +352,13 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .graph-dot.group { background: var(--bg); box-shadow: 0 0 0 2px var(--cat); }
 .graph-dot.next { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cat) 28%, transparent), 0 0 16px color-mix(in srgb, var(--cat) 70%, transparent); }
 .graph-dot.hidden { display: none; }
+/* The job each group would do next sparkles: a glow that breathes, and a pair of stars that twinkle. */
+.graph-dot.next { animation: breathe 2.8s ease-in-out infinite; }
+.graph-dot.next::before, .graph-dot.next::after { content: ""; position: absolute; background: #fff; pointer-events: none; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); opacity: 0; animation: twinkle 2.4s ease-in-out infinite; }
+.graph-dot.next::before { width: 11px; height: 11px; top: -10px; right: -9px; }
+.graph-dot.next::after { width: 8px; height: 8px; bottom: -8px; left: -8px; animation-delay: 1.2s; }
+@keyframes breathe { 0%, 100% { filter: drop-shadow(0 0 2px var(--cat)); } 50% { filter: drop-shadow(0 0 9px var(--cat)); } }
+@keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
 .graph-note { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--muted); opacity: 0.65; }
 .dim { opacity: 0.12; }
 .graph-pill { color: inherit; text-decoration: none; position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; max-width: var(--pill-max, 190px); padding: 5px 6px 5px 10px; border-radius: 999px; background: var(--surface-raised); border: 1px solid color-mix(in srgb, var(--cat) 40%, var(--line)); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28); font-size: 0.82rem; font-weight: 600; }
@@ -386,6 +395,11 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .job-card:hover { border-color: color-mix(in srgb, var(--now) 45%, var(--line)); }
 .job-card.selected { border-color: var(--now); background: color-mix(in srgb, var(--now) 8%, var(--surface)); }
 .job-card.faded { opacity: 0.28; }
+/* The job each group would do next shimmers, and has a star in the corner that twinkles. */
+.job-card.recommended { overflow: hidden; border-color: color-mix(in srgb, var(--now) 60%, var(--line)); box-shadow: 0 0 14px color-mix(in srgb, var(--now) 30%, transparent); }
+.job-card.recommended::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, color-mix(in srgb, var(--now) 28%, transparent) 50%, transparent 65%); background-size: 250% 100%; animation: shimmer 3.2s ease-in-out infinite; }
+.job-card.recommended::after { content: ""; position: absolute; top: 4px; right: 6px; width: 10px; height: 10px; background: var(--now); pointer-events: none; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); animation: twinkle 2.4s ease-in-out infinite; }
+@keyframes shimmer { 0% { background-position: 130% 0; } 60%, 100% { background-position: -130% 0; } }
 .job-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem; }
 .job-kind { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
 .kind-icon { width: 13px; height: 13px; flex: none; opacity: 0.8; }
