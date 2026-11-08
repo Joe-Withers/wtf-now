@@ -4,7 +4,6 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { getJson, type MapTask, type ProjectMap } from "../api";
 import { ProjectPanel } from "../components/ProjectPanel";
-import { TaskPanel } from "../components/TaskPanel";
 import { Loading } from "../components/ui";
 import { EMPTY_MAP, layoutMap } from "../graph/layout";
 import { useSize } from "../useSize";
@@ -44,7 +43,6 @@ export function GraphScreen() {
   // Hiding the done work leaves the rest of the map where it is.
   const layout = useMemo(() => layoutMap(map, size, focus, hideDone), [map, size, focus, hideDone]);
   const colours = new Map(map.categories.map((category) => [category.slug, category.colour]));
-  const task = map.tasks.find((one) => one.slug === selected);
 
   return (
     <main className="screen wide graph-screen">
@@ -94,8 +92,9 @@ export function GraphScreen() {
                     key={dot.task.slug}
                     className={`graph-dot cat-${colours.get(dot.task.category) ?? 0}${dot.next ? " next" : ""}${dot.done ? " done" : ""}${dot.waiting ? " waiting" : ""}${dot.task.slug === selected ? " selected" : ""}${dot.group ? " group" : ""}${dot.dimmed ? " dim" : ""}${dot.hidden ? " hidden" : ""}`}
                     style={{ left: dot.x, top: dot.y, width: dot.r * 2, height: dot.r * 2 }}
-                    onClick={() => setSelected(dot.task.slug)}
+                    onClick={() => setSelected(selected === dot.task.slug ? null : dot.task.slug)}
                     aria-label={dot.task.title}
+                    aria-pressed={dot.task.slug === selected}
                     title={dot.task.title}
                     hidden={dot.hidden}
                   />
@@ -115,7 +114,7 @@ export function GraphScreen() {
                     key={pill.task.slug}
                     className={`graph-pill cat-${pill.colour} ${pill.side}`}
                     style={{ left: pill.x, top: pill.y }}
-                    onClick={() => setSelected(pill.task.slug)}
+                    onClick={() => setSelected(selected === pill.task.slug ? null : pill.task.slug)}
                     aria-label={`Next up: ${pill.task.title}, ${KIND_LABELS[pill.task.kind]}`}
                     title={pill.task.title}
                   >
@@ -152,10 +151,6 @@ export function GraphScreen() {
                   Unlocks
                 </span>
               </div>
-
-              {task && (
-                <TaskPanel task={task} map={map} onSelect={setSelected} onClose={() => setSelected(null)} />
-              )}
             </div>
           </>
         )}

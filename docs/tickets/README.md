@@ -2,7 +2,7 @@
 
 Work through these in number order; each one lists what it depends on. Tickets 001 to 017 get the app into use at the van, and the rest build on that.
 
-Tickets 001 to 023 are built and merged, and so are 028, which takes the buttons out of the app and leaves the chat to do the writing, 029, which gives the screens a proper look, 030, which moves the navigation to a rail and the chat into a drawer, 031, which draws the project as a graph, 032, which draws What now as a flow, 033, which makes the drawings and the notes one thing: the docs, 034, which makes the layout fill the screen, 035, which draws the project as a map, 036, which draws What now as a run of jobs, 037, which makes the plan fill the screen, 038, which puts the three views of the project in one switch, and 039, which makes the rail a compact strip of icons at every screen size, 040, which draws the map as a tree you can read, 041, which draws the map as the flow of the work, and 042, which quietens the map to show the state of the work. Tickets 024 to 027 need something from the owner: a server, their own project, a transcription provider, and an Anthropic key.
+Tickets 001 to 023 are built and merged, and so are 028, which takes the buttons out of the app and leaves the chat to do the writing, 029, which gives the screens a proper look, 030, which moves the navigation to a rail and the chat into a drawer, 031, which draws the project as a graph, 032, which draws What now as a flow, 033, which makes the drawings and the notes one thing: the docs, 034, which makes the layout fill the screen, 035, which draws the project as a map, 036, which draws What now as a run of jobs, 037, which makes the plan fill the screen, 038, which puts the three views of the project in one switch, and 039, which makes the rail a compact strip of icons at every screen size, 040, which draws the map as a tree you can read, 041, which draws the map as the flow of the work, 042, which quietens the map to show the state of the work, and 043, which takes the panel off the map. Tickets 024 to 027 need something from the owner: a server, their own project, a transcription provider, and an Anthropic key.
 
 | Ticket | Title |
 |---|---|
@@ -48,3 +48,4 @@ Tickets 001 to 023 are built and merged, and so are 028, which takes the buttons
 | [040](040-a-map-you-can-read.md) | A map you can read |
 | [041](041-the-flow-of-the-work.md) | The flow of the work |
 | [042](042-a-quieter-map.md) | A quieter map |
+| [043](043-no-panel-on-the-map.md) | No panel on the map |

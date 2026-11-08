@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { mockApi, renderApp } from "../test-helpers";
@@ -120,18 +120,20 @@ test("the tasks that are done can be hidden", async () => {
   expect(screen.queryByRole("button", { name: "Trim the felt" })).not.toBeInTheDocument();
 });
 
-test("picking a task says what it needs and what it unblocks", async () => {
+test("picking a task opens no panel, and picking it again lets it go", async () => {
   mockApi({ "/api/map": map });
 
-  renderApp(<GraphScreen />);
+  const { container } = renderApp(<GraphScreen />);
 
-  await userEvent.click(await screen.findByRole("button", { name: "Fit the fridge" }));
+  const fridge = await screen.findByRole("button", { name: "Fit the fridge" });
+  await userEvent.click(fridge);
+  expect(fridge).toHaveAttribute("aria-pressed", "true");
+  expect(screen.queryByRole("region", { name: "Selected task" })).not.toBeInTheDocument();
+  expect(container.querySelectorAll(".graph-line.needs")).toHaveLength(1);
 
-  const panel = await screen.findByRole("region", { name: "Selected task" });
-  expect(within(panel).getByText("Fit the fridge")).toBeInTheDocument();
-  expect(within(panel).getByText("Needs")).toBeInTheDocument();
-  expect(within(panel).getByRole("button", { name: "Run the cables" })).toBeInTheDocument();
-  expect(within(panel).getByText("Waiting on 1 task")).toBeInTheDocument();
+  await userEvent.click(fridge);
+  expect(fridge).toHaveAttribute("aria-pressed", "false");
+  expect(container.querySelectorAll(".graph-line.needs")).toHaveLength(0);
 });
 
 test("a note about a task shows up beside it", async () => {
@@ -145,10 +147,10 @@ test("a note about a task shows up beside it", async () => {
 test("a link can point straight at a task", async () => {
   mockApi({ "/api/map": map });
 
-  renderApp(<GraphScreen />, "/?task=fridge");
+  const { container } = renderApp(<GraphScreen />, "/?task=fridge");
 
-  expect(await screen.findByRole("region", { name: "Selected task" })).toBeInTheDocument();
-  expect(screen.getByText("Fit the fridge")).toBeInTheDocument();
+  expect(await screen.findByRole("button", { name: "Fit the fridge" })).toHaveAttribute("aria-pressed", "true");
+  expect(container.querySelectorAll(".graph-line.needs")).toHaveLength(1);
 });
 
 test("no dependency lines are drawn until a task is picked", async () => {
@@ -169,7 +171,7 @@ test("picking a task draws what it needs in red and what it unlocks in green", a
   expect(container.querySelectorAll(".graph-line.needs")).toHaveLength(1);
   expect(container.querySelectorAll(".graph-line.unlocks")).toHaveLength(0);
 
-  await userEvent.click(container.querySelector<HTMLElement>('.graph-dot[aria-label="Run the cables"]')!);
+  await userEvent.click((await screen.findAllByRole("button", { name: "Run the cables" }))[0]);
   expect(container.querySelectorAll(".graph-line.needs")).toHaveLength(0);
   expect(container.querySelectorAll(".graph-line.unlocks")).toHaveLength(1);
 });
