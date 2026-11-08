@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 import { getJson, type Drawing, type NoteSummary, type SearchHit } from "../api";
 import { DrawingPreview } from "../components/Drawing";
-import { Loading, ScreenHead } from "../components/ui";
+import { Loading } from "../components/ui";
 
 function DrawingCard({ drawing }: { drawing: Drawing }) {
   const zones = drawing.zones.length;
@@ -46,7 +46,6 @@ export function Docs() {
 
   return (
     <main className="screen">
-      <ScreenHead title="Docs" />
       <input
         className="field"
         type="search"

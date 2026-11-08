@@ -59,7 +59,7 @@ The app is one system, not a set of screens that happen to sit together.
 
 - **A rail, not a bar.** The navigation runs down the left-hand side, so the bottom of the screen belongs to whatever you were reading. It is a compact strip of icons at every screen size: the rail holds the places you go, and each of them is a screen of its own.
 - **A layout that fits the screen.** The app fills the window rather than floating in it. The rail is the same strip of icons on a phone and on a laptop, so the screen gets the width either way. Reading screens keep a comfortable measure, and card lists go two abreast when there is room. The screens that draw something use the whole width.
-- **One header.** Every screen opens with a sticky header saying where you are. Nothing else.
+- **No page titles.** The rail says where you are, so the screens don't repeat it: Shopping, Docs, Log and What now open straight onto their content. A note or a drawing keeps its own title, because that is the thing itself rather than the name of the page.
 - **One type scale.** Screen titles, section eyebrows, card titles and metadata each have a fixed size, so a card looks like a card wherever it appears.
 - **One way of showing state.** A task's state is a pill — Not started, Underway, Done — and a purchase says To order, On order, Arrived. The same pill everywhere, never a stray word.
 - **The chat comes out of the side.** One round button in the bottom-right corner pulls the chat out of the right-hand side, over whatever you were reading. It knows what you were looking at, so on a task screen it opens about that task. There is no chat tab, and no other way in.

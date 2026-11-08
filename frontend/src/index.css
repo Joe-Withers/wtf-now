@@ -78,14 +78,14 @@ button { cursor: pointer; }
 /* The app fills the window. The reading column inside it stays a comfortable width. */
 .app { position: relative; display: flex; height: 100dvh; padding-top: env(safe-area-inset-top); }
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.screen { --gutter: max(16px, calc((100% - 880px) / 2)); flex: 1; min-height: 0; overflow-y: auto; padding: 0 var(--gutter) 88px; display: flex; flex-direction: column; gap: 20px; }
+.screen { --gutter: max(16px, calc((100% - 880px) / 2)); flex: 1; min-height: 0; overflow-y: auto; padding: 16px var(--gutter) 88px; display: flex; flex-direction: column; gap: 20px; }
 /* The screens that draw something use the whole space. */
 .screen.wide { --gutter: clamp(16px, 2vw, 36px); }
 .content { display: flex; flex-direction: column; gap: 20px; }
 .section { display: flex; flex-direction: column; gap: 9px; }
 
 /* The header stays put while the screen scrolls under it. */
-.screen-head { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0 12px; background: var(--bg); }
+.screen-head { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: -16px; padding: 30px 0 12px; background: var(--bg); }
 .head-action { flex: none; font-size: 0.85rem; font-weight: 600; color: var(--now); padding: 6px 2px; }
 
 /* The navigation runs down the left-hand side, so the chat can have the bottom. */
@@ -355,10 +355,7 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 /* What now: the work as a run of jobs. */
 .jobs-screen { padding: 0; gap: 0; overflow: hidden; }
 .jobs-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.jobs-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px 10px; flex: none; }
-.jobs-head h1 { font-size: 1.7rem; letter-spacing: -0.02em; }
-.jobs-head .meta { margin-top: 4px; }
-.jobs-filters { display: flex; gap: 8px; padding: 0 18px 12px; overflow-x: auto; scrollbar-width: none; flex: none; }
+.jobs-filters { display: flex; gap: 8px; padding: 12px 18px; overflow-x: auto; scrollbar-width: none; flex: none; }
 .jobs-filters::-webkit-scrollbar { display: none; }
 .jobs-canvas { flex: 1; min-height: 0; position: relative; overflow: auto; }
 .jobs-edges { position: absolute; top: 0; left: 0; pointer-events: none; }
@@ -417,9 +414,7 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
   .category-row { flex: none; width: 150px; }
   .panel-body { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .segmented a { padding: 6px 11px; font-size: 0.82rem; }
-  .jobs-head { flex-direction: column; padding: 12px 14px 8px; }
-  .jobs-head .segmented { margin-left: 0; }
-  .jobs-filters { padding: 0 14px 10px; }
+      .jobs-filters { padding: 10px 14px; }
 }
 
 /* On a laptop the project is a sidebar, and the map fills the rest. */

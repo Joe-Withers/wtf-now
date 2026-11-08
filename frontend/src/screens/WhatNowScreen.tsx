@@ -7,7 +7,7 @@ import { ProjectPanel } from "../components/ProjectPanel";
 import { TaskPanel } from "../components/TaskPanel";
 import { Loading } from "../components/ui";
 import { EMPTY_MAP } from "../graph/layout";
-import { FILTERS, day, layoutJobs, readyCounts, type FilterKey, type JobCard } from "../jobs/layout";
+import { FILTERS, day, layoutJobs, type FilterKey, type JobCard } from "../jobs/layout";
 import { useSize } from "../useSize";
 
 const KIND_LABELS: Record<MapTask["kind"], string> = {
@@ -82,22 +82,6 @@ function KindIcon({ kind }: { kind: MapTask["kind"] }) {
   );
 }
 
-/** The sentence under the title: what you could be doing right now. */
-function summary(map: ProjectMap): string {
-  const { total, byKind } = readyCounts(map);
-  if (total === 0) return "Nothing is ready right now. The log will say when it is.";
-  const parts = [
-    { kind: "build", name: "build" },
-    { kind: "purchase", name: "to buy" },
-    { kind: "decision", name: "to decide" },
-    { kind: "research", name: "to research" },
-  ]
-    .filter((one) => byKind[one.kind])
-    .map((one) => `${byKind[one.kind]} ${one.name}`);
-  const things = `${total} ${total === 1 ? "thing" : "things"} you can do right now`;
-  return `${things}${parts.length > 0 ? `: ${parts.join(", ")}` : ""}.`;
-}
-
 export function WhatNowScreen() {
   const project = useQuery({ queryKey: ["map"], queryFn: () => getJson<ProjectMap>("/map") });
   const [focus, setFocus] = useState<string | null>(null);
@@ -137,13 +121,6 @@ export function WhatNowScreen() {
           <>
             <ProjectPanel map={map} focus={focus} onFocus={setFocus} />
             <div className="jobs-main">
-              <div className="jobs-head">
-                <div>
-                  <h1>What now?</h1>
-                  <p className="meta">{summary(map)}</p>
-                </div>
-              </div>
-
               <div className="jobs-filters">
                 {FILTERS.map((option) => (
                   <button

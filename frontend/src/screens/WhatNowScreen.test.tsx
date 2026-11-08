@@ -87,14 +87,6 @@ test("the work is a run of jobs, in four columns", async () => {
   expect(screen.getByRole("heading", { name: /^Later/ })).toBeInTheDocument();
 });
 
-test("it says what you could do right now", async () => {
-  mockApi({ "/api/map": map });
-
-  renderApp(<WhatNowScreen />);
-
-  expect(await screen.findByText("2 things you can do right now: 1 build, 1 to buy.")).toBeInTheDocument();
-});
-
 test("the last thing you finished is in the done column", async () => {
   mockApi({ "/api/map": map });
 

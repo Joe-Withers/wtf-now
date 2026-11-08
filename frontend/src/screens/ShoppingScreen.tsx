@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { getJson, type Shopping, type ShoppingItem } from "../api";
-import { Loading, ScreenHead } from "../components/ui";
+import { Loading } from "../components/ui";
 
 const money = (value: number) => `£${value.toLocaleString("en-GB", { maximumFractionDigits: 2 })}`;
 
@@ -38,7 +38,6 @@ export function ShoppingScreen() {
 
   return (
     <main className="screen">
-      <ScreenHead title="Shopping" />
       <Loading query={query}>
         {(shopping) => {
           const total = shopping.spent + shopping.still_to_spend;
