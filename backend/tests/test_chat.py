@@ -220,3 +220,20 @@ def test_trim_history_starts_at_something_the_owner_said() -> None:
     trimmed = trim_history(messages)
 
     assert trimmed == [{"role": "user", "content": "latest"}]
+
+
+def test_the_ai_is_told_to_group_by_area_and_never_by_phase(store: Store, clock: Clock) -> None:
+    system = build_system(store, clock(), [])
+
+    assert "areas, not phases" in system
+    assert "nothing is left at the top level on its own" in system
+    assert "mark it done" in system
+
+
+def test_up_to_twelve_groups_each_get_their_own_colour() -> None:
+    from wtf_now.views import CATEGORY_COLOURS, _colour
+
+    taken: set[int] = set()
+    colours = [_colour(f"area-{index}", taken) for index in range(CATEGORY_COLOURS)]
+
+    assert len(set(colours)) == CATEGORY_COLOURS

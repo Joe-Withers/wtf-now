@@ -290,7 +290,8 @@ def search(project: Project, query: str) -> list[SearchHit]:
     return hits[:SEARCH_LIMIT]
 
 
-CATEGORY_COLOURS = 6
+# How many colours the frontend has. A project with more groups than this has to repeat one.
+CATEGORY_COLOURS = 12
 
 
 def _colour(slug: str, taken: set[int] | None = None) -> int:

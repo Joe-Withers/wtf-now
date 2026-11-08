@@ -20,6 +20,12 @@
   --cat-3: #4fd1a5;
   --cat-4: #b48cff;
   --cat-5: #ff6f91;
+  --cat-6: #a6d94f;
+  --cat-7: #35c6e8;
+  --cat-8: #e270d0;
+  --cat-9: #cdbb93;
+  --cat-10: #ff5a4d;
+  --cat-11: #8a7dff;
   --radius: 16px;
   --radius-sm: 11px;
   --heading: "Space Grotesk Variable", system-ui, sans-serif;
@@ -49,6 +55,12 @@
     --cat-3: #1f8f6c;
     --cat-4: #7c4fd8;
     --cat-5: #d14268;
+    --cat-6: #6a9a1b;
+    --cat-7: #0f8fb0;
+    --cat-8: #b63fa0;
+    --cat-9: #8f7a4c;
+    --cat-10: #c93a2e;
+    --cat-11: #5b4fd6;
   }
 }
 
@@ -302,6 +314,12 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .cat-3 { --cat: var(--cat-3); }
 .cat-4 { --cat: var(--cat-4); }
 .cat-5 { --cat: var(--cat-5); }
+.cat-6 { --cat: var(--cat-6); }
+.cat-7 { --cat: var(--cat-7); }
+.cat-8 { --cat: var(--cat-8); }
+.cat-9 { --cat: var(--cat-9); }
+.cat-10 { --cat: var(--cat-10); }
+.cat-11 { --cat: var(--cat-11); }
 
 .graph-screen { padding: 0; gap: 0; overflow: hidden; }
 .graph-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }

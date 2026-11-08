@@ -435,12 +435,16 @@ export function layoutMap(
   const isHidden = (task: MapTask | null, next: string | null) =>
     Boolean(hideDone && task?.state === "done" && task.is_leaf && task.slug !== next);
 
+  /** Where each group's dot sits. */
+  const hubAt = new Map<string, { x: number; y: number }>();
+
   // The groups, in a ring inside the work.
   for (const root of roots) {
     const dimmed = focus !== null && focus !== root.category.slug;
     const x = centre.x + rx * HUB_RING * Math.cos(root.angle);
     const y = centre.y + ry * HUB_RING * Math.sin(root.angle);
     hubs.push({ category: root.category, x, y, dimmed });
+    hubAt.set(root.slug, { x, y });
     placed.set(root.slug, { x, y, angle: root.angle, dimmed, hidden: false });
     lines.push({
       id: `hub-${root.slug}`,
@@ -513,6 +517,21 @@ export function layoutMap(
         });
       }
     }
+  }
+
+  // A job with no group above it is its own group, so tie it to its dot.
+  for (const root of roots) {
+    if (root.children.length || !root.task) continue;
+    const from = hubAt.get(root.slug);
+    const to = placed.get(root.slug);
+    if (!from || !to) continue;
+    lines.push({
+      id: `branch-${root.slug}`,
+      d: `M ${from.x.toFixed(1)} ${from.y.toFixed(1)} L ${to.x.toFixed(1)} ${to.y.toFixed(1)}`,
+      kind: "branch",
+      dimmed: to.dimmed,
+      hidden: to.hidden,
+    });
   }
 
   // A group inside a group, and the tree that holds the work together.

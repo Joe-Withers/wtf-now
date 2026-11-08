@@ -206,3 +206,15 @@ test("focusing one group dims the rest", () => {
   expect(layout.hubs.find((hub) => hub.category.slug === "insulation")?.dimmed).toBe(true);
   expect(layout.dots.every((dot) => dot.dimmed === (dot.task.category !== "electrics"))).toBe(true);
 });
+
+test("a job with no group above it is tied to its own dot", () => {
+  const loose: ProjectMap = {
+    ...map,
+    categories: [...map.categories, { slug: "garage", title: "Garage", colour: 3, total: 1, done: 0, progress: 0, next: "garage" }],
+    tasks: [...map.tasks, task({ slug: "garage", title: "Garage", category: "garage", parent: null })],
+  };
+
+  const layout = layoutMap(loose, size);
+
+  expect(layout.lines.some((line) => line.id === "branch-garage")).toBe(true);
+});
