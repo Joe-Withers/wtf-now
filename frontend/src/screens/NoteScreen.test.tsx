@@ -39,3 +39,21 @@ test("a verified note doesn't ask again", async () => {
   expect(await screen.findByText(/Verified by you/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Yes, it's right" })).not.toBeInTheDocument();
 });
+
+test("an unverified measurement that is wrong can be removed, and you go back to the docs", async () => {
+  const calls = mockApi({
+    "/api/notes/height": { ...note, body: "1420mm", change: { id: "c", summary: "", at: "" } },
+  });
+  renderApp(
+    <Routes>
+      <Route path="/notes/:slug" element={<NoteScreen />} />
+      <Route path="/docs" element={<p>The docs</p>} />
+    </Routes>,
+    "/notes/height",
+  );
+
+  await userEvent.click(await screen.findByRole("button", { name: "No, it's wrong" }));
+
+  await waitFor(() => expect(calls.some((call) => call.url === "/api/notes/height" && call.init?.method === "DELETE")).toBe(true));
+  expect(await screen.findByText("The docs")).toBeInTheDocument();
+});

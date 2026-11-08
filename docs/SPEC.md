@@ -49,7 +49,7 @@ Three taps survive, because each of them is the owner's judgement rather than a 
 
 - approving or rejecting a proposed change,
 - undoing a change the AI made,
-- confirming a measurement, which only the owner can do.
+- confirming a measurement, which only the owner can do, or saying it's wrong, which removes the note so the right figures can be written down again.
 
 Every screen keeps a way into the chat, and the task screen opens it with that task in focus, so reporting work is one tap from wherever you noticed it.
 

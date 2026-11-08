@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { getJson, type NoteDetail } from "../api";
 import { Loading, ScreenHead, useChange } from "../components/ui";
@@ -14,6 +14,7 @@ export function NoteScreen() {
   const { slug = "" } = useParams();
   const query = useQuery({ queryKey: ["note", slug], queryFn: () => getJson<NoteDetail>(`/notes/${slug}`) });
   const change = useChange();
+  const navigate = useNavigate();
 
   return (
     <main className="screen">
@@ -38,7 +39,22 @@ export function NoteScreen() {
                     onClick={() => change.mutate({ path: `/notes/${note.slug}/verify`, message: "Verified" })}
                   >
                     Yes, it's right
+                  </button>{" "}
+                  <button
+                    className="button"
+                    disabled={change.isPending}
+                    onClick={() =>
+                      change.mutate(
+                        { path: `/notes/${note.slug}`, method: "DELETE", message: "Removed" },
+                        { onSuccess: () => navigate("/docs") },
+                      )
+                    }
+                  >
+                    No, it's wrong
                   </button>
+                  <p className="meta" style={{ marginTop: 10 }}>
+                    Removes the note. Tell the chat the right figures and it will write them down again.
+                  </p>
                 </section>
               )}
               <Markdown text={note.body} />
