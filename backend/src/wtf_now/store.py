@@ -114,6 +114,7 @@ class Transaction:
         "set_state",
         "update_current_state",
         "write_note",
+        "delete_note",
         "verify_note",
         "write_drawing",
         "attach_photo",
@@ -338,7 +339,9 @@ class Transaction:
             self._check_timestamp(stale_after)
         if related is not None:
             self._task(related)  # a note can only document a task that exists
-        slug = slug or self._unique_slug(NOTE_DIR, slugify(title))
+        if slug is None:
+            # A note with this title is replaced, not copied: a second note on the same thing is a mistake.
+            slug = self._note_with_title(title) or self._unique_slug(NOTE_DIR, slugify(title))
         path = f"{NOTE_DIR}{slug}.md"
         existing = self.concepts.get(path)
         concept = existing or Concept(path, CommentedMap(), "")
@@ -361,6 +364,21 @@ class Transaction:
         self.concepts[path] = concept
         self._record("Note", self._link(concept))
         return slug
+
+    def _note_with_title(self, title: str) -> str | None:
+        wanted = title.strip().casefold()
+        for path, concept in sorted(self.concepts.items()):
+            if path.startswith(NOTE_DIR) and str(concept.frontmatter.get("title", "")).strip().casefold() == wanted:
+                return concept.slug
+        return None
+
+    def delete_note(self, slug: str) -> None:
+        path = f"{NOTE_DIR}{slug}.md"
+        concept = self.concepts.get(path)
+        if concept is None:
+            raise ChangeRejected(f"There's no note {slug!r}")
+        del self.concepts[path]
+        self._record("Removed note", str(concept.frontmatter.get("title", slug)))
 
     def _check_timestamp(self, value: str) -> None:
         try:

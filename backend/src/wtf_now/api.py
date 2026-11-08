@@ -233,6 +233,10 @@ def create_app(
     def get_note(slug: str) -> Any:
         return views.note_detail(store.project, slug, clock())
 
+    @app.delete("/api/notes/{slug}")
+    def delete_note(slug: str) -> Any:
+        return change(Op("delete_note", {"slug": slug}))
+
     @app.post("/api/notes/{slug}/verify")
     def verify_note(slug: str) -> Any:
         return change(Op("verify_note", {"slug": slug}))

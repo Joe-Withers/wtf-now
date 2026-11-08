@@ -22,6 +22,7 @@ PROPOSABLE = (
     "add_dependency",
     "remove_dependency",
     "write_drawing",
+    "delete_note",
 )
 
 
@@ -116,7 +117,8 @@ TOOLS = [
     ),
     _tool(
         "write_note",
-        "Create or replace a wiki note. Use type Measurement for dimensions, Research for findings, Decision for "
+        "Create or replace a wiki note. To correct a note, pass its slug (or the same title) and it is replaced, not "
+        "copied. Use type Measurement for dimensions, Research for findings, Decision for "
         "choices and why, Part for part numbers, Inventory for tools and stock. Set stale_after on prices, as an "
         "ISO 8601 time with a UTC offset. Set related to the slug of the task the note documents.",
         {
@@ -143,7 +145,8 @@ TOOLS = [
         "create_task(title, slug, parent, kind, description, effort_hours, zone, closes_zone, needs_helper, cost, "
         "depends_on: [{task, strength}]); update_task(slug, reason, title, description, kind, zone, closes_zone, "
         "effort_hours, needs_helper, cost); move_task(slug, parent); delete_task(slug); "
-        "add_dependency(task, depends_on, strength); remove_dependency(task, depends_on); "
+        "add_dependency(task, depends_on, strength); remove_dependency(task, depends_on); delete_note(slug), to remove "
+        "a note that is wrong or a duplicate; "
         "write_drawing(title, slug, zones: [{id, title, x, y, width, height}]), a simple drawing of rectangles with "
         "zones for tasks to refer to; closes_zone marks a task that makes a zone inaccessible. "
         "Strength is hard if the order is physically forced, soft if one order is just easier. "
@@ -200,6 +203,8 @@ def describe(project_titles: dict[str, str], operation: str, args: dict[str, Any
             return f"{title(args.get('task'))} needs {title(args.get('depends_on'))} first ({args.get('strength', 'hard')})"
         case "remove_dependency":
             return f"{title(args.get('task'))} no longer needs {title(args.get('depends_on'))}"
+        case "delete_note":
+            return f"Delete the note “{title('note:' + str(args.get('slug')))}”"
         case "write_drawing":
             return f"Create the drawing “{args.get('title')}” with {len(args.get('zones') or [])} zones"
     return operation
@@ -249,6 +254,8 @@ class Tools:
 
         self.store.check(ops, actor=self.actor)
         titles = {slug: task.title for slug, task in self.store.project.tasks.items()}
+        for slug, note in self.store.project.notes.items():
+            titles[f"note:{slug}"] = str(note.frontmatter.get("title", slug))
         for change in changes:
             if change["operation"] == "create_task" and change["args"].get("slug"):
                 titles[change["args"]["slug"]] = change["args"].get("title", "")

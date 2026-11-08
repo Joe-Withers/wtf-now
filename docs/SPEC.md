@@ -236,8 +236,8 @@ Claude subscription tokens are not a supported credential; use an API key. See t
 | `set_progress` | Applies directly; logs and commits |
 | `set_state` | Applies directly; logs and commits |
 | `update_current_state` | Applies directly; commits |
-| `write_note` | Applies directly; commits, with trust fields |
-| `propose_changes` | Needs approval. One grouped list of task creates, updates, moves, deletes and dependency changes, validated before it's shown and applied as one commit |
+| `write_note` | Applies directly; commits, with trust fields. A note with the same title is replaced, never copied |
+| `propose_changes` | Needs approval. One grouped list of task creates, updates, moves, deletes and dependency changes, and the removal of a note that is wrong or a duplicate, validated before it's shown and applied as one commit |
 
 The AI has no tool for verifying notes. Only the owner can confirm a measurement.
 

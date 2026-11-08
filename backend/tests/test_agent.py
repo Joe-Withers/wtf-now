@@ -324,3 +324,21 @@ def test_ai_can_propose_a_drawing_of_zones(store: Store, proposals: ProposalStor
     proposals.approve(proposal["id"])
 
     assert store.project.zones() == {"rear": "Rear"}
+
+
+def test_a_wrong_note_is_removed_by_a_proposal_the_owner_approves(store: Store, proposals: ProposalStore) -> None:
+    store.apply([Op("write_note", {"title": "Interior layout", "body": "wrong", "slug": "layout-old"})])
+    model = ScriptedModel(
+        [call("propose_changes", summary="Remove the wrong note", changes=[{"operation": "delete_note", "args": {"slug": "layout-old"}}])],
+        [text("Have a look.")],
+    )
+
+    events, _ = converse(store, proposals, model)
+
+    [event] = of_type(events, "proposal")
+    assert event["descriptions"] == ["Delete the note “Interior layout”"]
+    assert "layout-old" in store.project.notes
+
+    proposals.approve(event["id"])
+
+    assert "layout-old" not in store.project.notes

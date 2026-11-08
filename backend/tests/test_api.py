@@ -431,3 +431,12 @@ def test_broken_svg_still_lists_zones(client: TestClient) -> None:
     [drawing] = client.get("/api/drawings").json()
 
     assert [zone["shape"] for zone in drawing["zones"]] == [None, None]
+
+
+def test_a_note_can_be_deleted(client: TestClient) -> None:
+    client.post("/api/notes", json={"title": "Wrong", "body": "nope"})
+    slug = client.get("/api/notes").json()[0]["slug"]
+
+    assert client.delete(f"/api/notes/{slug}").status_code == 200
+    assert client.get("/api/notes").json() == []
+    assert client.delete("/api/notes/missing").status_code == 422

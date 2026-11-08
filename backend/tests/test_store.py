@@ -468,3 +468,27 @@ def test_undo_removes_a_drawing_and_its_svg(store: Store) -> None:
 
     assert store.project.zones() == {}
     assert not (store.root / "layouts" / "plan.svg").exists()
+
+
+def test_writing_a_note_with_the_same_title_replaces_it(store: Store) -> None:
+    _, [first] = store.apply([Op("write_note", {"title": "Interior layout", "body": "615mm"})])
+    _, [second] = store.apply([Op("write_note", {"title": "interior layout ", "body": "650mm"})])
+
+    assert second == first
+    assert len(store.project.notes) == 1
+    assert "650mm" in store.project.notes[first].body
+
+
+def test_a_note_can_be_deleted_and_the_deletion_undone(store: Store) -> None:
+    _, [slug] = store.apply([Op("write_note", {"title": "Wrong", "body": "nope"})])
+
+    change, _ = store.apply([Op("delete_note", {"slug": slug})])
+    assert slug not in store.project.notes
+
+    store.undo(change.id)
+    assert slug in store.project.notes
+
+
+def test_deleting_a_note_that_is_not_there_is_rejected(store: Store) -> None:
+    with pytest.raises(ChangeRejected):
+        store.apply([Op("delete_note", {"slug": "nothing"})])
