@@ -18,6 +18,8 @@ KINDS = ("build", "purchase", "research", "decision")
 STATES = ("todo", "doing", "done")
 STRENGTHS = ("hard", "soft")
 LEAF_ONLY_FIELDS = ("state", "progress", "progress_reason", "effort_hours", "needs_helper", "cost")
+# How many more jobs are worth doing beside the one recommended next.
+SECONDARY_COUNT = 3
 DEFAULT_EFFORT_HOURS = 1.0
 
 _SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -56,6 +58,8 @@ class Task:
     needs_helper: bool = False
     cost: float | None = None
     depends_on: list[Dependency] = field(default_factory=list)
+    # The AI's pick of what to do: "next" for the one job, "also" for a few more worth doing.
+    recommended: str | None = None
     body: str = ""
 
     @property
@@ -189,6 +193,7 @@ def _task_from_concept(concept: Concept, problems: list[Problem]) -> Task:
         needs_helper=data.get("needs_helper") is True,
         cost=number("cost", 0),
         depends_on=dependencies,
+        recommended=data.get("recommended") if data.get("recommended") in ("next", "also") else None,
         body=concept.body,
     )
 

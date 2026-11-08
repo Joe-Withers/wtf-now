@@ -8,7 +8,7 @@ from .project import Project
 from .proposals import Proposal
 from .store import Store
 from .views import notes
-from .what_now import home, log_lines
+from .what_now import home, log_lines, recommendations
 
 RECENT_LOG_LINES = 12
 _NOTE_LINK = re.compile(r"\(/notes/([a-z0-9-]+)\.md\)")
@@ -45,6 +45,13 @@ they can do that. Warn them before relying on a measurement that's unverified.
 To correct a note, rewrite it with write_note using its slug; never write a second note on the same thing. To \
 remove a note that is wrong or a duplicate, propose delete_note. Never say you have removed or changed something \
 unless a tool call did it.
+
+Keep the recommendation up to date. The screens show one recommended next job, with a few more worth doing, and you \
+are the one who chooses them with set_recommended. Call it after you record work, add or change tasks, or learn how \
+much time they have, who can help, or what they have on hand. Choose by these, in order: work already underway, \
+what fits the time they have, what unlocks the most other work, and what they have the materials and tools for \
+(check the inventory note). Only unfinished work that nothing is holding up can be picked. If your picks stop being \
+possible, the app falls back to its own ranking until you set them again, so never leave them stale.
 
 Progress and effort are estimates that must stay stable. Change them only when something has actually happened, \
 and give the reason. Parent tasks are calculated, so only ever set progress on leaf tasks.
@@ -107,6 +114,12 @@ def build_system(store: Store, now: datetime, pending: list[Proposal], focus: st
         lines.append(f"Last activity was {summary.days_away} days ago.")
     lines.append("\n## Areas")
     lines += [f"- {project.tasks[root].title} ({root}): {progress(project, root):.0f}%" for root in project.roots]
+
+    first, more = recommendations(project)
+    if first:
+        lines.append("\n## Recommended now")
+        lines.append(f"- Next: {project.tasks[first].title} ({first})")
+        lines += [f"- Also: {project.tasks[slug].title} ({slug})" for slug in more]
 
     if summary.in_progress:
         lines.append("\n## In progress")

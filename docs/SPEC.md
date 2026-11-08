@@ -30,7 +30,7 @@ A mobile-first web app, installable as a PWA, with an AI chat built in. You talk
 
 | Screen | Purpose |
 |---|---|
-| **Graph** | The home screen. The project as a flow drawn round: the groups in a ring, each given a slice of the circle in proportion to the work in it; the work inside to out, so a job that waits on nothing is on the first ring and a job that waits on three things is on the fourth; within a group's slice a job sits on the side of the group the work it waits on is on. Each group has its own colour, up to twelve, and a job with no group above it is tied to its own dot. Each group's dot has a ring round it that fills in green, clockwise from the top, by how much of the group is done. Done work is outlined in green with a near-white middle, available work keeps its group's colour, and work that is waiting on unfinished work is that colour darkened. No dependency lines are drawn until you pick a job: then a red line runs to each job it waits on and a green one to each job that waits on it. The next task of each group glows and sparkles: its glow breathes and two small stars twinkle beside it. The job you pick gets a label, clear of the work, and the label is a link to that task. Pick a group to focus it. Pick a job to see what it needs and what it unlocks, and pick it again to let it go. The map is the whole screen. |
+| **Graph** | The home screen. The project as a flow drawn round: the groups in a ring, each given a slice of the circle in proportion to the work in it; the work inside to out, so a job that waits on nothing is on the first ring and a job that waits on three things is on the fourth; within a group's slice a job sits on the side of the group the work it waits on is on. Each group has its own colour, up to twelve, and a job with no group above it is tied to its own dot. Each group's dot has a ring round it that fills in green, clockwise from the top, by how much of the group is done. Done work is outlined in green with a near-white middle, available work keeps its group's colour, and work that is waiting on unfinished work is that colour darkened. No dependency lines are drawn until you pick a job: then a red line runs to each job it waits on and a green one to each job that waits on it. One job is recommended next and sparkles: its glow breathes and two small stars twinkle beside it. A few more worth doing glow steadily without the stars. The job you pick gets a label, clear of the work, and the label is a link to that task. Pick a group to focus it. Pick a job to see what it needs and what it unlocks, and pick it again to let it go. The map is the whole screen. |
 | **What now?** | The work as a run of jobs: what you finished, what you could start now, what comes next, and what is further off. A line runs from each job to the job it holds up. |
 | **Chat** | Conversation with the AI, with approve/reject cards for structural changes. It comes out of the side (§3.3). |
 | **Task detail** | Current state, notes, dependencies, photos, and a way into the chat with that task in focus. |
@@ -203,7 +203,7 @@ What now draws the same groups as a run of jobs, in four columns:
 - **Up next**: the work one step away — waiting on one job, and that job is itself ready.
 - **Later**: everything else that is still to do.
 
-A line runs from a job to the job it holds up. The job each group would do next is in Ready now with a shimmer across it and a star that twinkles, so the recommended work stands out from the rest. The chips along the top filter the run by kind, and the jobs of other kinds fade rather than vanish, so the shape of the run stays.
+A line runs from a job to the job it holds up. The one job recommended next is in Ready now with a shimmer across it and a star that twinkles, and a few more worth doing have a steady glow, so the recommended work stands out from the rest. The chips along the top filter the run by kind, and the jobs of other kinds fade rather than vanish, so the shape of the run stays.
 
 ### 5.4 Preflight
 
@@ -235,6 +235,7 @@ Claude subscription tokens are not a supported credential; use an API key. See t
 | `search_docs`, `read_note`, `list_notes`, `list_drawings`, `read_log` | Read |
 | `set_progress` | Applies directly; logs and commits |
 | `set_state` | Applies directly; logs and commits |
+| `set_recommended` | Applies directly; commits. Picks the one job to do next and up to three more worth doing, stored on the tasks. Only unfinished, unblocked work can be picked; when the picks stop being possible the fixed ranking takes over until the AI sets them again |
 | `update_current_state` | Applies directly; commits |
 | `write_note` | Applies directly; commits, with trust fields. A note with the same title is replaced, never copied |
 | `propose_changes` | Needs approval. One grouped list of task creates, updates, moves, deletes and dependency changes, and the removal of a note that is wrong or a duplicate, validated before it's shown and applied as one commit |

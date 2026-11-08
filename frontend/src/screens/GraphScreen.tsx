@@ -90,7 +90,7 @@ export function GraphScreen() {
                 {layout.dots.map((dot) => (
                   <button
                     key={dot.task.slug}
-                    className={`graph-dot cat-${colours.get(dot.task.category) ?? 0}${dot.next ? " next" : ""}${dot.done ? " done" : ""}${dot.waiting ? " waiting" : ""}${dot.task.slug === selected ? " selected" : ""}${dot.group ? " group" : ""}${dot.dimmed ? " dim" : ""}${dot.hidden ? " hidden" : ""}`}
+                    className={`graph-dot cat-${colours.get(dot.task.category) ?? 0}${dot.next ? " next" : ""}${dot.also ? " also" : ""}${dot.done ? " done" : ""}${dot.waiting ? " waiting" : ""}${dot.task.slug === selected ? " selected" : ""}${dot.group ? " group" : ""}${dot.dimmed ? " dim" : ""}${dot.hidden ? " hidden" : ""}`}
                     style={{ left: dot.x, top: dot.y, width: dot.r * 2, height: dot.r * 2 }}
                     onClick={() => setSelected(selected === dot.task.slug ? null : dot.task.slug)}
                     aria-label={dot.task.title}
@@ -132,7 +132,11 @@ export function GraphScreen() {
                 </span>
                 <span>
                   <i className="swatch next" aria-hidden="true" />
-                  Next up
+                  Do next
+                </span>
+                <span>
+                  <i className="swatch also" aria-hidden="true" />
+                  Also good
                 </span>
                 <span>
                   <i className="swatch note" aria-hidden="true" />

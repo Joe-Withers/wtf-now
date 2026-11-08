@@ -230,6 +230,8 @@ export type MapTask = {
   blocks: string[];
   children: string[];
   note: string;
+  /** The one job to do next, or one of a few more worth doing. */
+  recommended?: "next" | "also" | null;
 };
 
 /** A top-level group: the cluster a task belongs to. */

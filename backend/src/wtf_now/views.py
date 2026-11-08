@@ -21,7 +21,7 @@ from .graph import (
 )
 from .project import DRAWINGS_DIR, Dependency, Project, effective_dependencies
 from .store import CURRENT_STATE
-from .what_now import recent_steps
+from .what_now import recent_steps, recommendations
 
 UNVERIFIED_BY_DEFAULT = "Measurement"
 SEARCH_LIMIT = 20
@@ -358,6 +358,8 @@ class MapTask:
     blocks: list[str]
     children: list[str]
     note: str
+    # "next" for the one job to do next, "also" for a few more worth doing.
+    recommended: str | None = None
 
 
 @dataclass
@@ -438,6 +440,8 @@ def _categories(project: Project) -> list[MapCategory]:
 
 
 def _tasks(project: Project) -> list[MapTask]:
+    first, more = recommendations(project)
+    picks = {first: "next", **{slug: "also" for slug in more}}
     return [
         MapTask(
             slug=slug,
@@ -452,6 +456,7 @@ def _tasks(project: Project) -> list[MapTask]:
             blocks=_blocks(project, slug),
             children=list(project.children.get(slug, [])),
             note=get_section(task.body, CURRENT_STATE),
+            recommended=picks.get(slug),
         )
         for slug, task in project.tasks.items()
     ]

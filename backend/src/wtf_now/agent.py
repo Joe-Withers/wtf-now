@@ -110,6 +110,17 @@ TOOLS = [
         ("slug", "state"),
     ),
     _tool(
+        "set_recommended",
+        "Pick the one job to do next, and up to three more worth doing, replacing the last picks. Only unfinished "
+        "work that nothing is holding up can be picked. Call it again whenever what is best to do changes.",
+        {
+            "next": {"type": "string", "description": "Slug of the one job to do next"},
+            "also": {"type": "array", "items": {"type": "string"}, "description": "Slugs of up to three more"},
+            "reason": TEXT,
+        },
+        (),
+    ),
+    _tool(
         "update_current_state",
         "Rewrite the task's Current state section: exactly where it was left, in enough detail to pick it up months later.",
         {"slug": SLUG, "text": TEXT},
@@ -288,7 +299,7 @@ class Tools:
                 if hold := self._preflight_hold(args):
                     return hold, []
                 return self._direct(Op(name, args))
-            case "update_current_state" | "write_note" | "attach_photo":
+            case "update_current_state" | "write_note" | "attach_photo" | "set_recommended":
                 return self._direct(Op(name, args))
             case "propose_changes":
                 return self._propose(args["summary"], args["changes"])

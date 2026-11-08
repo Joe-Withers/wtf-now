@@ -492,3 +492,42 @@ def test_a_note_can_be_deleted_and_the_deletion_undone(store: Store) -> None:
 def test_deleting_a_note_that_is_not_there_is_rejected(store: Store) -> None:
     with pytest.raises(ChangeRejected):
         store.apply([Op("delete_note", {"slug": "nothing"})])
+
+
+def _three_jobs(store: Store) -> tuple[str, str, str]:
+    a = task(store, "Cut the floor", kind="build")
+    b = task(store, "Order the vent", kind="purchase")
+    c = task(store, "Fit the vent", kind="build")
+    store.apply([Op("add_dependency", {"task": c, "depends_on": b})])
+    return a, b, c
+
+
+def test_recommendations_are_stored_in_the_files_and_replace_the_last_ones(store: Store) -> None:
+    a, b, _ = _three_jobs(store)
+
+    store.apply([Op("set_recommended", {"next": a, "also": [b]})])
+    assert store.project.tasks[a].recommended == "next"
+    assert store.project.tasks[b].recommended == "also"
+
+    store.apply([Op("set_recommended", {"next": b})])
+    assert store.project.tasks[a].recommended is None
+    assert store.project.tasks[b].recommended == "next"
+    assert "recommended: next" in (store.root / "tasks" / f"{b}.md").read_text()
+
+
+def test_only_unfinished_unblocked_work_can_be_recommended(store: Store) -> None:
+    a, b, c = _three_jobs(store)
+
+    with pytest.raises(ChangeRejected, match="waiting on"):
+        store.apply([Op("set_recommended", {"next": c})])
+
+    store.apply([Op("set_state", {"slug": a, "state": "done"})])
+    with pytest.raises(ChangeRejected, match="already done"):
+        store.apply([Op("set_recommended", {"next": a})])
+
+
+def test_at_most_three_more_can_be_recommended(store: Store) -> None:
+    slugs = [task(store, f"Job {index}") for index in range(5)]
+
+    with pytest.raises(ChangeRejected, match="at most"):
+        store.apply([Op("set_recommended", {"next": slugs[0], "also": slugs[1:]})])

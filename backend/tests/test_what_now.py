@@ -2,7 +2,7 @@ from datetime import date
 
 from wtf_now.bundle import LogDay
 from wtf_now.project import build_project
-from wtf_now.what_now import home, log_lines, recent_steps, suggestions, what_now
+from wtf_now.what_now import home, log_lines, recent_steps, recommendations, suggestions, what_now
 
 from .test_graph import HARD, SOFT
 from .test_project import project_from
@@ -181,3 +181,26 @@ def test_home_for_an_empty_project() -> None:
 
     assert result.last_activity is None and result.days_away is None
     assert result.overall_progress == 0
+
+
+def test_recommendations_fall_back_to_the_ranking_when_none_are_set() -> None:
+    project = project_from({"a": "kind: build\n", "b": "kind: build\nstate: doing\n", "c": "kind: build\n"})
+
+    first, more = recommendations(project)
+
+    assert first == "b"  # already underway ranks first
+    assert more == ["a", "c"]
+
+
+def test_the_ais_picks_stand_while_they_are_possible_and_lapse_when_not() -> None:
+    project = project_from(
+        {
+            "a": "kind: build\nrecommended: next\n",
+            "b": "kind: build\nrecommended: also\n",
+            "c": "kind: build\nstate: doing\n",
+        }
+    )
+    assert recommendations(project) == ("a", ["b"])
+
+    finished = project_from({"a": "kind: build\nstate: done\nrecommended: next\n", "b": "kind: build\n", "c": "kind: build\nstate: doing\n"})
+    assert recommendations(finished)[0] == "c"  # the pick is done, so the ranking decides

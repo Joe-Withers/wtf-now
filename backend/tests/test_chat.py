@@ -237,3 +237,11 @@ def test_up_to_twelve_groups_each_get_their_own_colour() -> None:
     colours = [_colour(f"area-{index}", taken) for index in range(CATEGORY_COLOURS)]
 
     assert len(set(colours)) == CATEGORY_COLOURS
+
+
+def test_the_ai_is_told_to_keep_the_recommendation_up_to_date(store: Store, clock: Clock) -> None:
+    system = build_system(store, clock(), [])
+
+    assert "Keep the recommendation up to date" in system
+    assert "set_recommended" in system
+    assert "## Recommended now" in system

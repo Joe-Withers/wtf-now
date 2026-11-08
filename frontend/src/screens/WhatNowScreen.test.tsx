@@ -140,12 +140,18 @@ test("nothing on What now changes a job — the chat does that", async () => {
   expect(calls.every((call) => call.init?.method !== "POST")).toBe(true);
 });
 
-test("the job each group would do next sparkles, and the others don't", async () => {
-  mockApi({ "/api/map": map });
+test("the one job to do next sparkles, a few more glow, and the others don't", async () => {
+  const picked = {
+    ...map,
+    tasks: map.tasks.map((one) =>
+      one.slug === "wire" ? { ...one, recommended: "next" } : one.slug === "fridge" ? { ...one, recommended: "also" } : one,
+    ),
+  };
+  mockApi({ "/api/map": picked });
 
   renderApp(<WhatNowScreen />);
 
-  const wire = await screen.findByRole("button", { name: /Run the cables/ });
-  expect(wire).toHaveClass("recommended");
+  expect(await screen.findByRole("button", { name: /Run the cables/ })).toHaveClass("recommended");
+  expect(screen.getByRole("button", { name: /Run the cables/ })).not.toHaveClass("also");
   expect(screen.getByRole("button", { name: /Fit the fridge/ })).not.toHaveClass("recommended");
 });

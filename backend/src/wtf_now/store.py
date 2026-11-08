@@ -33,7 +33,9 @@ from .bundle import (
     set_section,
     write_text_atomic,
 )
+from .graph import blockers
 from .project import (
+    SECONDARY_COUNT,
     KINDS,
     DRAWINGS_DIR,
     LEAF_ONLY_FIELDS,
@@ -112,6 +114,7 @@ class Transaction:
         "remove_dependency",
         "set_progress",
         "set_state",
+        "set_recommended",
         "update_current_state",
         "write_note",
         "delete_note",
@@ -126,6 +129,7 @@ class Transaction:
         self.actor = actor
         self.log: list[tuple[str, str]] = []
         self.files: dict[str, str] = {}  # non-concept files, by path
+        self.summary = ""  # for a change that has nothing to say in the log
 
     def run(self, op: Op) -> Any:
         if op.name not in self.OPERATIONS:
@@ -313,6 +317,38 @@ class Transaction:
         if data.get("kind") == "purchase":
             label = {"todo": "To order", "doing": "Ordered", "done": "Arrived"}[state]
         self._record(label, f"{self._link(concept)}{f': {reason}' if reason else ''}")
+
+    def set_recommended(self, next: str | None = None, also: list[str] | None = None, reason: str = "") -> None:
+        """Picks the one job to do next and a few more worth doing, replacing the last picks.
+
+        Only unfinished work that nothing is holding up can be recommended.
+        """
+        also = list(also or [])
+        picks = ([next] if next else []) + also
+        if len(set(picks)) != len(picks):
+            raise ChangeRejected("A job can only be recommended once")
+        if len(also) > SECONDARY_COUNT:
+            raise ChangeRejected(f"Recommend at most {SECONDARY_COUNT} more beside the next one")
+        project = self._project()
+        for slug in picks:
+            self._task(slug)
+            if not project.is_leaf(slug):
+                raise ChangeRejected(f"{slug!r} has subtasks. Recommend one of those instead")
+            if project.tasks[slug].state == "done":
+                raise ChangeRejected(f"{slug!r} is already done")
+            if waiting := blockers(project, slug):
+                raise ChangeRejected(f"{slug!r} is waiting on {', '.join(sorted(waiting))}, so it can't be recommended yet")
+        for concept in self.concepts.values():
+            if concept.path.startswith(TASK_DIR):
+                concept.frontmatter.pop("recommended", None)
+        if next:
+            self._task(next).frontmatter["recommended"] = "next"
+        for slug in also:
+            self._task(slug).frontmatter["recommended"] = "also"
+        titles = [project.tasks[slug].title for slug in picks]
+        self.summary = f"Recommend {', '.join(titles)}" if titles else "Clear the recommendation"
+        if reason:
+            self.summary += f": {reason}"
 
     def update_current_state(self, slug: str, text: str) -> None:
         concept = self._task(slug)
@@ -562,7 +598,7 @@ class Store:
             write_text_atomic(self.root / LOG_FILE, text)
 
             self._write_index(build_project(transaction.concepts.values()))
-            message = summary or re.sub(r"\[([^]]*)\]\([^)]*\)", r"\1", transaction.log[0][1]) if transaction.log else summary
+            message = summary or re.sub(r"\[([^]]*)\]\([^)]*\)", r"\1", transaction.log[0][1]) if transaction.log else summary or transaction.summary
             return self._commit(message or "Update project", transaction.now), results
 
     def _read(self, name: str) -> str:

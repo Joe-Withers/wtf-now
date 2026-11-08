@@ -352,11 +352,13 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .graph-dot.group { background: var(--bg); box-shadow: 0 0 0 2px var(--cat); }
 .graph-dot.next { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cat) 28%, transparent), 0 0 16px color-mix(in srgb, var(--cat) 70%, transparent); }
 .graph-dot.hidden { display: none; }
-/* The job each group would do next sparkles: a glow that breathes, and a pair of stars that twinkle. */
+/* The job to do next sparkles: a glow that breathes, and a pair of stars that twinkle. */
 .graph-dot.next { animation: breathe 2.8s ease-in-out infinite; }
 .graph-dot.next::before, .graph-dot.next::after { content: ""; position: absolute; background: #fff; pointer-events: none; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); opacity: 0; animation: twinkle 2.4s ease-in-out infinite; }
 .graph-dot.next::before { width: 11px; height: 11px; top: -10px; right: -9px; }
 .graph-dot.next::after { width: 8px; height: 8px; bottom: -8px; left: -8px; animation-delay: 1.2s; }
+/* A few more worth doing glow, steadily, without the stars. */
+.graph-dot.also { box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 30%, transparent), 0 0 10px color-mix(in srgb, var(--cat) 45%, transparent); }
 @keyframes breathe { 0%, 100% { filter: drop-shadow(0 0 2px var(--cat)); } 50% { filter: drop-shadow(0 0 9px var(--cat)); } }
 @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
 .graph-note { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--muted); opacity: 0.65; }
@@ -373,6 +375,7 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .graph-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .swatch { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); opacity: 0.6; }
 .swatch.next { background: var(--now); opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--now) 25%, transparent); }
+.swatch.also { background: var(--now); opacity: 0.6; box-shadow: 0 0 0 2px color-mix(in srgb, var(--now) 20%, transparent); }
 .swatch.note { width: 6px; height: 6px; }
 .swatch.done { background: color-mix(in srgb, white 45%, var(--muted)); box-shadow: 0 0 0 2px var(--done); opacity: 1; }
 .swatch.waiting { background: color-mix(in srgb, black 60%, var(--muted)); opacity: 1; }
@@ -395,10 +398,12 @@ input[type="range"] { width: 100%; accent-color: var(--now); min-height: 36px; }
 .job-card:hover { border-color: color-mix(in srgb, var(--now) 45%, var(--line)); }
 .job-card.selected { border-color: var(--now); background: color-mix(in srgb, var(--now) 8%, var(--surface)); }
 .job-card.faded { opacity: 0.28; }
-/* The job each group would do next shimmers, and has a star in the corner that twinkles. */
+/* The job to do next shimmers, and has a star in the corner that twinkles. */
 .job-card.recommended { overflow: hidden; border-color: color-mix(in srgb, var(--now) 60%, var(--line)); box-shadow: 0 0 14px color-mix(in srgb, var(--now) 30%, transparent); }
 .job-card.recommended::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 35%, color-mix(in srgb, var(--now) 28%, transparent) 50%, transparent 65%); background-size: 250% 100%; animation: shimmer 3.2s ease-in-out infinite; }
 .job-card.recommended::after { content: ""; position: absolute; top: 4px; right: 6px; width: 10px; height: 10px; background: var(--now); pointer-events: none; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); animation: twinkle 2.4s ease-in-out infinite; }
+/* A few more worth doing have a steady glow. */
+.job-card.also { border-color: color-mix(in srgb, var(--now) 35%, var(--line)); box-shadow: 0 0 8px color-mix(in srgb, var(--now) 16%, transparent); }
 @keyframes shimmer { 0% { background-position: 130% 0; } 60%, 100% { background-position: -130% 0; } }
 .job-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem; }
 .job-kind { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; color: var(--muted); white-space: nowrap; }

@@ -106,10 +106,19 @@ test("hiding the done work leaves everything where it was", () => {
   expect(old?.hidden).toBe(true);
 });
 
-test("the next task of a group glows, but no label is drawn until a job is picked", () => {
-  const layout = layoutMap(map, size);
+test("the job to do next sparkles, a few more glow, and no label is drawn until a job is picked", () => {
+  const recommended: ProjectMap = {
+    ...map,
+    tasks: map.tasks.map((one) =>
+      one.slug === "wire" ? { ...one, recommended: "next" as const } : one.slug === "wool" ? { ...one, recommended: "also" as const } : one,
+    ),
+  };
 
-  expect(layout.dots.find((dot) => dot.task.slug === "wire")?.next).toBe(true);
+  const layout = layoutMap(recommended, size);
+
+  expect(layout.dots.find((dot) => dot.task.slug === "wire")).toMatchObject({ next: true, also: false });
+  expect(layout.dots.find((dot) => dot.task.slug === "wool")).toMatchObject({ next: false, also: true });
+  expect(layout.dots.filter((dot) => dot.next)).toHaveLength(1);
   expect(layout.pills).toHaveLength(0);
 });
 

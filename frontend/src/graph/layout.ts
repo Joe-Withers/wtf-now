@@ -40,6 +40,8 @@ export type Dot = {
   y: number;
   r: number;
   next: boolean;
+  /** One of a few more jobs worth doing, beside the one to do next. */
+  also: boolean;
   done: boolean;
   /** Not done, and held up by work that isn't either. */
   waiting: boolean;
@@ -497,7 +499,7 @@ export function layoutMap(
         const x = centre.x + rx * scale * Math.cos(item.angle);
         const y = centre.y + ry * scale * Math.sin(item.angle);
         const dimmed = focus !== null && focus !== task.category;
-        const next = task.category === root.category.slug ? root.category.next === task.slug : false;
+        const next = task.recommended === "next";
         const hidden = isHidden(task, root.category.next);
 
         angles.set(task.slug, item.angle);
@@ -508,6 +510,7 @@ export function layoutMap(
           y,
           r: next ? 11 : radius(task),
           next,
+          also: task.recommended === "also",
           done: task.state === "done",
           waiting: task.state !== "done" && task.needs.length > 0,
           group: false,
@@ -548,6 +551,7 @@ export function layoutMap(
           y,
           r: 8,
           next: false,
+          also: false,
           done: false,
           waiting: false,
           group: true,

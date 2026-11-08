@@ -6,7 +6,7 @@ from datetime import date
 
 from .bundle import LogDay, get_section
 from .graph import blockers, downstream_hours, is_done, overall_progress, soft_warnings
-from .project import Project, Task
+from .project import SECONDARY_COUNT, Project, Task
 from .store import CURRENT_STATE
 
 SUGGESTION_COUNT = 3
@@ -170,6 +170,25 @@ def suggestions(project: Project, hours: float | None = None, helper: bool = Tru
         if task.kind == "build" and (helper or not task.needs_helper)
     ]
     return sorted(items, key=lambda item: _rank(item, hours))[:SUGGESTION_COUNT]
+
+
+def recommendations(project: Project, hours: float | None = None) -> tuple[str | None, list[str]]:
+    """The one job to do next, and a few more worth doing.
+
+    The AI's picks stand while they are still unfinished and unblocked. When
+    none of them are, the fixed ranking chooses, so there is always an answer.
+    """
+    downstream = downstream_hours(project)
+    items = sorted((_item(project, task, downstream) for task in _available(project)), key=lambda item: _rank(item, hours))
+    ranked = [item.slug for item in items]
+    chosen = {slug: project.tasks[slug].recommended for slug in ranked if project.tasks[slug].recommended}
+    if not chosen:
+        return (ranked[0] if ranked else None), ranked[1 : 1 + SECONDARY_COUNT]
+    firsts = [slug for slug in ranked if chosen.get(slug) == "next"]
+    alsos = [slug for slug in ranked if chosen.get(slug) == "also"]
+    primary = (firsts or alsos)[0]
+    others = [slug for slug in firsts + alsos if slug != primary]
+    return primary, others[:SECONDARY_COUNT]
 
 
 def log_lines(days: list[LogDay]) -> list[LogLine]:
