@@ -62,7 +62,7 @@ The app is one system, not a set of screens that happen to sit together.
 - **No page titles.** The rail says where you are, so the screens don't repeat it: Shopping, Docs, Log and What now open straight onto their content. A note or a drawing keeps its own title, because that is the thing itself rather than the name of the page.
 - **One type scale.** Screen titles, section eyebrows, card titles and metadata each have a fixed size, so a card looks like a card wherever it appears.
 - **One way of showing state.** A task's state is a pill — Not started, Underway, Done — and a purchase says To order, On order, Arrived. The same pill everywhere, never a stray word.
-- **The chat comes out of the side.** One round button in the bottom-right corner pulls the chat out of the right-hand side, over whatever you were reading. It knows what you were looking at, so on a task screen it opens about that task. There is no chat tab, and no other way in.
+- **The chat comes out of the side.** One round button in the bottom-right corner pulls the chat out of the right-hand side, over whatever you were reading. It knows what you were looking at, so on a task screen it opens about that task. There is no chat tab, and no other way in. A **New chat** button in its header leaves the conversation and starts a clean one, and the old one stays under Recent chats.
 - **Warm, high contrast, dark or light.** A workshop palette that stays readable in a dusty van.
 
 ---

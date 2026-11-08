@@ -213,3 +213,23 @@ test("a voice note lands in the message box to check before sending", async () =
   await waitFor(() => expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue("Finished the ceiling panels"));
   expect(stop).toHaveBeenCalled();
 });
+
+test("a new chat starts clean, and a second message opens a second session", async () => {
+  const calls = server([{ type: "text", text: "Noted." }, { type: "done" }]);
+  renderApp(<Chat />);
+
+  expect(screen.queryByRole("button", { name: "New chat" })).not.toBeInTheDocument();
+
+  await say("I fitted the vent");
+  expect(await screen.findByText("Noted.")).toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole("button", { name: "New chat" }));
+
+  expect(screen.queryByText("I fitted the vent")).not.toBeInTheDocument();
+  expect(screen.queryByText("Noted.")).not.toBeInTheDocument();
+  expect(screen.getByText("What's happened?")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "New chat" })).not.toBeInTheDocument();
+
+  await say("The floor is down");
+  await waitFor(() => expect(calls.filter((call) => call === "POST /api/sessions")).toHaveLength(2));
+});
