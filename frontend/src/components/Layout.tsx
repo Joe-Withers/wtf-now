@@ -15,7 +15,6 @@ const LINKS = [
   { to: "/shopping", label: "Shopping", icon: "M3 4h2l2.5 11h10L20 7H6M9 20h.01M17 20h.01" },
   { to: "/docs", label: "Docs", icon: "M4 5h16v11H4zM4 16l4-4 4 4 3-3 5 5M9 9h.01" },
   { to: "/log", label: "Log", icon: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2" },
-  { to: "/more", label: "More", icon: "M5 12h.01M12 12h.01M19 12h.01" },
 ];
 
 export function Layout() {

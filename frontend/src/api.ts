@@ -144,7 +144,6 @@ export type NoteSummary = {
 };
 export type NoteDetail = NoteSummary & { body: string };
 export type SearchHit = { kind: "task" | "note"; slug: string; title: string; snippet: string };
-export type Problem = { code: string; path: string; message: string };
 
 export type ShoppingItem = { slug: string; title: string; area: string | null; cost: number | null; blocked_by: TaskRef[] };
 export type Shopping = {
