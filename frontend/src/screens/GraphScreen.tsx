@@ -41,7 +41,7 @@ export function GraphScreen() {
 
   const map = project.data ?? EMPTY_MAP;
   // Hiding the done work leaves the rest of the map where it is.
-  const layout = useMemo(() => layoutMap(map, size, focus, hideDone), [map, size, focus, hideDone]);
+  const layout = useMemo(() => layoutMap(map, size, focus, hideDone, selected), [map, size, focus, hideDone, selected]);
   const colours = new Map(map.categories.map((category) => [category.slug, category.colour]));
 
   return (
@@ -110,18 +110,18 @@ export function GraphScreen() {
                   />
                 ))}
                 {layout.pills.map((pill) => (
-                  <button
+                  <Link
                     key={pill.task.slug}
                     className={`graph-pill cat-${pill.colour} ${pill.side}`}
                     style={{ left: pill.x, top: pill.y }}
-                    onClick={() => setSelected(selected === pill.task.slug ? null : pill.task.slug)}
-                    aria-label={`Next up: ${pill.task.title}, ${KIND_LABELS[pill.task.kind]}`}
+                    to={`/tasks/${pill.task.slug}`}
+                    aria-label={`Open ${pill.task.title}, ${KIND_LABELS[pill.task.kind]}`}
                     title={pill.task.title}
                   >
                     <span className="dot" aria-hidden="true" />
                     <span className="pill-text">{pill.task.title}</span>
                     <span className="pill-kind">{KIND_LABELS[pill.task.kind]}</span>
-                  </button>
+                  </Link>
                 ))}
               </div>
 

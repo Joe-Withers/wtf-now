@@ -106,18 +106,22 @@ test("hiding the done work leaves everything where it was", () => {
   expect(old?.hidden).toBe(true);
 });
 
-test("the next task of a group is called out with a label", () => {
+test("the next task of a group glows, but no label is drawn until a job is picked", () => {
   const layout = layoutMap(map, size);
 
-  expect(layout.pills.map((pill) => pill.task.slug)).toEqual(["wire", "wool"]);
-  const dot = layout.dots.find((one) => one.task.slug === "wire");
-  const pill = layout.pills.find((one) => one.task.slug === "wire");
-  expect(dot?.next).toBe(true);
-  expect(pill).toBeDefined();
+  expect(layout.dots.find((dot) => dot.task.slug === "wire")?.next).toBe(true);
+  expect(layout.pills).toHaveLength(0);
+});
+
+test("the job that is picked is called out with a label", () => {
+  const layout = layoutMap(map, size, null, false, "fridge");
+
+  expect(layout.pills.map((pill) => pill.task.slug)).toEqual(["fridge"]);
+  expect(layout.pills[0].colour).toBe(1);
 });
 
 test("a label does not land on top of the work", () => {
-  const layout = layoutMap(map, size);
+  const layout = layoutMap(map, size, null, false, "wire");
 
   const pill = layout.pills.find((one) => one.task.slug === "wire")!;
   for (const dot of layout.dots) {
@@ -195,11 +199,10 @@ test("a note about a task sits beside it", () => {
   expect(Math.hypot((note?.x ?? 0) - (dot?.x ?? 0), (note?.y ?? 0) - (dot?.y ?? 0))).toBeLessThan(20);
 });
 
-test("focusing one group dims the rest, and calls out only that one", () => {
+test("focusing one group dims the rest", () => {
   const layout = layoutMap(map, size, "electrics");
 
   expect(layout.hubs.find((hub) => hub.category.slug === "electrics")?.dimmed).toBe(false);
   expect(layout.hubs.find((hub) => hub.category.slug === "insulation")?.dimmed).toBe(true);
   expect(layout.dots.every((dot) => dot.dimmed === (dot.task.category !== "electrics"))).toBe(true);
-  expect(layout.pills.map((pill) => pill.task.slug)).toEqual(["wire"]);
 });

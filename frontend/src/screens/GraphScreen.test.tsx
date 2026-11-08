@@ -98,14 +98,24 @@ test("shows the project whole, and the groups it's made of", async () => {
   expect(screen.getByRole("button", { name: /Insulation/ })).toBeInTheDocument();
 });
 
-test("draws the work, with the next task of each group called out", async () => {
+test("draws the work, with no label until a task is picked", async () => {
   mockApi({ "/api/map": map });
 
   renderApp(<GraphScreen />);
 
   expect(await screen.findByRole("button", { name: "Fit the fridge" })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: /Next up: Run the cables/ })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: /Next up: Lay the wool/ })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /^Open / })).not.toBeInTheDocument();
+});
+
+test("the picked task gets a label that goes to the task", async () => {
+  mockApi({ "/api/map": map });
+
+  renderApp(<GraphScreen />);
+
+  await userEvent.click(await screen.findByRole("button", { name: "Lay the wool" }));
+
+  const label = await screen.findByRole("link", { name: /Open Lay the wool/ });
+  expect(label).toHaveAttribute("href", "/tasks/wool");
 });
 
 test("the tasks that are done can be hidden", async () => {

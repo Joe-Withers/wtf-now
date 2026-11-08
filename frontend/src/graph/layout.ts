@@ -397,6 +397,7 @@ export function layoutMap(
   size: { width: number; height: number },
   focus: string | null = null,
   hideDone = false,
+  selected: string | null = null,
 ): MapLayout {
   const width = Math.max(size.width, 300);
   const height = Math.max(size.height, 300);
@@ -573,19 +574,15 @@ export function layoutMap(
     }
   }
 
-  // The next task of each group is called out, out towards the edge of the map.
-  // On a narrow screen there is only room for the group being looked at.
-  const roomForAll = width >= 700;
-  for (const category of map.categories) {
-    const next = category.next;
-    if (!next) continue;
-    if (focus ? focus !== category.slug : !roomForAll) continue;
-    const at = placed.get(next);
-    if (!at) continue;
+  // The job that is picked is called out with a label, out towards the edge of the map.
+  const picked = selected ? map.tasks.find((task) => task.slug === selected) : undefined;
+  const at = picked ? placed.get(picked.slug) : undefined;
+  if (picked && at && !at.hidden) {
     const outward = Math.abs(Math.cos(at.angle)) > 0.5 ? (Math.cos(at.angle) < 0 ? "left" : "right") : Math.sin(at.angle) < 0 ? "above" : "below";
-    const size = labelSize(map.tasks.find((task) => task.slug === next)?.title ?? "", label);
+    const size = labelSize(picked.title, label);
     const spot = place(at.x, at.y, outward, size, width, height, dots.map((dot) => ({ x: dot.x, y: dot.y })));
-    pills.push({ task: map.tasks.find((task) => task.slug === next)!, x: spot.x, y: spot.y, side: spot.side, colour: category.colour });
+    const colour = map.categories.find((category) => category.slug === picked.category)?.colour ?? 0;
+    pills.push({ task: picked, x: spot.x, y: spot.y, side: spot.side, colour });
   }
 
   // A note sits beside the task it documents.
